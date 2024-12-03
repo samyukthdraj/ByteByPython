@@ -66,3 +66,5 @@
 - Set up MongoDB (local or cloud)
 - Replace API keys in `config.py`
 - Run the application: `uvicorn main:app --reload`
+
+hi.
