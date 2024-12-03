@@ -7,6 +7,7 @@
 - Using HuggingFace instead of OpenAI API keys
 - Install Python 3.8+
 - Install dependencies: pip install -r requirements.txt
+- pip install pydantic-settings
 - python -m pip install -r requirements.txt if the above doesnt work, 
 - Set up MongoDB locally or use a cloud service
 <!-- - Obtain OpenAI API key for image analysis -->
