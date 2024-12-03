@@ -1,0 +1,33 @@
+- Instead of using Google cloud to convert the voice to text we are using these alternatives.
+- Done: AssemblyAI (for speech-to-text): Offers a free tier for speech-to-text.
+- Undone: DeepL (for translation): Provides a free version with some limitations. {considering alternatives}
+
+- MongoDB:
+ Setting Up MongoDB
+Local Installation:
+For Windows:
+
+Download MongoDB Community Server from official website
+Run the installer
+Choose "Complete" setup type
+Create a data directory:
+`mkdir C:\data\db`
+
+Add MongoDB bin directory to system PATH
+Start MongoDB:
+`mongod`
+In another terminal:
+`mongo`
+
+Cloud Service (Recommended for Beginners):
+
+Go to MongoDB Atlas (https://www.mongodb.com/cloud/atlas)
+Create a free account
+Click "Create New Cluster"
+Choose free tier (M0 Shared Cluster)
+Select cloud provider and region
+Create cluster name
+In "Database Access" tab, create a database user
+In "Network Access" tab, add your IP address
+Click "Connect" and choose "Connect your application"
+Copy the connection string (replace <password> with your user password)
