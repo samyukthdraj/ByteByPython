@@ -58,3 +58,10 @@
 - Sanitize and validate all user inputs
 - Implement rate limiting
 - Secure file uploads
+
+# Setup Instructions:
+
+Install dependencies: pip install -r requirements.txt
+Set up MongoDB (local or cloud)
+Replace API keys in config.py
+Run the application: uvicorn main:app --reload
