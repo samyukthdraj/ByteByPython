@@ -1,7 +1,10 @@
-- Instead of using Google cloud to convert the voice to text we are using these alternatives.
+- Context: Instead of using Google cloud to convert the voice to text we are using these two alternatives:
 - Done: AssemblyAI (for speech-to-text): Offers a free tier for speech-to-text.
 - Undone: DeepL (for translation): Provides a free version with some limitations. {considering alternatives}
 
+- Done: Instead of OpenAI we used HuggingFace 
+
+- ToDo: 
 - MongoDB:
  Setting Up MongoDB
 Local Installation:
