@@ -1,40 +1,25 @@
-from transformers import pipeline
-import torch
+import os
 from PIL import Image
+import io
+from transformers import pipeline
 
-class CrimeDetector:
-    def __init__(self):
-        # New: Use Hugging Face vision model for image classification
-        self.image_classifier = pipeline(
-            "image-classification", 
-            model="google/vit-base-patch16-224"
-        )
+# Suppress HuggingFace symlink warnings
+os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
+
+# Use a compatible image classification model
+image_classifier = pipeline("image-classification", model="google/vit-base-patch16-224")
+
+def analyze_image(image_bytes):
+    """
+    Analyze the uploaded image and extract crime-related keywords.
+    """
+    # Convert bytes to PIL Image
+    image = Image.open(io.BytesIO(image_bytes))
     
-    def detect_crime_type(self, image_path):
-        """
-        # New: Detect potential crime indicators from an image using Hugging Face
-        """
-        try:
-            # Classify the image
-            predictions = self.image_classifier(image_path, top_k=3)
-            
-            # New: Custom mapping of classifications to crime types
-            crime_keywords = {
-                'violence': 'Assault',
-                'theft': 'Theft',
-                'vandalism': 'Vandalism',
-                'weapon': 'Weapon Possession',
-                'accident': 'Property Damage'
-            }
-            
-            # New: Check predictions against crime keywords
-            for pred in predictions:
-                for keyword, crime_type in crime_keywords.items():
-                    if keyword in pred['label'].lower():
-                        return crime_type
-            
-            return "Unidentified"
-        
-        except Exception as e:
-            print(f"Error in crime detection: {e}")
-            return "Unidentified"
+    # Run image classification
+    predictions = image_classifier(image)
+    
+    # Extract top 5 labels as keywords
+    keywords = [pred["label"] for pred in sorted(predictions, key=lambda x: x["score"], reverse=True)[:5]]
+    
+    return keywords

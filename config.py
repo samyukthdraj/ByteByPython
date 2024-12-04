@@ -1,17 +1,16 @@
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     # MongoDB configuration
-    MONGO_URI: str = "mongodb://localhost:27017"
+    MONGO_URI: str
     MONGO_DB_NAME: str = "cap_database"
 
-    # AssemblyAI Configuration (for speech-to-text)
-    ASSEMBLYAI_API_KEY: str = "your_assemblyai_api_key"
+    # AssemblyAI Configuration
+    ASSEMBLYAI_API_KEY: str
 
-    # DeepL Configuration (for translation)
-    DEEPL_API_KEY: str = "your_deepl_api_key"
-
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+    )
 
 settings = Settings()

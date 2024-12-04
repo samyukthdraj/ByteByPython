@@ -1,56 +1,119 @@
-# Prerequisites and Setup
+# Civilians As Police (CAP)
 
-- Using these instead of Google Cloud; 
-    AssemblyAI (for speech-to-text): Offers a free tier for speech-to-text.
-    DeepL (for translation): Provides a free version with some limitations. {considering alternatives}
-- Using HuggingFace instead of OpenAI API keys
-- Install Python 3.8+
-- Install dependencies: pip install -r requirements.txt
-- python -m pip install -r requirements.txt if the above doesnt work, 
-- Set up MongoDB locally or use a cloud service
-<!-- - Obtain OpenAI API key for image analysis -->
-<!-- - Set up Google Cloud credentials for speech-to-text and translation -->
+## Overview
 
-# Key Features Implemented
+Civilians As Police (CAP) is an innovative web application designed to simplify crime reporting by leveraging AI technologies. The platform allows users to submit crime reports through multiple input methods, including image uploads, voice notes, and manual text entry.
 
-- FastAPI backend
-- MongoDB integration for storing reports
-- OpenAI Vision API for crime type detection from images
-- Google Cloud Speech-to-Text for voice note transcription
-- Google Cloud Translation for converting transcribed text to English
+## Key Features
 
-# Workflow
+- **Multi-Modal Report Submission**
+  - Image upload with AI-powered crime type detection
+  - Voice note transcription
+  - Manual text description
+  - Automatic police station recommendation based on pincode
 
-- User uploads an image (optional)
+- **AI-Powered Analysis**
+  - Image classification using HuggingFace's Vision Transformer
+  - Speech-to-text conversion with AssemblyAI
+  - Automatic keyword extraction and crime type suggestion
 
-- If no crime type is specified, AI attempts to detect from the image
+- **Robust Backend**
+  - FastAPI for efficient API handling
+  - MongoDB for secure report storage
+  - Comprehensive error handling and input validation
 
+## Tech Stack
 
-- User uploads a voice note (optional)
+- **Frontend**: HTML, CSS, JavaScript
+- **Backend**: Python, FastAPI
+- **AI Services**: 
+  - HuggingFace Transformers (Image Classification)
+  - AssemblyAI (Speech-to-Text)
+- **Database**: MongoDB
+- **Deployment**: Uvicorn
 
-- AI transcribes and translates the voice note
+## Prerequisites
 
+### System Requirements
+- Python 3.8+
+- MongoDB
+- AssemblyAI Account (Free Tier)
 
-- User can manually edit crime type and description
-- Report is saved to MongoDB
+### Installation
 
-# Additional Configuration Needed
+1. Clone the repository
+```bash
+git clone https://github.com/yourusername/civilians-as-police.git
+cd civilians-as-police
+```
 
-- Replace placeholders in config.py and .env with your actual credentials
-- Install Google Cloud SDK and set up authentication
-- Install MongoDB and configure connection string
+2. Create a virtual environment
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+```
 
-# Deployment Recommendations
+3. Install dependencies
+```bash
+pip install -r requirements.txt
+```
 
-- Use Docker for containerization
-- Deploy on cloud platforms like AWS, Google Cloud, or Azure
-- Use Nginx as a reverse proxy
-- Set up SSL for secure communication
+4. Configure Environment Variables
+- Create a `.env` file in the project root
+- Add the following configurations:
+```
+MONGO_URI=your_mongodb_connection_string
+MONGO_DB_NAME=cap_database
+ASSEMBLYAI_API_KEY=your_assemblyai_api_key
+```
 
-# Security Notes
+## Running the Application
 
-- Implement proper authentication and authorization
-- Add input validation
-- Sanitize and validate all user inputs
-- Implement rate limiting
+### Backend (FastAPI)
+```bash
+uvicorn main:app --reload
+```
+
+### Frontend
+- Open `index.html` in a modern web browser
+- Ensure backend is running simultaneously
+
+## Features in Detail
+
+### Image Upload
+- Automatically analyzes uploaded images
+- Suggests potential crime types based on image classification
+- Populates description with detected keywords
+
+### Voice Note Transcription
+- Converts voice notes to text using AssemblyAI
+- Appends transcription to the description field
+
+### Police Station Recommendations
+- Dynamically fetches and displays nearby police stations
+- Updates based on entered pincode
+
+### Report Submission
+- Comprehensive form with multiple input options
+- Automatic and manual crime type selection
+- User identification through phone number
+
+## Security Considerations
+
+- Input sanitization
 - Secure file uploads
+- Environment-based configuration management
+- CORS middleware for API security
+
+## Future Enhancements
+
+- User authentication
+- More sophisticated AI crime detection
+- Multi-language support
+- Advanced geolocation services
+
+## Contributions
+
+Contributions are welcome! Please read our contribution guidelines before submitting pull requests.
+
+![screenshot of the website front-end](image-1.png)

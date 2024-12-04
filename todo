@@ -1,36 +1,20 @@
 - Context: Instead of using Google cloud to convert the voice to text we are using these two alternatives:
 - Done: AssemblyAI (for speech-to-text): Offers a free tier for speech-to-text.
 - Undone: DeepL (for translation): Provides a free version with some limitations. {considering alternatives}
+<!-- not doing any translations since getting a translation service for indian regional languages for free is a difficulty. -->
 
-- Done: Instead of OpenAI we used HuggingFace 
+- Done: Used HuggingFace instead of OpenAI. 
 
 - ToDo: 
-- MongoDB:
- Setting Up MongoDB
-Local Installation:
-For Windows:
 
-Download MongoDB Community Server from official website
-Run the installer
-Choose "Complete" setup type
-Create a data directory:
-`mkdir C:\data\db`
+- done: Photo should be automatically analysed and the description box should be filled automatically.
+- undone: the nearby police station distances are updated after giving the pincode but the names of the stations arent updated dynamically.
+- undone: the picture is analysed and keywords are received and the dropdown is also updated dynamically but the user cant edit the crime type from the dropdown by appending their own views from the dropdown.
+- undone: Add a user name text box to help the police identify the user reporting the crime.
 
-Add MongoDB bin directory to system PATH
-Start MongoDB:
-`mongod`
-In another terminal:
-`mongo`
+# Startup
 
-Cloud Service (Recommended for Beginners):
-
-Go to MongoDB Atlas (https://www.mongodb.com/cloud/atlas)
-Create a free account
-Click "Create New Cluster"
-Choose free tier (M0 Shared Cluster)
-Select cloud provider and region
-Create cluster name
-In "Database Access" tab, create a database user
-In "Network Access" tab, add your IP address
-Click "Connect" and choose "Connect your application"
-Copy the connection string (replace <password> with your user password)
+- Install VsCode
+- Install Python 3.8+
+- Install dependencies: pip install -r requirements.txt
+- uvicorn main:app --reload

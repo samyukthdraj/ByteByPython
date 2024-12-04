@@ -13,10 +13,6 @@ class PyObjectId(ObjectId):
             raise ValueError("Invalid ObjectId")
         return ObjectId(v)
 
-    @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(type="string")
-
 class CrimeReport(BaseModel):
     id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
     pincode: str
@@ -26,16 +22,3 @@ class CrimeReport(BaseModel):
     description: Optional[str] = None
     image_url: Optional[str] = None
     audio_url: Optional[str] = None
-
-    class Config:
-        allow_population_by_field_name = True
-        json_encoders = {ObjectId: str}
-        schema_extra = {
-            "example": {
-                "pincode": "560001",
-                "police_station": "Central Police Station",
-                "phone_number": "+911234567890",
-                "crime_type": "Theft",
-                "description": "Witnessed a theft near the market area",
-            }
-        }
