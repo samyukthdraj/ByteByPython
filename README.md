@@ -116,4 +116,3 @@ uvicorn main:app --reload
 
 Contributions are welcome! Please read our contribution guidelines before submitting pull requests.
 
-![screenshot of the website front-end](image-1.png)
