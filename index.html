@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Civilians As Police (CAP)</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="window">
+    <h1 class="title">Civilians As Police (CAP)</h1>
+
+    <!-- Image Upload -->
+    <div class="form-group">
+      <label for="uploadImage">Upload Image:</label>
+      <input type="file" id="uploadImage" accept="image/*">
+    </div>
+
+    <!-- Voice Note Upload -->
+    <div class="form-group">
+      <label for="uploadVoice">Upload Voice:</label>
+      <input type="file" id="uploadVoice" accept="audio/*">
+    </div>
+
+    <!-- Pincode Input -->
+    <div class="form-group">
+      <label for="pincode">Enter Pincode:</label>
+      <input type="text" id="pincode" placeholder="e.g., 123456">
+    </div>
+
+    <!-- Police Station Dropdown -->
+    <div class="form-group">
+      <label for="policeStation">Nearest Police Station:</label>
+      <select id="policeStation">
+        <option value="">Select a station</option>
+        <option value="station1">Station 1</option>
+        <option value="station2">Station 2</option>
+        <option value="station3">Station 3</option>
+      </select>
+    </div>
+
+    <!-- Type of Crime Dropdown -->
+    <div class="form-group">
+      <label for="crimeType">Type of Crime:</label>
+      <select id="crimeType">
+        <option value="">Select a crime type</option>
+        <option value="theft">Theft</option>
+        <option value="vandalism">Vandalism</option>
+        <option value="assault">Assault</option>
+        <option value="fraud">Fraud</option>
+        <option value="others">Others</option>
+      </select>
+    </div>
+
+    <!-- Phone Number Input -->
+    <div class="form-group">
+      <label for="phoneNumber">Your Phone Number:</label>
+      <input type="text" id="phoneNumber" placeholder="e.g., +1234567890">
+    </div>
+
+    <!-- Description Box -->
+    <div class="form-group">
+      <label for="description">Description:</label>
+      <textarea id="description" placeholder="Enter crime description here..."></textarea>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="form-group">
+      <button class="submit-button">Submit Report</button>
+    </div>
+  </div>
+</body>
+</html>
