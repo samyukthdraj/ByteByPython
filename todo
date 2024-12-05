@@ -11,10 +11,16 @@
 - undone: the nearby police station distances are updated after giving the pincode but the names of the stations arent updated dynamically.
 - undone: the picture is analysed and keywords are received and the dropdown is also updated dynamically but the user cant edit the crime type from the dropdown by appending their own views from the dropdown.
 - undone: Add a user name text box to help the police identify the user reporting the crime.
+- undone: After clicking the submit button a popup should come which says, your report has been submitted/ ticket generated. 
+There should be a random ticket number which should come after you press the submit button and raise the ticket, 
+the status of the ticket can be tracked by entering the ticket number.
+Police can take action based on the ticket number as well.
+- undone: Types of crime and the keywords received are not accurate to the crime, ie. crime detection is not accurate.
 
-# Startup
 
-- Install VsCode
-- Install Python 3.8+
-- Install dependencies: pip install -r requirements.txt
-- uvicorn main:app --reload
+# # Startup
+
+# - Install VsCode
+# - Install Python 3.8+
+# - Install dependencies: pip install -r requirements.txt
+# - uvicorn main:app --reload
