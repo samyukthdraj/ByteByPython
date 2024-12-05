@@ -1,16 +1,25 @@
 # .gitignore
-*.venv/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
- 
-# Distribution / packaging
-build/
-dist/
-*.egg-info/
- 
-# Environments
-.env
+# Virtual Environment
 .venv/
 venv/
+env/
+ 
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+ 
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+ 
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+ 
+# Operating System files
+.DS_Store
+Thumbs.db
