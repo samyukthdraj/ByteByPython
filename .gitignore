@@ -1,25 +1,30 @@
-# .gitignore
 # Virtual Environment
 .venv/
 venv/
 env/
  
-# Byte-compiled / optimized / DLL files
+# Python bytecode
 __pycache__/
 *.py[cod]
 *$py.class
  
+# Large binary files
+*.dll
+*.lib
+*.so
+*.a
+ 
+# Torch-specific ignores
+**/torch/**/*.dll
+**/torch/**/*.lib
+**/site-packages/torch/**/*.dll
+**/site-packages/torch/**/*.lib
+ 
 # Distribution / packaging
-*.egg-info/
 dist/
 build/
+*.egg-info/
  
-# IDEs and editors
+# IDE files
 .vscode/
 .idea/
-*.swp
-*.swo
- 
-# Operating System files
-.DS_Store
-Thumbs.db
