@@ -22,3 +22,5 @@ class CrimeReport(BaseModel):
     description: Optional[str] = None
     image_url: Optional[str] = None
     audio_url: Optional[str] = None
+    ticket_number: Optional[str] = None
+    user_name: Optional[str] = None

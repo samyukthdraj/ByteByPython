@@ -10,6 +10,12 @@
   <div class="window">
     <h1 class="title">Civilians As Police (CAP)</h1>
 
+    <!-- User Name Input -->
+    <div class="form-group">
+      <label for="userName">Your Name:</label>
+      <input type="text" id="userName" placeholder="Enter your name">
+    </div>
+
     <!-- Image Upload -->
     <div class="form-group">
       <label for="uploadImage">Upload Image:</label>
@@ -50,6 +56,9 @@
         <option value="fraud">Fraud</option>
         <option value="others">Others</option>
       </select>
+      <div id="customCrimeType" style="display: none; margin-top: 10px;">
+        <input type="text" id="customCrimeTypeInput" placeholder="Enter custom crime type">
+      </div>
     </div>
 
     <!-- Phone Number Input -->

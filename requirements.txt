@@ -13,3 +13,6 @@ requests==2.31.0
 pydantic==2.6.4
 PyYAML==6.0.1
 huggingface_hub
+geopy==2.4.1
+fastapi==0.109.0
+python-multipart==0.0.9
