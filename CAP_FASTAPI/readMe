@@ -1,0 +1,5 @@
+Step 1: Delete venu
+Step 2: python -m venv venv    
+Step 3: pip install uvicorn fastapi
+Step 4: pip install pymongo
+Step 5: uvicorn app:app --reload
