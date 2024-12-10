@@ -10,6 +10,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { Link as RouterLink } from 'react-router-dom'; // React Router Link for navigation
 
 const theme = createTheme();
 
@@ -21,12 +22,10 @@ export default function SignUp() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    // Perform signup logic here (e.g., API call)
     console.log("Name:", name);
     console.log("Mobile:", mobile);
     console.log("Username:", username);
     console.log("Password:", password);
-
   };
 
   return (
@@ -47,17 +46,22 @@ export default function SignUp() {
           <Typography component="h1" variant="h5">
             Sign up
           </Typography>
-          <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3 }}>
+          <Box
+            component="form"
+            noValidate
+            onSubmit={handleSubmit}
+            sx={{ mt: 3 }}
+            autoComplete="off" // Disable autofill for the entire form
+          >
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
-                  autoComplete="given-name"
                   name="name"
                   required
                   fullWidth
                   id="name"
                   label="Name"
-                  autoFocus
+                  onFocus={(e) => e.target.setAttribute('autoComplete', 'on')} // Enable autofill on focus
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
@@ -70,10 +74,9 @@ export default function SignUp() {
                   id="mobile"
                   label="Mobile Number"
                   name="mobile"
-                  autoComplete="tel"
+                  onFocus={(e) => e.target.setAttribute('autoComplete', 'on')} // Enable autofill on focus
                   value={mobile}
                   onChange={(e) => setMobile(e.target.value)}
-                  // Add input validation for mobile number if needed
                 />
               </Grid>
               <Grid item xs={12}>
@@ -83,7 +86,7 @@ export default function SignUp() {
                   id="username"
                   label="Username"
                   name="username"
-                  autoComplete="username"
+                  onFocus={(e) => e.target.setAttribute('autoComplete', 'on')} // Enable autofill on focus
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />
@@ -96,12 +99,11 @@ export default function SignUp() {
                   label="Password"
                   type="password"
                   id="password"
-                  autoComplete="new-password"
+                  onFocus={(e) => e.target.setAttribute('autoComplete', 'on')} // Enable autofill on focus
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </Grid>
-
             </Grid>
             <Button
               type="submit"
@@ -113,14 +115,13 @@ export default function SignUp() {
             </Button>
             <Grid container justifyContent="flex-end">
               <Grid item>
-                <Link href="#" variant="body2">
-                  Already have an account? Sign in
+                <Link component={RouterLink} to="/" variant="body2">
+                  {"Already have an account? Sign in"}
                 </Link>
               </Grid>
             </Grid>
           </Box>
         </Box>
-
       </Container>
     </ThemeProvider>
   );

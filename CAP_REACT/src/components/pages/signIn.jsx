@@ -12,6 +12,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { Link as RouterLink } from 'react-router-dom';
 
 const theme = createTheme();
 
@@ -20,7 +21,7 @@ function Copyright(props) {
     <Typography variant="body2" color="text.secondary" align="center" {...props}>
       {'Copyright © '}
       <Link color="inherit" href="https://mui.com/">
-        Your Website
+        {" "}
       </Link>{' '}
       {new Date().getFullYear()}
       {'.'}
@@ -28,17 +29,15 @@ function Copyright(props) {
   );
 }
 
-
 export default function SignIn() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-
   const handleSubmit = (event) => {
     event.preventDefault();
-    // Perform login logic here (e.g., API call)
-    console.log("Username:", username);
-    console.log("Password:", password);
+    // Add authentication logic here
+    console.log('Username:', username);
+    console.log('Password:', password);
   };
 
   return (
@@ -57,20 +56,26 @@ export default function SignIn() {
             <LockOutlinedIcon />
           </Avatar>
           <Typography component="h1" variant="h5">
-            Sign in
+            Sign In
           </Typography>
-          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+          <Box 
+            component="form" 
+            onSubmit={handleSubmit} 
+            noValidate 
+            sx={{ mt: 1 }} 
+            autoComplete="off" // Disable autofill on page load
+          >
             <TextField
               margin="normal"
               required
               fullWidth
-              id="username"  // Corrected ID
-              label="Username" // Corrected Label
-              name="username" // Corrected Name
-              autoComplete="username"
-              autoFocus
+              id="username"
+              label="Username"
+              name="username"
+              onFocus={(e) => e.target.setAttribute('autoComplete', 'on')} // Enable autofill on focus
               value={username}
-              onChange={(e) => setUsername(e.target.value)} // Added onChange
+              onChange={(e) => setUsername(e.target.value)}
+              autoFocus
             />
             <TextField
               margin="normal"
@@ -80,10 +85,9 @@ export default function SignIn() {
               label="Password"
               type="password"
               id="password"
-              autoComplete="current-password"
+              onFocus={(e) => e.target.setAttribute('autoComplete', 'on')} // Enable autofill on focus
               value={password}
-              onChange={(e) => setPassword(e.target.value)} // Added onChange
-
+              onChange={(e) => setPassword(e.target.value)}
             />
             <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}
@@ -99,12 +103,12 @@ export default function SignIn() {
             </Button>
             <Grid container>
               <Grid item xs>
-                <Link href="#" variant="body2">
+                <Link component={RouterLink} to="/forgotpassword" variant="body2">
                   Forgot password?
                 </Link>
               </Grid>
               <Grid item>
-                <Link href="#" variant="body2">
+                <Link component={RouterLink} to="/signUp" variant="body2">
                   {"Don't have an account? Sign Up"}
                 </Link>
               </Grid>
