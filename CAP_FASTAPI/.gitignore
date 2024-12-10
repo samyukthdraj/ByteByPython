@@ -1,0 +1,35 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+env/
+venv/
+.venv/
+__pypackages__/  # Windows support
+.nox/
+.nycrc.json
+*.coveragerc
+.coverage
+.tox/
+.isort.cfg
+*.egg-info/
+dist/
+build/
+
+# FastAPI specific directories
+.alembic/
+migrations/
+db.sqlite3
+
+# IDE specific files
+*.suo
+*.sln
+.idea/
+.vscode/
+
+# Celery
+celerybeat.pid
+celeryev.pid
+celeryresult/
