@@ -1,4 +1,6 @@
 from pydantic import BaseModel
+from typing import Optional
+
 
 class User(BaseModel):
     name: str
@@ -6,4 +8,3 @@ class User(BaseModel):
     userName: str
     password: str
     type: bool
-    
