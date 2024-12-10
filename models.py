@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 from bson import ObjectId
 
 class PyObjectId(ObjectId):
@@ -13,10 +13,16 @@ class PyObjectId(ObjectId):
             raise ValueError("Invalid ObjectId")
         return ObjectId(v)
 
+class PoliceStation(BaseModel):
+    id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
+    name: str
+    address: str
+    password: str
+
 class CrimeReport(BaseModel):
     id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
     pincode: str
-    police_station: str
+    police_station: PyObjectId
     phone_number: str
     crime_type: str
     description: Optional[str] = None
