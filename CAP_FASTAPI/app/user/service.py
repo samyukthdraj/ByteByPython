@@ -1,35 +1,26 @@
-from typing import List
+from typing import List, Optional
 from .model import User
 from ..database import user_collection
-# Sample in-memory storage to simulate a database
-users_db = []
 
-def create_user(user: User) -> User:
-    users_db.append(user)
-    return user
-
-def get_user(user_name: str) -> User:
-    for user in users_db:
-        if user.userName == user_name:
-            return user
-    return None
-
+# Function to get all users
 def get_all_users() -> List[User]:
-    # Query the user collection to get all users
     users_cursor = user_collection.find()
-    users_list = [User(**user) for user in users_cursor]
-    
+    users_list = [User(**user) for user in users_cursor]   
     return users_list
 
+# Function to get a user by username
+def get_user_by_username(username: str) -> Optional[User]:
+    user_document = user_collection.find_one({"userName": username})
+    if user_document:
+        return User(**user_document)
+    return None
 
-def update_user(user_name: str, updated_user: User) -> bool:
-    for i, user in enumerate(users_db):
-        if user.userName == user_name:
-            users_db[i] = updated_user
-            return True
-    return False
+# Function to post (create) a new user
+def post_user(new_user: User) -> User:
+    user_data = new_user.dict()  # Convert Pydantic model to a dictionary
+    result = user_collection.insert_one(user_data)  # Insert into the collection
+    if result.acknowledged:
+        # Fetch the newly added user to return it
+        return get_user_by_username(new_user.userName)  # Fetch user by username
+    raise Exception("Failed to add user")
 
-def delete_user(user_name: str) -> bool:
-    global users_db
-    users_db = [user for user in users_db if user.userName != user_name]
-    return True
