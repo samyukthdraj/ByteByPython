@@ -10,14 +10,17 @@
 - done: Photo should be automatically analysed and the description box should be filled automatically.
 - undone: the nearby police station distances are updated after giving the pincode but the names of the stations arent updated dynamically.
 - undone: the picture is analysed and keywords are received and the dropdown is also updated dynamically but the user can't edit the crime type from the dropdown by appending their own views in the description.
-- undone: Add a user name text box to help the police identify the user reporting the crime.
+- done: Add a user name text box to help the police identify the user reporting the crime.(create a login page for the user if time allows.)
 - undone: After clicking the submit button a popup should come which says, your report has been submitted/ ticket generated. 
 There should be a random ticket number which should come after you press the submit button and raise the ticket, 
 the status of the ticket can be tracked by entering the ticket number.
 Police can take action based on the ticket number as well.
 This ticket number will be stored in the database which the police can then use as reference to track.
-- undone: Types of crime and the keywords received are not accurate to the crime, ie. crime detection is not accurate.
-
+- undone: Types of crime and the keywords received are not accurate to the crime, ie. crime detection is not accurate and is slow.
+- undone: Create a login page for a user and a signup page for a user and then another section in the login for police
+Police should have a dashboard when they login and for the users the dashboard is the current page ie tthe main index.html
+- undone : Check if backend is working.
+- undone: Link frontend and backend.
 
 # # Startup
 
