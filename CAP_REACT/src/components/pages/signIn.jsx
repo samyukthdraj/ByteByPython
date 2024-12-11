@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -6,39 +6,59 @@ import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import Link from '@mui/material/Link';
-import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import Snackbar from '@mui/material/Snackbar';
+import { getData } from '../../services/API';
 
 const theme = createTheme();
 
-function Copyright(props) {
-  return (
-    <Typography variant="body2" color="text.secondary" align="center" {...props}>
-      {'Copyright © '}
-      <Link color="inherit" href="https://mui.com/">
-        Your Website
-      </Link>{' '}
-      {new Date().getFullYear()}
-      {'.'}
-    </Typography>
-  );
-}
-
-
 export default function SignIn() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+    remember: false, // State for the "Remember me" checkbox
+  });
 
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
-  const handleSubmit = (event) => {
+  useEffect(() => {
+    // Clear form data when component mounts
+    setFormData({
+      username: '',
+      password: '',
+      remember: false,
+    });
+  }, []); // Empty dependency array ensures this runs only once on mount
+
+  const handleChange = (event) => {
+    const { name, value, checked, type } = event.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: type === 'checkbox' ? checked : value, // Handle checkbox state
+    }));
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    // Perform login logic here (e.g., API call)
-    console.log("Username:", username);
-    console.log("Password:", password);
+    try {
+      const response = await getData(`get/userByUserName/${formData.username}`);
+      if (response && response.password === formData.password) {
+        console.log('Sign in successful:', response);
+        // Proceed with sign-in logic
+      } else {
+        setSnackbarOpen(true); // Show snackbar with error message
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
   };
 
   return (
@@ -64,13 +84,13 @@ export default function SignIn() {
               margin="normal"
               required
               fullWidth
-              id="username"  // Corrected ID
+              id="username" // Corrected ID
               label="Username" // Corrected Label
               name="username" // Corrected Name
-              autoComplete="username"
+              autoComplete="off" // Disabled auto-fill
               autoFocus
-              value={username}
-              onChange={(e) => setUsername(e.target.value)} // Added onChange
+              value={formData.username}
+              onChange={handleChange}
             />
             <TextField
               margin="normal"
@@ -80,13 +100,19 @@ export default function SignIn() {
               label="Password"
               type="password"
               id="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)} // Added onChange
-
+              autoComplete="off" // Disabled auto-fill
+              value={formData.password}
+              onChange={handleChange}
             />
             <FormControlLabel
-              control={<Checkbox value="remember" color="primary" />}
+              control={
+                <Checkbox
+                  name="remember"
+                  checked={formData.remember}
+                  onChange={handleChange}
+                  color="primary"
+                />
+              }
               label="Remember me"
             />
             <Button
@@ -97,21 +123,20 @@ export default function SignIn() {
             >
               Sign In
             </Button>
-            <Grid container>
-              <Grid item xs>
-                <Link href="#" variant="body2">
-                  Forgot password?
-                </Link>
-              </Grid>
-              <Grid item>
-                <Link href="#" variant="body2">
-                  {"Don't have an account? Sign Up"}
-                </Link>
-              </Grid>
-            </Grid>
+            <Link href="#" variant="body2">
+              Forgot password?
+            </Link>
+            <Link href="#" variant="body2">
+              {"Don't have an account? Sign Up"}
+            </Link>
           </Box>
         </Box>
-        <Copyright sx={{ mt: 8, mb: 4 }} />
+        <Snackbar
+          open={snackbarOpen}
+          onClose={handleSnackbarClose}
+          message="Username or password is incorrect."
+          autoHideDuration={6000}
+        />
       </Container>
     </ThemeProvider>
   );

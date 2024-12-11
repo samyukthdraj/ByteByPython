@@ -4,29 +4,54 @@ import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
 import Link from '@mui/material/Link';
-import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { FormControl, FormGroup } from '@mui/material';
+import Snackbar from '@mui/material/Snackbar';
+import { getData, postData } from '../../services/API';
 
 const theme = createTheme();
 
 export default function SignUp() {
-  const [name, setName] = useState('');
-  const [mobile, setMobile] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    mobileNumber: '',
+    username: '',
+    password: '',
+    type: 'civilian',
+  });
 
-  const handleSubmit = (event) => {
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    // Perform signup logic here (e.g., API call)
-    console.log("Name:", name);
-    console.log("Mobile:", mobile);
-    console.log("Username:", username);
-    console.log("Password:", password);
+    try {
 
+      const response = await getData(`get/userByUserName/${formData.username}`);
+      if (response.detail === 'User not found') {
+        const postResponse = await postData(formData, 'post/user');
+        console.log(postResponse);
+      } else {
+        setSnackbarOpen(true);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
   };
 
   return (
@@ -48,79 +73,72 @@ export default function SignUp() {
             Sign up
           </Typography>
           <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
+            <FormControl fullWidth>
+              <FormGroup>
                 <TextField
-                  autoComplete="given-name"
                   name="name"
                   required
                   fullWidth
                   id="name"
                   label="Name"
+                  autoComplete="given-name"
                   autoFocus
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={formData.name}
+                  onChange={handleChange}
+                  sx={{ mb: 2 }}
                 />
-              </Grid>
-
-              <Grid item xs={12}>
                 <TextField
+                  name="mobileNumber"
                   required
                   fullWidth
-                  id="mobile"
+                  id="mobileNumber"
                   label="Mobile Number"
-                  name="mobile"
                   autoComplete="tel"
-                  value={mobile}
-                  onChange={(e) => setMobile(e.target.value)}
-                  // Add input validation for mobile number if needed
+                  value={formData.mobileNumber}
+                  onChange={handleChange}
+                  sx={{ mb: 2 }}
                 />
-              </Grid>
-              <Grid item xs={12}>
                 <TextField
+                  name="username"
                   required
                   fullWidth
                   id="username"
                   label="Username"
-                  name="username"
                   autoComplete="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={formData.username}
+                  onChange={handleChange}
+                  sx={{ mb: 2 }}
                 />
-              </Grid>
-              <Grid item xs={12}>
                 <TextField
+                  name="password"
                   required
                   fullWidth
-                  name="password"
+                  id="password"
                   label="Password"
                   type="password"
-                  id="password"
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="off"
+                  value={formData.password}
+                  onChange={handleChange}
+                  sx={{ mb: 2 }}
                 />
-              </Grid>
-
-            </Grid>
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-            >
+              </FormGroup>
+            </FormControl>
+            <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
               Sign Up
             </Button>
-            <Grid container justifyContent="flex-end">
-              <Grid item>
-                <Link href="#" variant="body2">
-                  Already have an account? Sign in
-                </Link>
-              </Grid>
-            </Grid>
+            <Box textAlign="center">
+              <Link href="#" variant="body2">
+                Already have an account? Sign in
+              </Link>
+            </Box>
           </Box>
         </Box>
-
+        <Snackbar
+          open={snackbarOpen}
+          onClose={handleSnackbarClose}
+          message="User already exists"
+          autoHideDuration={6000}
+        />
       </Container>
     </ThemeProvider>
   );

@@ -10,7 +10,7 @@ def get_all_users() -> List[User]:
 
 # Function to get a user by username
 def get_user_by_username(username: str) -> Optional[User]:
-    user_document = user_collection.find_one({"userName": username})
+    user_document = user_collection.find_one({"username": username})
     if user_document:
         return User(**user_document)
     return None
@@ -21,6 +21,6 @@ def post_user(new_user: User) -> User:
     result = user_collection.insert_one(user_data)  # Insert into the collection
     if result.acknowledged:
         # Fetch the newly added user to return it
-        return get_user_by_username(new_user.userName)  # Fetch user by username
+        return get_user_by_username(new_user.username)  # Fetch user by username
     raise Exception("Failed to add user")
 
