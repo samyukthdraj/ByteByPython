@@ -28,3 +28,5 @@ build/
 # IDE files
 .vscode/
 .idea/
+
+.env

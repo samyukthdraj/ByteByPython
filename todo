@@ -20,7 +20,13 @@ This ticket number will be stored in the database which the police can then use 
 - undone: Create a login page for a user and a signup page for a user and then another section in the login for police
 Police should have a dashboard when they login and for the users the dashboard is the current page ie tthe main index.html
 - undone : Check if backend is working.
+- undone: Create user database, change names of police stations to match the ones in the front end, 
+Create user login, police login, police dashboard and then connections.
 - undone: Link frontend and backend.
+
+- undone: signup; username password(hash if possible) email, forgot password (email), store both in the database.
+- undone: what is secret key 
+- undone: main.py (rest of the code)
 
 # # Startup
 

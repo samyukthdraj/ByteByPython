@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Civilians As Police (CAP) - Login</title>
+  <link rel="stylesheet" href="styleslogin.css">
+</head>
+<body>
+  <div class="login-container">
+    <div class="user-login">
+      <h2>User Login</h2>
+      <form>
+        <input type="text" placeholder="Username" id="user-username">
+        <input type="password" placeholder="Password" id="user-password">
+        <button type="submit">Login</button>
+        <a href="signup.html" id="signup-link">Sign Up</a>
+        <a href="forgotpass.html" id="forgot-password-link">Forgot Password</a>
+      </form>
+    </div>
+    <div class="police-login">
+      <h2>Police Login</h2>
+      <form>
+        <input type="text" placeholder="Police Station ID" id="police-station-id">
+        <input type="password" placeholder="Police Station Password" id="police-station-password">
+        <button type="submit">Login</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="loginapp.js"></script>
+  <script>
+    // Optional: Add event listeners for signup and forgot password links
+    document.getElementById('signup-link').addEventListener('click', () => {
+      window.location.href = 'sign_up.html';
+    });
+
+    document.getElementById('forgot-password-link').addEventListener('click', () => {
+      window.location.href = 'forgot_password.html';
+    });
+  </script>
+</body>
+</html>

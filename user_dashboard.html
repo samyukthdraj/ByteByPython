@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Civilians As Police (CAP) - User Dashboard</title>
+  <link rel="stylesheet" href="stylesudash.css">
+
+</head>
+<body>
+  <div class="dashboard-container">
+    <h1>User Dashboard</h1>
+    <div class="ticket-list">
+      <!-- Dynamically generate ticket cards here -->
+    </div>
+    <button class="new-ticket-button" onclick="window.location.href = 'index.html'">
+      Submit New Ticket
+    </button>
+  </div>
+
+  <script src="loginapp.js"></script>
+  <script>
+    // Call authentication check when the page loads
+    checkAuthentication();
+    
+    // Fetch user's submitted tickets and populate the dashboard
+    fetch('/user-tickets')
+      .then(response => response.json())
+      .then(tickets => {
+        const ticketList = document.querySelector('.ticket-list');
+        tickets.forEach(ticket => {
+          const ticketCard = document.createElement('div');
+          ticketCard.classList.add('ticket-card');
+          ticketCard.innerHTML = `
+            <h3>Ticket #${ticket.ticket_number}</h3>
+            <p>Crime: ${ticket.crime_type}</p>
+            <p>Police Station: ${ticket.police_station_name}</p>
+            <p>Status: ${ticket.status}</p>
+          `;
+          ticketList.appendChild(ticketCard);
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching user tickets:', error);
+        alert('An error occurred while loading the user dashboard. Please try again later.');
+      });
+  </script>
+</body>
+</html>
