@@ -2,8 +2,8 @@
 from pymongo import MongoClient
 from .config import settings
 
-client = MongoClient(settings.MONGODB_URI)
-db = client.get_database("test")
+client = MongoClient("mongodb://localhost:27017/")  # Replace with your connection string
+db = client["test"]
 
 # Example collections
 user_collection = db["user"]
