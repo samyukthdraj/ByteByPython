@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch('/signup', {
+            const response = await fetch('http://localhost:8000/signup', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -39,22 +39,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 }),
             });
 
-            const data = await response.json();
+            const responseData = await response.json();
 
             if (response.ok) {
-                signupMessage.textContent = 'User created successfully!';
+                signupMessage.textContent = responseData.message || 'User created successfully!';
                 signupMessage.classList.add('success');
 
                 setTimeout(() => {
                     window.location.href = 'login.html';
                 }, 2000);
             } else {
-                signupMessage.textContent = data.detail || 'Signup failed.';
+                // Use the error message from the server response
+                signupMessage.textContent = responseData.detail || 'Signup failed. Please try again.';
                 signupMessage.classList.add('error');
             }
         } catch (error) {
-            console.error('Signup error:', error);
-            signupMessage.textContent = 'An error occurred. Please try again.';
+            console.error('Signup Error:', error);
+            signupMessage.textContent = 'Network error. Please check your connection and try again.';
             signupMessage.classList.add('error');
         }
     });

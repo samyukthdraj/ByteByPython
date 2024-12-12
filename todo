@@ -24,10 +24,18 @@ Police should have a dashboard when they login and for the users the dashboard i
 Create user login, police login, police dashboard and then connections.
 - undone: Link frontend and backend.
 
-- undone: signup; username password(hash if possible) email, forgot password (email), store both in the database.
-- undone: main.py (rest of the code)
+- done: signup page; username password(hash if possible) email, forgot password (email), store both in the database.
+- done: main.py (rest of the code)
 
-- undone: signup.html fix, forgot password otp fix, remove .env from push
+- undone: signup.html error while creating account fix, 
+forgot password otp fix (add a text field for otp which will later be cross checked with the otp sent in mail).
+police login issue.
+
+signup works: samyukth, samyukthterawe@outlook.com, 12345678
+
+# python -m http.server 8000
+
+
 
 # # Startup
 

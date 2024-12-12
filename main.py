@@ -17,6 +17,7 @@ from models import CrimeReport, PoliceStation, User, Ticket
 from typing import List, Optional
 from config import settings
 
+
 app = FastAPI()
 db = Database()
 
@@ -130,27 +131,37 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 
 @app.post("/signup")
 async def signup(user: UserSignup):
-    existing_username = db.users_collection.find_one({"username": user.username})
-    existing_email = db.users_collection.find_one({"email": user.email})
-    
-    if existing_username:
-        raise HTTPException(status_code=400, detail="Username already exists.")
-    
-    if existing_email:
-        raise HTTPException(status_code=400, detail="Email already registered.")
-    
-    hashed_password = hash_password(user.password)
-    user_doc = {
-        "username": user.username,
-        "email": user.email,
-        "full_name": user.full_name,
-        "phone_number": user.phone_number,
-        "hashed_password": hashed_password,
-        "created_at": datetime.utcnow(),
-    }
-    
-    result = db.users_collection.insert_one(user_doc)
-    return {"message": "User created successfully", "user_id": str(result.inserted_id)}
+    try:
+        existing_username = db.users_collection.find_one({"username": user.username})
+        existing_email = db.users_collection.find_one({"email": user.email})
+        
+        if existing_username:
+            raise HTTPException(status_code=400, detail="Username already exists.")
+        
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Email already registered.")
+        
+        hashed_password = hash_password(user.password)
+        user_doc = {
+            "username": user.username,
+            "email": user.email,
+            "full_name": user.full_name,
+            "phone_number": user.phone_number,
+            "hashed_password": hashed_password,
+            "created_at": datetime.utcnow(),
+        }
+        
+        result = db.users_collection.insert_one(user_doc)
+        return {"message": "User created successfully", "user_id": str(result.inserted_id)}
+    except Exception as e:
+        print(f"Error during signup: {e}")
+        raise HTTPException(status_code=500, detail="Signup failed. Please try again.")
+
+
+@app.options("/signup")
+async def options_signup():
+    return {"status": "OK"}
+
 
 
 @app.post("/send-otp")
@@ -313,3 +324,18 @@ async def get_tickets(current_user: dict = Depends(get_current_user)):
     # Fetch tickets for the current user
     tickets = list(db.tickets_collection.find({"user_id": current_user['username']}))
     return tickets
+
+# --- Appended Functionality Starts Here ---
+
+@app.post("/new-feature")
+async def new_feature(param1: str, param2: int):
+
+    """
+
+    Example of appended functionality for demonstration.
+
+    """
+
+    return {"message": f"New feature with {param1} and {param2} added successfully."}
+
+# --- Appended Functionality Ends Here ---
