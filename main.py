@@ -9,7 +9,7 @@ from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
-
+from fastapi import Form
 from crime_detection import analyze_image_detailed
 from speech_processing import process_speech_to_text
 from database import Database
@@ -38,6 +38,7 @@ class UserSignup(BaseModel):
     email: EmailStr
     password: str
     full_name: Optional[str] = None
+    phone_number: Optional[str] = None
 
 class OTPVerification(BaseModel):
     email: EmailStr
@@ -133,24 +134,24 @@ async def signup(user: UserSignup):
     existing_email = db.users_collection.find_one({"email": user.email})
     
     if existing_username:
-        raise HTTPException(status_code=400, detail="Username already exists")
+        raise HTTPException(status_code=400, detail="Username already exists.")
     
     if existing_email:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="Email already registered.")
     
     hashed_password = hash_password(user.password)
-    
     user_doc = {
         "username": user.username,
         "email": user.email,
         "full_name": user.full_name,
-        "password": hashed_password,
-        "created_at": datetime.utcnow()
+        "phone_number": user.phone_number,
+        "hashed_password": hashed_password,
+        "created_at": datetime.utcnow(),
     }
     
     result = db.users_collection.insert_one(user_doc)
-    
     return {"message": "User created successfully", "user_id": str(result.inserted_id)}
+
 
 @app.post("/send-otp")
 async def send_otp(request: PasswordResetRequest):
@@ -212,10 +213,15 @@ async def reset_password(reset_request: PasswordReset):
 # Crime Report Routes
 @app.post("/upload-crime-report")
 async def upload_crime_report(
+    pincode: str = Form(...),
+    police_station: str = Form(...),
+    phone_number: str = Form(...),
+    crime_type: str = Form(...),
+    description: Optional[str] = Form(None),
     file: UploadFile = File(...), 
     current_user: dict = Depends(get_current_user)
 ):
-    # Generate a unique filename
+    # Generate a unique filename for the image
     file_extension = file.filename.split('.')[-1]
     unique_filename = f"{uuid.uuid4()}.{file_extension}"
     
@@ -228,15 +234,17 @@ async def upload_crime_report(
         buffer.write(await file.read())
     
     # Create crime report document
-    crime_report = {
-        "user_id": current_user['username'],
-        "file_path": file_path,
-        "analysis_result": analysis_result,
-        "timestamp": datetime.utcnow()
-    }
+    crime_report = CrimeReport(
+        pincode=pincode,
+        police_station=police_station,
+        phone_number=phone_number,
+        crime_type=crime_type,
+        description=description,
+        image_url=file_path
+    )
     
     # Insert into database
-    result = db.crime_reports_collection.insert_one(crime_report)
+    result = db.crime_reports_collection.insert_one(crime_report.dict())
     
     return {
         "message": "Crime report uploaded successfully", 

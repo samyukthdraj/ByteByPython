@@ -3,6 +3,8 @@ from config import settings
 from bson.objectid import ObjectId
 from passlib.context import CryptContext
 from datetime import datetime
+from models import PoliceStation
+
 
 class Database:
     def __init__(self):
@@ -27,7 +29,7 @@ class Database:
 
     def pre_configure_police_stations(self):
         # You can keep your existing implementation
-        from .models import PoliceStation  # Local import to avoid circular dependency
+        from models import PoliceStation  # Local import to avoid circular dependency
         
         police_stations = [
             PoliceStation(

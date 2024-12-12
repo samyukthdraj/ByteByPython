@@ -64,3 +64,19 @@ class PoliceStation(BaseModel):
         json_encoders = {
             ObjectId: str
         }
+
+class CrimeReport(BaseModel):
+    id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
+    pincode: str
+    police_station: str
+    phone_number: str
+    crime_type: str
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    audio_url: Optional[str] = None
+
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {
+            ObjectId: str
+        }

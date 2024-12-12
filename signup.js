@@ -5,21 +5,21 @@ document.addEventListener('DOMContentLoaded', () => {
     signupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // Reset previous message
+        // Clear previous message
         signupMessage.textContent = '';
         signupMessage.className = 'message';
 
-        // Get form values
-        const username = document.getElementById('signup-username').value;
-        const email = document.getElementById('signup-email').value;
-        const password = document.getElementById('signup-password').value;
-        const confirmPassword = document.getElementById('signup-confirm-password').value;
-        const fullName = document.getElementById('signup-full-name').value;
-        const phoneNumber = document.getElementById('signup-phone').value;
+        // Collect form data
+        const username = document.getElementById('signup-username').value.trim();
+        const email = document.getElementById('signup-email').value.trim();
+        const password = document.getElementById('signup-password').value.trim();
+        const confirmPassword = document.getElementById('signup-confirm-password').value.trim();
+        const fullName = document.getElementById('signup-full-name').value.trim();
+        const phoneNumber = document.getElementById('signup-phone').value.trim();
 
-        // Basic validation
+        // Validation
         if (password !== confirmPassword) {
-            signupMessage.textContent = 'Passwords do not match';
+            signupMessage.textContent = 'Passwords do not match.';
             signupMessage.classList.add('error');
             return;
         }
@@ -33,24 +33,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({
                     username,
                     email,
-                    hashed_password: password, // Backend will hash this
+                    password,
                     full_name: fullName || null,
-                    phone_number: phoneNumber || null
-                })
+                    phone_number: phoneNumber || null,
+                }),
             });
 
             const data = await response.json();
 
-            if (data.success) {
-                signupMessage.textContent = 'Account created successfully!';
+            if (response.ok) {
+                signupMessage.textContent = 'User created successfully!';
                 signupMessage.classList.add('success');
-                
-                // Optional: Redirect to login after a short delay
+
                 setTimeout(() => {
                     window.location.href = 'login.html';
                 }, 2000);
             } else {
-                signupMessage.textContent = data.message || 'Sign up failed';
+                signupMessage.textContent = data.detail || 'Signup failed.';
                 signupMessage.classList.add('error');
             }
         } catch (error) {
