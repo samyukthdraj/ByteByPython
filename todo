@@ -25,8 +25,9 @@ Create user login, police login, police dashboard and then connections.
 - undone: Link frontend and backend.
 
 - undone: signup; username password(hash if possible) email, forgot password (email), store both in the database.
-- undone: what is secret key 
 - undone: main.py (rest of the code)
+
+- undone: signup.html fix, forgot password otp fix, remove .env from push
 
 # # Startup
 
