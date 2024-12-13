@@ -8,18 +8,19 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { Button, FormControl, FormGroup, FormHelperText, Input } from '@mui/material';
 import { getData, postData } from '../../services/API';
 import { AuthContext } from '../../context/AuthContext';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
 
 export default function NewIncident() {
-
   const { user, login, logout, isLoading } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     image: null,
     audio: null,
     pincode: '',
-    contact: '',
     crimeType: '',
     description: '',
     policeStation: '',
+    username: user ? user.username : '',
   });
 
   // Handle input changes
@@ -52,6 +53,10 @@ export default function NewIncident() {
     }
   };
 
+  if (isLoading) {
+    return <div>Loading...</div>; // Or some loading indicator
+  }
+
   return (
     <React.Fragment>
       <Container maxWidth="sm">
@@ -67,13 +72,6 @@ export default function NewIncident() {
           }}
         >
           <h2>New Incident</h2>
-          <div>
-            {user ? (
-              <div>Welcome, {user.password}!</div>
-            ) : (
-              <div>Please log in.</div>
-            )}
-          </div>
           <FormControl component="form" onSubmit={handleSubmit} fullWidth>
             <FormGroup>
               {/* Image Upload */}
@@ -88,11 +86,21 @@ export default function NewIncident() {
                   sx={{ display: 'none' }}
                 />
                 <label htmlFor="image">
-                  <Button component="span" variant="outlined" fullWidth>
-                    {formData.image ? formData.image.name : 'Upload Image'}
+                  <Button
+                    component="span"
+                    variant="outlined"
+                    fullWidth
+                    sx={{
+                      textAlign: 'left',
+                      justifyContent: 'flex-start', // Ensures content aligns to the left
+                      color: 'black',
+                    }}
+                  >
+                    Upload Image
                   </Button>
+
                 </label>
-                {formData.image && <FormHelperText>Image: {formData.image.name}</FormHelperText>}
+                {formData.image && <FormHelperText sx={{ color: 'black' }}>Image: {formData.image.name}</FormHelperText>}
               </FormControl>
 
               {/* Audio Upload */}
@@ -104,14 +112,24 @@ export default function NewIncident() {
                   accept="audio/*"
                   onChange={handleFileChange}
                   fullWidth
-                  sx={{ display: 'none' }}
+                  sx={{ display: 'none', color: 'black', border: '1px solid black' }}
                 />
                 <label htmlFor="audio">
-                  <Button component="span" variant="outlined" fullWidth>
-                    {formData.audio ? formData.audio.name : 'Upload Audio'}
+                  <Button
+                    component="span"
+                    variant="outlined"
+                    fullWidth
+                    sx={{
+                      textAlign: 'left', // Optional but can be kept for clarity
+                      justifyContent: 'flex-start', // Aligns content to the left
+                      color: 'black',
+                    }}
+                  >
+                    Upload Audio
                   </Button>
+
                 </label>
-                {formData.audio && <FormHelperText>Audio: {formData.audio.name}</FormHelperText>}
+                {formData.audio && <FormHelperText sx={{ color: 'black' }}>Audio: {formData.audio.name}</FormHelperText>}
               </FormControl>
 
               {/* Pincode Input */}
@@ -121,19 +139,6 @@ export default function NewIncident() {
                 label="Enter Pincode"
                 variant="standard"
                 value={formData.pincode}
-                onChange={handleChange}
-                fullWidth
-                required
-                sx={{ marginBottom: 2 }}
-              />
-
-              {/* Contact Input */}
-              <TextField
-                id="contact"
-                name="contact"
-                label="Your Contact"
-                variant="standard"
-                value={formData.contact}
                 onChange={handleChange}
                 fullWidth
                 required
@@ -155,41 +160,39 @@ export default function NewIncident() {
               />
 
               {/* Crime Type Select */}
-              <TextField
-                id="crimeType"
-                name="crimeType"
-                select
-                label="Type of Crime"
-                value={formData.crimeType}
-                onChange={handleChange}
-                fullWidth
-                required
-                sx={{ marginBottom: 2 }}
-              >
-                <MenuItem value="Theft">Theft</MenuItem>
-                <MenuItem value="Assault">Assault</MenuItem>
-                <MenuItem value="Fraud">Fraud</MenuItem>
-                <MenuItem value="Robbery">Robbery</MenuItem>
-                <MenuItem value="Other">Other</MenuItem>
-              </TextField>
+              <FormControl variant="standard" fullWidth required sx={{ marginBottom: 2 }}>
+                <InputLabel id="crimeType-label">Type of Crime</InputLabel>
+                <Select
+                  labelId="crimeType-label"
+                  id="crimeType"
+                  name="crimeType"
+                  value={formData.crimeType}
+                  onChange={handleChange}
+                >
+                  <MenuItem value="Theft">Theft</MenuItem>
+                  <MenuItem value="Assault">Assault</MenuItem>
+                  <MenuItem value="Fraud">Fraud</MenuItem>
+                  <MenuItem value="Robbery">Robbery</MenuItem>
+                  <MenuItem value="Other">Other</MenuItem>
+                </Select>
+              </FormControl>
 
               {/* Police Station Select */}
-              <TextField
-                id="policeStation"
-                name="policeStation"
-                select
-                label="Nearest Police Station"
-                value={formData.policeStation}
-                onChange={handleChange}
-                fullWidth
-                required
-                sx={{ marginBottom: 2 }}
-              >
-                <MenuItem value="Station A">Station A</MenuItem>
-                <MenuItem value="Station B">Station B</MenuItem>
-                <MenuItem value="Station C">Station C</MenuItem>
-                <MenuItem value="Station D">Station D</MenuItem>
-              </TextField>
+              <FormControl variant="standard" fullWidth required sx={{ marginBottom: 2 }}>
+                <InputLabel id="policeStation-label">Nearest Police Station</InputLabel>
+                <Select
+                  labelId="policeStation-label"
+                  id="policeStation"
+                  name="policeStation"
+                  value={formData.policeStation}
+                  onChange={handleChange}
+                >
+                  <MenuItem value="Station A">Station A</MenuItem>
+                  <MenuItem value="Station B">Station B</MenuItem>
+                  <MenuItem value="Station C">Station C</MenuItem>
+                  <MenuItem value="Station D">Station D</MenuItem>
+                </Select>
+              </FormControl>
 
               {/* Submit Button */}
               <Button
