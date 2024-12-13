@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -25,6 +26,7 @@ export default function SignUp() {
   });
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -37,18 +39,18 @@ export default function SignUp() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-
       const response = await getData(`get/userByUserName/${formData.username}`);
       if (response.detail === 'User not found') {
         const postResponse = await postData(formData, 'post/user');
         console.log(postResponse);
+        navigate('/'); // Navigate to the Sign In page after successful signup
       } else {
         setSnackbarOpen(true);
       }
     } catch (error) {
       console.log(error);
     }
-  };
+  };  
 
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
@@ -127,7 +129,7 @@ export default function SignUp() {
               Sign Up
             </Button>
             <Box textAlign="center">
-              <Link href="#" variant="body2">
+              <Link onClick={() => navigate('/')} variant="body2" sx={{ cursor: 'pointer' }}>
                 Already have an account? Sign in
               </Link>
             </Box>

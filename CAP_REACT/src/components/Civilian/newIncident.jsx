@@ -1,15 +1,17 @@
 import * as React from 'react';
-import { useState } from 'react';
-import CssBaseline from '@mui/material/CssBaseline';
+import { useState, useContext } from 'react';
 import Box from '@mui/material/Box';
+import MenuItem from '@mui/material/MenuItem';
 import Container from '@mui/material/Container';
 import TextField from '@mui/material/TextField';
-import MenuItem from '@mui/material/MenuItem';
+import CssBaseline from '@mui/material/CssBaseline';
 import { Button, FormControl, FormGroup, FormHelperText, Input } from '@mui/material';
 import { getData, postData } from '../../services/API';
+import { AuthContext } from '../../context/AuthContext';
 
-export default function NewToken() {
-  // State to manage the form data as a single object
+export default function NewIncident() {
+
+  const { user, login, logout, isLoading } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     image: null,
     audio: null,
@@ -41,7 +43,7 @@ export default function NewToken() {
 
     // Call the postData function with the form data
     try {
-      const fetchData= await getData();
+      const fetchData = await getData();
       console.log(fetchData);
       await postData(formData); // Ensure postData is implemented to handle the data
       alert('Form submitted successfully!');
@@ -52,8 +54,8 @@ export default function NewToken() {
 
   return (
     <React.Fragment>
-      <CssBaseline />
       <Container maxWidth="sm">
+        <CssBaseline />
         <Box
           sx={{
             height: '100vh',
@@ -64,7 +66,14 @@ export default function NewToken() {
             gap: 2,
           }}
         >
-          <h1>CAP</h1>
+          <h2>New Incident</h2>
+          <div>
+            {user ? (
+              <div>Welcome, {user.password}!</div>
+            ) : (
+              <div>Please log in.</div>
+            )}
+          </div>
           <FormControl component="form" onSubmit={handleSubmit} fullWidth>
             <FormGroup>
               {/* Image Upload */}
@@ -131,6 +140,20 @@ export default function NewToken() {
                 sx={{ marginBottom: 2 }}
               />
 
+              {/* Description Input */}
+              <TextField
+                id="description"
+                name="description"
+                label="Description"
+                multiline
+                variant="standard"
+                value={formData.description}
+                onChange={handleChange}
+                fullWidth
+                required
+                sx={{ marginBottom: 2 }}
+              />
+
               {/* Crime Type Select */}
               <TextField
                 id="crimeType"
@@ -149,20 +172,6 @@ export default function NewToken() {
                 <MenuItem value="Robbery">Robbery</MenuItem>
                 <MenuItem value="Other">Other</MenuItem>
               </TextField>
-
-              {/* Description Input */}
-              <TextField
-                id="description"
-                name="description"
-                label="Description"
-                multiline
-                variant="standard"
-                value={formData.description}
-                onChange={handleChange}
-                fullWidth
-                required
-                sx={{ marginBottom: 2 }}
-              />
 
               {/* Police Station Select */}
               <TextField

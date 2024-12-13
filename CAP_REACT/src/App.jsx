@@ -1,36 +1,22 @@
-import './App.css'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import SignIn from './components/pages/signIn'
-import SignUp from './components/pages/signUp'
-import NewToken from './components/pages/newToken'
-import ForgotPassword from './components/pages/ForgotPassword'
-
-
-
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <SignIn />, // Root route goes to SignIn component
-  },
-  {
-    path: '/signUp',
-    element: <SignUp />, // Route for SignUp page
-  },
-  {
-    path: '/newToken',
-    element: <NewToken />, // Route for NewToken (CAP Dashboard)
-  },
-  {
-    path: '/forgotpassword',
-    element: <ForgotPassword />, // Route for NewToken (CAP Dashboard)
-  },
-]);
+import router from './routes';
+import { AuthProvider } from './context/AuthContext';
+import { BrowserRouter as Router, RouterProvider } from 'react-router-dom';
 
 function App() {
-  return <NewToken />;
-  // < NewToken />
+  return (
+      <AuthProvider>
+        <RouterProvider 
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+          v7_fetcherPersist: true,
+          v7_normalizeFormMethod: true,
+          v7_partialHydration: true,
+          v7_skipActionErrorRevalidation: true
+        }}
+        router={router} />
+      </AuthProvider>
+  );
 }
 
-export default App
-
-
+export default App;

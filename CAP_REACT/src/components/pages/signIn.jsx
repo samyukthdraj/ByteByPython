@@ -1,44 +1,46 @@
-import React, { useState, useEffect } from 'react';
+// SignIn.jsx
+import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Box from '@mui/material/Box';
+import Link from '@mui/material/Link';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
-import CssBaseline from '@mui/material/CssBaseline';
-import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
-import Link from '@mui/material/Link';
-import Box from '@mui/material/Box';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Snackbar from '@mui/material/Snackbar';
+import Container from '@mui/material/Container';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import CssBaseline from '@mui/material/CssBaseline';
+import { FormControl, FormGroup } from '@mui/material';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { getData } from '../../services/API';
+import { AuthContext } from '../../context/AuthContext';
 
 const theme = createTheme();
 
 export default function SignIn() {
+  const { login } = useContext(AuthContext); // Use the AuthContext
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    remember: false, // State for the "Remember me" checkbox
   });
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Clear form data when component mounts
     setFormData({
       username: '',
       password: '',
-      remember: false,
     });
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, []);
 
   const handleChange = (event) => {
-    const { name, value, checked, type } = event.target;
+    const { name, value } = event.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: type === 'checkbox' ? checked : value, // Handle checkbox state
+      [name]: value,
     }));
   };
 
@@ -47,8 +49,12 @@ export default function SignIn() {
     try {
       const response = await getData(`get/userByUserName/${formData.username}`);
       if (response && response.password === formData.password) {
-        console.log('Sign in successful:', response);
-        // Proceed with sign-in logic
+        login(response); // Use the login function from AuthContext
+        if (response.type === 'civilian') {
+          navigate('/civilian/newIncident'); // Direct to the correct route
+        } else if (response.type === 'police') {
+          navigate('/police/dashboard');
+        }
       } else {
         setSnackbarOpen(true); // Show snackbar with error message
       }
@@ -56,9 +62,14 @@ export default function SignIn() {
       console.error('Error:', error);
     }
   };
+  
 
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
+  };
+
+  const handleSignUp = () => {
+    navigate('/signUp');
   };
 
   return (
@@ -79,48 +90,41 @@ export default function SignIn() {
           <Typography component="h1" variant="h5">
             Sign In
           </Typography>
-          <Box 
-            component="form" 
-            onSubmit={handleSubmit} 
-            noValidate 
-            sx={{ mt: 1 }} 
-            autoComplete="off" // Disable autofill on page load
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            noValidate
+            sx={{ mt: 1 }}
+            autoComplete="off"
           >
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="username" // Corrected ID
-              label="Username" // Corrected Label
-              name="username" // Corrected Name
-              autoComplete="off" // Disabled auto-fill
-              autoFocus
-              value={formData.username}
-              onChange={handleChange}
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              type="password"
-              id="password"
-              autoComplete="off" // Disabled auto-fill
-              value={formData.password}
-              onChange={handleChange}
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  name="remember"
-                  checked={formData.remember}
+            <FormControl fullWidth>
+              <FormGroup>
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="username"
+                  label="Username"
+                  name="username"
+                  autoComplete="off"
+                  autoFocus
+                  value={formData.username}
                   onChange={handleChange}
-                  color="primary"
                 />
-              }
-              label="Remember me"
-            />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  name="password"
+                  label="Password"
+                  type="password"
+                  id="password"
+                  autoComplete="off"
+                  value={formData.password}
+                  onChange={handleChange}
+                />
+              </FormGroup>
+            </FormControl>
             <Button
               type="submit"
               fullWidth
@@ -129,12 +133,20 @@ export default function SignIn() {
             >
               Sign In
             </Button>
-            <Link href="#" variant="body2">
-              Forgot password?
-            </Link>
-            <Link href="#" variant="body2">
-              {"Don't have an account? Sign Up"}
-            </Link>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                mt: 2,
+              }}
+            >
+              <Link href="#" variant="body2">
+                Forgot password?
+              </Link>
+              <Link variant="body2" onClick={handleSignUp} sx={{ cursor: 'pointer' }}>
+                {"Don't have an account? Sign Up"}
+              </Link>
+            </Box>
           </Box>
         </Box>
         <Snackbar
