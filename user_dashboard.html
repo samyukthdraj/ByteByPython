@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Civilians As Police (CAP) - User Dashboard</title>
   <link rel="stylesheet" href="stylesudash.css">
-
 </head>
 <body>
   <div class="dashboard-container">
     <h1>User Dashboard</h1>
-    <div class="ticket-list">
+    <div id="loading-message">Loading tickets...</div>
+    <div class="ticket-list" id="ticket-list">
       <!-- Dynamically generate ticket cards here -->
     </div>
     <button class="new-ticket-button" onclick="window.location.href = 'index.html'">
@@ -18,32 +18,74 @@
     </button>
   </div>
 
-  <script src="loginapp.js"></script>
   <script>
-    // Call authentication check when the page loads
-    checkAuthentication();
-    
+    // Function to check authentication
+    function checkAuthentication() {
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) {
+        window.location.href = 'login.html';
+        return false;
+      }
+      return true;
+    }
+
     // Fetch user's submitted tickets and populate the dashboard
-    fetch('/user-tickets')
-      .then(response => response.json())
-      .then(tickets => {
-        const ticketList = document.querySelector('.ticket-list');
+    async function fetchUserTickets() {
+      const loadingMessage = document.getElementById('loading-message');
+      const ticketList = document.getElementById('ticket-list');
+      
+      try {
+        // Ensure authentication first
+        if (!checkAuthentication()) return;
+
+        const response = await fetch('http://localhost:8000/user-tickets', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch tickets');
+        }
+
+        const tickets = await response.json();
+
+        // Clear loading message
+        loadingMessage.style.display = 'none';
+
+        // Clear previous tickets
+        ticketList.innerHTML = '';
+
+        if (tickets.length === 0) {
+          ticketList.innerHTML = '<p>No tickets submitted yet.</p>';
+          return;
+        }
+
+        // Populate tickets
         tickets.forEach(ticket => {
           const ticketCard = document.createElement('div');
           ticketCard.classList.add('ticket-card');
           ticketCard.innerHTML = `
-            <h3>Ticket #${ticket.ticket_number}</h3>
-            <p>Crime: ${ticket.crime_type}</p>
-            <p>Police Station: ${ticket.police_station_name}</p>
-            <p>Status: ${ticket.status}</p>
+            <h3>Ticket #${ticket._id.slice(-6)}</h3>
+            <p>Crime Type: ${ticket.crime_type}</p>
+            <p>Pincode: ${ticket.pincode}</p>
+            <p>Phone Number: ${ticket.phone_number}</p>
+            <p>Status: ${ticket.status || 'Pending'}</p>
+            ${ticket.description ? `<p>Description: ${ticket.description}</p>` : ''}
           `;
           ticketList.appendChild(ticketCard);
         });
-      })
-      .catch(error => {
+      } catch (error) {
         console.error('Error fetching user tickets:', error);
-        alert('An error occurred while loading the user dashboard. Please try again later.');
-      });
+        loadingMessage.textContent = 'An error occurred while loading tickets. Please try again later.';
+        loadingMessage.style.color = 'red';
+      }
+    }
+
+    // Call authentication and fetch tickets when the page loads
+    document.addEventListener('DOMContentLoaded', fetchUserTickets);
   </script>
 </body>
 </html>

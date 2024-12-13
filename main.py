@@ -16,7 +16,8 @@ from database import Database
 from models import CrimeReport, PoliceStation, User, Ticket
 from typing import List, Optional
 from config import settings
-
+from fastapi import HTTPException
+from bson.objectid import ObjectId
 
 app = FastAPI()
 db = Database()
@@ -162,6 +163,67 @@ async def signup(user: UserSignup):
 async def options_signup():
     return {"status": "OK"}
 
+@app.post("/login")
+async def login(user: dict = Body(...)):
+    username = user.get("username")
+    password = user.get("password")
+
+    if not username or not password:
+        raise HTTPException(status_code=400, detail="Username and password are required.")
+
+    # Find user in the database
+    db_user = db.users_collection.find_one({"username": username})
+    if not db_user:
+        raise HTTPException(status_code=401, detail="Invalid credentials.")
+
+    # Verify the password
+    if not verify_password(password, db_user["hashed_password"]):
+        raise HTTPException(status_code=401, detail="Invalid credentials.")
+
+    # Generate access token
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": db_user["username"]}, expires_delta=access_token_expires
+    )
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user_id": str(db_user["_id"]),
+        "success": True
+    }
+
+# Add this to your existing routes in main.py
+
+@app.post("/police-login")
+async def police_login(login_data: dict = Body(...)):
+    station_id = login_data.get("stationId")
+    station_password = login_data.get("stationPassword")
+
+    if not station_id or not station_password:
+        raise HTTPException(status_code=400, detail="Station ID and password are required.")
+
+    # Find police station in the database
+    db_station = db.police_stations_collection.find_one({"username": station_id})
+    if not db_station:
+        raise HTTPException(status_code=401, detail="Invalid credentials.")
+
+    # Verify the password
+    if not verify_password(station_password, db_station["hashed_password"]):
+        raise HTTPException(status_code=401, detail="Invalid credentials.")
+
+    # Generate access token
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": db_station["username"]}, expires_delta=access_token_expires
+    )
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "police_station_id": str(db_station["_id"]),
+        "success": True
+    }
 
 
 @app.post("/send-otp")
@@ -338,4 +400,60 @@ async def new_feature(param1: str, param2: int):
 
     return {"message": f"New feature with {param1} and {param2} added successfully."}
 
-# --- Appended Functionality Ends Here ---
+# --- Appended Functionality Ends Here -------------------------------------------------------------
+# Add this to your main.py file, under the existing routes
+
+@app.get("/user-tickets")
+async def get_user_tickets(current_user: dict = Depends(get_current_user)):
+    # Fetch tickets for the current user
+    try:
+        tickets = list(db.tickets_collection.find({"user_id": current_user['username']}))
+        
+        # Convert ObjectId to string for JSON serialization
+        for ticket in tickets:
+            ticket['_id'] = str(ticket['_id'])
+        
+        return tickets
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching tickets: {str(e)}")
+
+
+
+
+
+# ------------------------------------------------------------------------------------------
+
+
+# from fastapi import HTTPException
+# from bson.objectid import ObjectId
+
+# @app.get("/signup/{username}")
+# async def get_user_details(username: str):
+#     try:
+#         # Check if the user exists in the database
+#         user = db.users_collection.find_one({"username": username}, {"hashed_password": 0})
+#         if not user:
+#             raise HTTPException(status_code=404, detail="User not found.")
+
+#         # Return user details (excluding sensitive information like passwords)
+#         user["_id"] = str(user["_id"])  # Convert ObjectId to string for JSON serialization
+#         return {"user_details": user}
+#     except Exception as e:
+#         print(f"Error fetching user details: {e}")
+#         raise HTTPException(status_code=500, detail="Failed to retrieve user details.")
+
+
+# @app.get("/signup")
+# async def get_all_users():
+#     try:
+#         # Retrieve all user documents from the collection
+#         users = list(db.users_collection.find({}, {"hashed_password": 0}))
+        
+#         # Convert ObjectId to string for JSON serialization
+#         for user in users:
+#             user["_id"] = str(user["_id"])
+
+#         return {"users": users}
+#     except Exception as e:
+#         print(f"Error fetching all users: {e}")
+#         raise HTTPException(status_code=500, detail="Failed to retrieve users.")

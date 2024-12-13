@@ -30,8 +30,25 @@ Create user login, police login, police dashboard and then connections.
 - undone: signup.html error while creating account fix, 
 forgot password otp fix (add a text field for otp which will later be cross checked with the otp sent in mail).
 police login issue.
+dashboard should get the details from the database.
 
-signup works: samyukth, samyukthterawe@outlook.com, 12345678
+- undone: Your Ticket Number is: undefined when submit is clicked.
+When i click close i want to be re-routed to the user dashboard.
+Add a signout button which will get us back to login page.
+make login.html look 50/50 on the left and right    
+
+- testing: signup works: samyukth, samyukthterawe@outlook.com, 12345678
+Username: central_ps
+Password: centralps
+
+
+
+- undone: tickets not submitting successfully, form things should be in the schema. random id should be created which the police can access. foreign key and primary key should be submitted alongside the schema in the tickets, ie with the 
+police dashboard fetch 
+user dashboard fetch
+close button while submitting report should lead back to user dashboard
+signout button
+ai implementation in index.html
 
 # python -m http.server 8000
 
