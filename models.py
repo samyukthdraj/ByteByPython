@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field, EmailStr, constr
 from typing import Optional, List
 from bson import ObjectId
 from datetime import datetime
+import random
 
 class PyObjectId(ObjectId):
     @classmethod
@@ -31,19 +32,18 @@ class User(BaseModel):
         }
 
 class Ticket(BaseModel):
-    id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
-    user_id: str  # Changed to string to match username
-    ticket_number: Optional[str] = None
+    ticket_number: str = Field(default_factory=lambda: f"TICKET{random.randint(100000, 999999)}")
+    user_id: str
     pincode: str
-    police_station_id: Optional[PyObjectId] = None
     phone_number: str
     crime_type: str
     description: Optional[str] = None
-    image_url: Optional[str] = None
-    audio_url: Optional[str] = None
-    status: str = 'Pending'  # Options: Pending, In Progress, Resolved, Closed
+    police_station: Optional[str] = None
+    status: str = "New"  # Default status
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = None
+    image_url: Optional[str] = None
+    audio_url: Optional[str] = None
 
     class Config:
         arbitrary_types_allowed = True

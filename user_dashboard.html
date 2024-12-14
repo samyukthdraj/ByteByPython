@@ -68,11 +68,12 @@
           const ticketCard = document.createElement('div');
           ticketCard.classList.add('ticket-card');
           ticketCard.innerHTML = `
-            <h3>Ticket #${ticket._id.slice(-6)}</h3>
+            <h3>Ticket #${ticket.ticket_number}</h3>
             <p>Crime Type: ${ticket.crime_type}</p>
             <p>Pincode: ${ticket.pincode}</p>
             <p>Phone Number: ${ticket.phone_number}</p>
-            <p>Status: ${ticket.status || 'Pending'}</p>
+            <p>Status: ${ticket.status}</p>
+            <p>Police Station: ${ticket.police_station || 'Not assigned'}</p>
             ${ticket.description ? `<p>Description: ${ticket.description}</p>` : ''}
           `;
           ticketList.appendChild(ticketCard);

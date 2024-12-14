@@ -87,41 +87,41 @@ class Database:
             return None
         return station
 
-    def create_ticket(self, user_id, pincode, phone_number, crime_type, 
-                      description=None, image_url=None, audio_url=None):
+# Append this to your existing database.py file, right after the existing methods
+
+    def create_ticket(self, user_name, pincode, phone_number, crime_type, 
+                    police_station=None, description=None, ticket_number=None, 
+                    image_url=None, audio_url=None):
         """Create a new ticket in the database."""
+        # If no ticket number is provided, generate a random 6-digit number
+        if not ticket_number:
+            ticket_number = f"{random.randint(100000, 999999)}"
+
         ticket_doc = {
-            "ticket_id": self.generate_ticket_id(),
-            "user_id": user_id,
+            "ticket_number": ticket_number,
+            "user_name": user_name,  # Changed from user_id
             "pincode": pincode,
             "phone_number": phone_number,
             "crime_type": crime_type,
+            "police_station": police_station,
             "description": description,
             "image_url": image_url,
             "audio_url": audio_url,
-            "status": "Pending",
-            "created_at": datetime.utcnow()
+            "status": "New",
+            "created_at": datetime.utcnow(),
+            "updated_at": None
         }
 
         result = self.tickets_collection.insert_one(ticket_doc)
-        return ticket_doc["ticket_id"]
-
-    def generate_ticket_id(self):
-        """Generate a unique ticket ID."""
-        return f"TICKET{random.randint(100000, 999999)}"
-
-    def get_user_tickets(self, username: str):
-        """Retrieve tickets for a specific user."""
-        return list(self.tickets_collection.find({"user_id": username}))
-
-    def get_police_station_tickets(self, police_station_id: str):
+        return ticket_number
+    def get_police_station_tickets(self, police_station):
         """Retrieve tickets for a specific police station."""
-        return list(self.tickets_collection.find({"police_station_id": ObjectId(police_station_id)}))
+        return list(self.tickets_collection.find({"police_station": police_station}))
 
-    def update_ticket_status(self, ticket_id: str, new_status: str):
+    def update_ticket_status(self, ticket_number: str, new_status: str):
         """Update the status of a ticket."""
         result = self.tickets_collection.update_one(
-            {"ticket_id": ticket_id},
+            {"ticket_number": ticket_number},
             {
                 "$set": {
                     "status": new_status,

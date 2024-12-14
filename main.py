@@ -291,21 +291,35 @@ async def upload_crime_report(
     phone_number: str = Form(...),
     crime_type: str = Form(...),
     description: Optional[str] = Form(None),
-    file: UploadFile = File(...), 
+    file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
+    # Generate a random 6-digit ticket number
+    ticket_number = f"{random.randint(100000, 999999)}"
+
+    # Create ticket
+    db.create_ticket(
+        user_name=current_user['username'],  # Changed from user_id to user_name
+        pincode=pincode,
+        phone_number=phone_number,
+        crime_type=crime_type,
+        police_station=police_station,
+        description=description,
+        ticket_number=ticket_number  # Pass the generated ticket number
+    )
+
     # Generate a unique filename for the image
     file_extension = file.filename.split('.')[-1]
     unique_filename = f"{uuid.uuid4()}.{file_extension}"
-    
+
     # Analyze image
     analysis_result = await analyze_image_detailed(file.file)
-    
+
     # Save file 
     file_path = f"uploads/{unique_filename}"
     with open(file_path, "wb") as buffer:
         buffer.write(await file.read())
-    
+
     # Create crime report document
     crime_report = CrimeReport(
         pincode=pincode,
@@ -315,12 +329,13 @@ async def upload_crime_report(
         description=description,
         image_url=file_path
     )
-    
+
     # Insert into database
     result = db.crime_reports_collection.insert_one(crime_report.dict())
-    
+
     return {
-        "message": "Crime report uploaded successfully", 
+        "message": "Crime report uploaded successfully",
+        "ticket_number": ticket_number,
         "report_id": str(result.inserted_id),
         "analysis": analysis_result
     }
@@ -363,6 +378,50 @@ async def get_police_stations(current_user: dict = Depends(get_current_user)):
     return stations
 
 # Ticket Routes
+@app.get("/police-tickets")
+async def get_police_station_tickets(current_user: dict = Depends(get_current_user)):
+    # Assuming the police station is part of the user's profile
+    police_station = current_user.get('police_station')
+    if not police_station:
+        raise HTTPException(status_code=403, detail="Not authorized to view tickets")
+    
+    try:
+        tickets = db.get_police_station_tickets(police_station)
+        
+        # Convert ObjectId to string for JSON serialization
+        for ticket in tickets:
+            ticket['_id'] = str(ticket['_id'])
+        
+        return tickets
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching police tickets: {str(e)}")
+
+@app.post("/update-ticket/{ticket_number}")
+async def update_ticket_status(
+    ticket_number: str, 
+    status_update: dict = Body(...), 
+    current_user: dict = Depends(get_current_user)
+):
+    new_status = status_update.get('status')
+    if not new_status:
+        raise HTTPException(status_code=400, detail="Status is required")
+    
+    # Validate status
+    valid_statuses = ["New", "In Progress", "Resolved", "Closed"]
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of {valid_statuses}")
+    
+    try:
+        updated = db.update_ticket_status(ticket_number, new_status)
+        if not updated:
+            raise HTTPException(status_code=404, detail="Ticket not found")
+        
+        return {"message": "Ticket status updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating ticket status: {str(e)}")
+
+
+
 @app.post("/create-ticket")
 async def create_ticket(
     ticket: Ticket, 
@@ -422,38 +481,3 @@ async def get_user_tickets(current_user: dict = Depends(get_current_user)):
 
 
 # ------------------------------------------------------------------------------------------
-
-
-# from fastapi import HTTPException
-# from bson.objectid import ObjectId
-
-# @app.get("/signup/{username}")
-# async def get_user_details(username: str):
-#     try:
-#         # Check if the user exists in the database
-#         user = db.users_collection.find_one({"username": username}, {"hashed_password": 0})
-#         if not user:
-#             raise HTTPException(status_code=404, detail="User not found.")
-
-#         # Return user details (excluding sensitive information like passwords)
-#         user["_id"] = str(user["_id"])  # Convert ObjectId to string for JSON serialization
-#         return {"user_details": user}
-#     except Exception as e:
-#         print(f"Error fetching user details: {e}")
-#         raise HTTPException(status_code=500, detail="Failed to retrieve user details.")
-
-
-# @app.get("/signup")
-# async def get_all_users():
-#     try:
-#         # Retrieve all user documents from the collection
-#         users = list(db.users_collection.find({}, {"hashed_password": 0}))
-        
-#         # Convert ObjectId to string for JSON serialization
-#         for user in users:
-#             user["_id"] = str(user["_id"])
-
-#         return {"users": users}
-#     except Exception as e:
-#         print(f"Error fetching all users: {e}")
-#         raise HTTPException(status_code=500, detail="Failed to retrieve users.")

@@ -39,9 +39,9 @@
       <label for="policeStation">Nearest Police Station:</label>
       <select id="policeStation">
         <option value="">Select a station</option>
-        <option value="station1">Station 1</option>
-        <option value="station2">Station 2</option>
-        <option value="station3">Station 3</option>
+        <option value="Central Police Station">Central Police Station</option>
+        <option value="Station 2">Station 2</option>
+        <option value="Station 3">Station 3</option>
       </select>
     </div>
 
@@ -75,9 +75,74 @@
 
     <!-- Submit Button -->
     <div class="form-group">
-      <button class="submit-button">Submit Report</button>
+      <button class="submit-button" onclick="submitReport()">Submit Report</button>
     </div>
   </div>
-  <script src="app.js"></script>
+  <script>
+ function generateRandomTicketNumber() {
+      return Math.floor(100000 + Math.random() * 900000).toString();
+    }
+
+    async function submitReport() {
+      const userName = document.getElementById("userName").value;
+      const pincode = document.getElementById("pincode").value;
+      const policeStation = document.getElementById("policeStation").value;
+      const phoneNumber = document.getElementById("phoneNumber").value;
+      const crimeType = document.getElementById("crimeType").value === 'others' 
+          ? document.getElementById('customCrimeTypeInput').value 
+          : document.getElementById("crimeType").value;
+      const description = document.getElementById("description").value;
+
+      // Image upload handling
+      const imageFile = document.getElementById("uploadImage").files[0];
+      const voiceFile = document.getElementById("uploadVoice").files[0];
+
+      const reportData = {
+        user_name: userName,
+        pincode,
+        police_station: policeStation,
+        phone_number: phoneNumber,
+        crime_type: crimeType,
+        description,
+        ticket_number: generateRandomTicketNumber()
+      };
+
+      try {
+        const response = await fetch("http://localhost:8000/upload-crime-report", {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(reportData)
+        });
+
+        const result = await response.json();
+
+        // Show ticket generation popup
+        const popup = document.createElement('div');
+        popup.innerHTML = `
+          <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 2px solid blue; z-index: 1000; text-align: center;">
+            <h2>Report Submitted Successfully!</h2>
+            <p>Your Ticket Number is: <strong>${result.ticket_number}</strong></p>
+            <button onclick="this.parentElement.remove(); window.location.href='user_dashboard.html'">View Dashboard</button>
+          </div>
+        `;
+        document.body.appendChild(popup);
+      } catch (error) {
+        console.error("Error submitting report:", error);
+        alert("Failed to submit report. Please try again.");
+      }
+    }
+
+    // Show custom crime type input field when "Others" is selected
+    document.getElementById("crimeType").addEventListener("change", function() {
+      const customCrimeTypeDiv = document.getElementById("customCrimeType");
+      if (this.value === "others") {
+        customCrimeTypeDiv.style.display = "block";
+      } else {
+        customCrimeTypeDiv.style.display = "none";
+      }
+    });
+    </script>
 </body>
 </html>

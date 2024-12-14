@@ -37,18 +37,19 @@ When i click close i want to be re-routed to the user dashboard.
 Add a signout button which will get us back to login page.
 make login.html look 50/50 on the left and right    
 
-- testing: signup works: samyukth, samyukthterawe@outlook.com, 12345678
+- testing: signup works: username samyukth, samyukthterawe@outlook.com, 12345678
 Username: central_ps
 Password: centralps
 
 
 
-- undone: tickets not submitting successfully, form things should be in the schema. random id should be created which the police can access. foreign key and primary key should be submitted alongside the schema in the tickets, ie with the 
+- undone: tickets not submitting successfully, ticket number(random 6 digit number) alongside with the form details should be in the schema sent to the backend. random id should be created which the police can access. foreign key and primary key should be submitted alongside the schema in the tickets, ie with the 
 police dashboard fetch 
 user dashboard fetch
-close button while submitting report should lead back to user dashboard
+    DONE: close button while submitting report should lead back to user dashboard
 signout button
 ai implementation in index.html
+50/50 login style 
 
 # python -m http.server 8000
 
