@@ -7,4 +7,4 @@ db = client.get_database("test")
 
 # Example collections
 user_collection = db["user"]
-token_collection = db["token"]
+incident_collection = db["incident"]

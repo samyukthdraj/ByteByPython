@@ -22,7 +22,7 @@ export default function SignUp() {
     mobileNumber: '',
     username: '',
     password: '',
-    type: 'civilian',
+    type: '2',
   });
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);

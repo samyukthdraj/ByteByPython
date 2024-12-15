@@ -23,7 +23,7 @@ const Navbar = () => {
                     </div>
                 </Typography>
                 <Box>
-                    {user && user.type === 'civilian' && (
+                    {user && user.userType === '2' && (
                         <Button sx={{ color: 'black' }}>
                             <Link to="/civilian/newIncident" style={{ textDecoration: 'none', color: 'black' }}>
                                 New Incident
@@ -31,7 +31,7 @@ const Navbar = () => {
                         </Button>
                     )}
                     <Button sx={{ color: 'black' }}>
-                        <Link to={user && user.type === 'civilian' ? '/civilian/dashboard' : '/police/dashboard'} style={{ textDecoration: 'none', color: 'black' }}>
+                        <Link to={user && user.userType === '2' ? '/civilian/dashboard' : '/police/dashboard'} style={{ textDecoration: 'none', color: 'black' }}>
                             Dashboard
                         </Link>
                     </Button>

@@ -50,9 +50,9 @@ export default function SignIn() {
       const response = await getData(`get/userByUserName/${formData.username}`);
       if (response && response.password === formData.password) {
         login(response); // Use the login function from AuthContext
-        if (response.type === 'civilian') {
+        if (response.userType === '2') {
           navigate('/civilian/newIncident'); // Direct to the correct route
-        } else if (response.type === 'police') {
+        } else if (response.userType === '1') {
           navigate('/police/dashboard');
         }
       } else {
