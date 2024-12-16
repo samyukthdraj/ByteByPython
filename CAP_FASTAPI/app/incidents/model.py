@@ -8,6 +8,12 @@ class StatusEnum(str, Enum):
     pending = "1"    
     completed = "2"  
     rejected = "3"  
+    
+class DescriptionResponse(BaseModel):
+    description: str
+
+class ImageRequest(BaseModel):
+    image: str
 
 class Incident(BaseModel):
     _id: ObjectId
@@ -36,3 +42,4 @@ class Incident(BaseModel):
         if value in mapping.values():
             return value  # Already in numeric form
         raise ValueError("Invalid status value. Must be one of: 'completed', 'rejected', 'pending'.")
+

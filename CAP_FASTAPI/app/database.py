@@ -8,3 +8,4 @@ db = client.get_database("test")
 # Example collections
 user_collection = db["user"]
 incident_collection = db["incident"]
+images_collection = db["images"]

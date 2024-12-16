@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useEffect, useState, useContext } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import Box from '@mui/material/Box';
 import MenuItem from '@mui/material/MenuItem';
 import Container from '@mui/material/Container';
@@ -10,6 +10,7 @@ import { postData } from '../../services/API';
 import { AuthContext } from '../../context/AuthContext';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
+import { useRef } from 'react';
 
 export default function NewIncident() {
   const { user, isLoading } = useContext(AuthContext);
@@ -18,46 +19,91 @@ export default function NewIncident() {
     audio: null,
     pincode: '',
     crimeType: '',
-    description: '',
+    description: '', // Initialize with an empty string
     policeStationId: '',
     username: user ? user.username : '',
     startDate: '',
     status: '1'
   });
 
+  const [response, setResponse] = useState(null); // State to hold the response from `getImageDescription`
+  const imageInputRef = useRef();
+
   useEffect(() => {
     const SystemDate = new Date().toISOString(); // Update startDate with current date-time
     setFormData((prevData) => ({ ...prevData, startDate: SystemDate }));
   }, []);
 
-  // Convert file to Base64
-  const convertToBase64 = (file, callback) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => callback(reader.result);
-    reader.onerror = (error) => console.error('Error converting file to Base64:', error);
-  };
-
-  // Handle file changes
-  const handleFileChange = (e) => {
-    const { name, files } = e.target;
+  const handleFileChange = (event) => {
+    const { name, files } = event.target;
+  
     if (files && files[0]) {
-      convertToBase64(files[0], (base64) => {
-        setFormData((prevData) => ({ ...prevData, [name]: base64 }));
+      const reader = new FileReader();
+      reader.onload = () => {
+        setFormData((prevData) => {
+          const updatedData = { ...prevData, [name]: reader.result };
+          if (name === 'image') {
+            getImageDescription(updatedData.image);
+          }
+          return updatedData;
+        });
+      };
+      reader.readAsDataURL(files[0]); // Converts file to Base64
+    }
+  };
+  
+  const getImageDescription = async (image_base64) => {
+    const image = image_base64.split(',')[1]; // Remove the prefix
+  
+    // Construct the payload
+    const payload = {
+      image: image, // Send image as a key-value pair
+    };
+  
+    // Make the POST request
+    try {
+      const response = await postData(payload, 'post/getImageDescription');
+      const responseData = response.description.split('\n'); // Split the description string by lines
+      let parsedData = {
+        crime: '',
+        typeOfCrime: '',
+        description: '',
+      };
+  
+      responseData.forEach((line) => {
+        const [key, value] = line.split(':');
+        if (key === 'crime') {
+          parsedData.crime = value.trim();
+        } else if (key === 'typeOfCrime') {
+          parsedData.typeOfCrime = value.trim();
+        } else if (key === 'description') {
+          parsedData.description = value.trim();
+        }
       });
+      console.log(parsedData);
+      setResponse(parsedData); // Store the parsed response in the state
+    } catch (error) {
+      console.error('Error:', error);
     }
   };
 
-  // Handle input changes
+  useEffect(() => {
+    if (response) {
+      setFormData((prevData) => ({
+        ...prevData,
+        crimeType: response.typeOfCrime || '', // Update crimeType
+        description: response.description || '', // Update description
+      }));
+    }
+  }, [response]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  // Handle form submission
   const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log(formData);
     try {
       const response = await postData(formData, 'post/incident');
       console.log('Response:', response);
@@ -97,6 +143,7 @@ export default function NewIncident() {
                   onChange={handleFileChange}
                   fullWidth
                   sx={{ display: 'none' }}
+                  ref={imageInputRef}
                 />
                 <label htmlFor="image">
                   <Button
