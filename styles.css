@@ -13,43 +13,73 @@ body {
 .window {
   background: #fff;
   border: 2px solid #0078d4;
-  border-radius: 10px;
-  padding: 20px;
+  border-radius: 15px; /* More rounded corners */
+  padding: 25px;
   width: 600px;
+  max-width: 90%; /* Responsive for smaller screens */
   height: 90vh; /* Use most of the screen height */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Stronger shadow */
   overflow-y: auto; /* Allow scrolling inside the window if content overflows */
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for hover */
+}
+
+.window:hover {
+  transform: translateY(-5px); /* Slight hover effect */
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3); /* Elevate on hover */
 }
 
 .title {
   text-align: center;
   color: #0078d4;
+  font-size: 1.8em;
+  font-weight: bold;
   margin-bottom: 20px;
+  letter-spacing: 1px; /* Slight spacing for readability */
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 20px; /* Increased spacing for better readability */
 }
 
 input, textarea, select {
   width: 100%;
-  padding: 8px;
+  padding: 12px; /* Increased padding for better user experience */
   border: 1px solid #ddd;
-  border-radius: 5px;
+  border-radius: 8px; /* Rounded corners for inputs */
   box-sizing: border-box;
+  font-size: 1em;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for focus */
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: #0078d4;
+  box-shadow: 0 0 8px rgba(0, 120, 212, 0.3); /* Add a subtle glow effect */
+  outline: none; /* Remove default focus outline */
 }
 
 textarea {
-  resize: none;
-  height: 60px; /* Reduce height for smaller viewports */
+  resize: vertical; /* Allow vertical resizing only */
+  min-height: 80px; /* Increased default height */
 }
 
 .submit-button {
   background: #0078d4;
   color: #fff;
-  padding: 10px;
+  padding: 12px 20px; /* Increased padding for better appearance */
   border: none;
-  border-radius: 5px;
+  border-radius: 8px; /* Rounded corners */
   cursor: pointer;
-  font-size: 16px;
+  font-size: 1.1em;
+  font-weight: bold;
+  transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transition for hover */
+}
+
+.submit-button:hover {
+  background: #005fa3; /* Slightly darker shade on hover */
+  transform: translateY(-3px); /* Lift button on hover */
+}
+
+.submit-button:active {
+  background: #004b80; /* Even darker shade when clicked */
+  transform: translateY(1px); /* Subtle press effect */
 }

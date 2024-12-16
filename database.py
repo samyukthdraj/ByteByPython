@@ -38,7 +38,7 @@ class Database:
                 address="123 Main Street, Anytown",
                 username="central_ps",
                 hashed_password=self.hash_password("centralps"),
-                contact_number="+91 1234567890"
+                contact_number="1234567890"
             ),
             # Add more stations as needed
         ]
@@ -87,7 +87,7 @@ class Database:
             return None
         return station
 
-# Append this to your existing database.py file, right after the existing methods
+    # Append this to your existing database.py file, right after the existing methods
 
     def create_ticket(self, user_name, pincode, phone_number, crime_type, 
                     police_station=None, description=None, ticket_number=None, 
@@ -97,13 +97,26 @@ class Database:
         if not ticket_number:
             ticket_number = f"{random.randint(100000, 999999)}"
 
+        # Retrieve the user document
+        user = self.users_collection.find_one({"username": user_name})
+        if not user:
+            raise ValueError(f"User {user_name} not found")
+
+        # If police station is provided, verify its existence
+        if police_station:
+            station = self.police_stations_collection.find_one({"name": police_station})
+            if not station:
+                raise ValueError(f"Police station {police_station} not found")
+
         ticket_doc = {
             "ticket_number": ticket_number,
-            "user_name": user_name,  # Changed from user_id
+            "user_id": str(user['_id']),  # Store user's ObjectId
+            "user_name": user_name,
             "pincode": pincode,
             "phone_number": phone_number,
             "crime_type": crime_type,
             "police_station": police_station,
+            "police_station_id": station['_id'] if police_station else None,
             "description": description,
             "image_url": image_url,
             "audio_url": audio_url,
@@ -114,6 +127,7 @@ class Database:
 
         result = self.tickets_collection.insert_one(ticket_doc)
         return ticket_number
+
     def get_police_station_tickets(self, police_station):
         """Retrieve tickets for a specific police station."""
         return list(self.tickets_collection.find({"police_station": police_station}))

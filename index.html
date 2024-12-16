@@ -64,7 +64,7 @@
     <!-- Phone Number Input -->
     <div class="form-group">
       <label for="phoneNumber">Your Phone Number:</label>
-      <input type="text" id="phoneNumber" placeholder="e.g., +1234567890">
+      <input type="text" id="phoneNumber" placeholder="e.g., 1234567890">
     </div>
 
     <!-- Description Box -->
@@ -79,70 +79,69 @@
     </div>
   </div>
   <script>
- function generateRandomTicketNumber() {
-      return Math.floor(100000 + Math.random() * 900000).toString();
-    }
-
     async function submitReport() {
-      const userName = document.getElementById("userName").value;
-      const pincode = document.getElementById("pincode").value;
-      const policeStation = document.getElementById("policeStation").value;
-      const phoneNumber = document.getElementById("phoneNumber").value;
-      const crimeType = document.getElementById("crimeType").value === 'others' 
-          ? document.getElementById('customCrimeTypeInput').value 
-          : document.getElementById("crimeType").value;
-      const description = document.getElementById("description").value;
-
-      // Image upload handling
-      const imageFile = document.getElementById("uploadImage").files[0];
-      const voiceFile = document.getElementById("uploadVoice").files[0];
-
-      const reportData = {
-        user_name: userName,
-        pincode,
-        police_station: policeStation,
-        phone_number: phoneNumber,
-        crime_type: crimeType,
-        description,
-        ticket_number: generateRandomTicketNumber()
-      };
-
-      try {
-        const response = await fetch("http://localhost:8000/upload-crime-report", {
-          method: "POST",
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(reportData)
-        });
-
-        const result = await response.json();
-
-        // Show ticket generation popup
-        const popup = document.createElement('div');
-        popup.innerHTML = `
-          <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 2px solid blue; z-index: 1000; text-align: center;">
-            <h2>Report Submitted Successfully!</h2>
-            <p>Your Ticket Number is: <strong>${result.ticket_number}</strong></p>
-            <button onclick="this.parentElement.remove(); window.location.href='user_dashboard.html'">View Dashboard</button>
-          </div>
-        `;
-        document.body.appendChild(popup);
-      } catch (error) {
-        console.error("Error submitting report:", error);
-        alert("Failed to submit report. Please try again.");
-      }
+        const userName = document.getElementById("userName").value;
+        const pincode = document.getElementById("pincode").value;
+        const policeStation = document.getElementById("policeStation").value;
+        const phoneNumber = document.getElementById("phoneNumber").value;
+        const crimeType = document.getElementById("crimeType").value === 'others' 
+            ? document.getElementById('customCrimeTypeInput').value 
+            : document.getElementById("crimeType").value;
+        const description = document.getElementById("description").value;
+    
+        // Image upload handling
+        const imageFile = document.getElementById("uploadImage").files[0];
+        const voiceFile = document.getElementById("uploadVoice").files[0];
+    
+        const formData = new FormData();
+        formData.append('user_name', userName);
+        formData.append('pincode', pincode);
+        formData.append('police_station', policeStation);
+        formData.append('phone_number', phoneNumber);
+        formData.append('crime_type', crimeType);
+        formData.append('description', description);
+        
+        // Append files if they exist
+        if (imageFile) {
+            formData.append('file', imageFile);
+        }
+        
+        try {
+            const accessToken = localStorage.getItem('access_token');
+            if (!accessToken) {
+                throw new Error('No access token found. Please log in.');
+            }
+    
+            const response = await fetch("http://localhost:8000/upload-crime-report", {
+                method: "POST",
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+                body: formData
+            });
+    
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Failed to submit report');
+            }
+    
+            const result = await response.json();
+    
+            // Show ticket generation popup
+            const popup = document.createElement('div');
+            popup.innerHTML = `
+                <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 2px solid blue; z-index: 1000; text-align: center;">
+                    <h2>Report Submitted Successfully!</h2>
+                    <p>Your Ticket Number is: <strong>${result.ticket_number}</strong></p>
+                    <button onclick="this.parentElement.remove(); window.location.href='user_dashboard.html'">View Dashboard</button>
+                </div>
+            `;
+            document.body.appendChild(popup);
+        } catch (error) {
+            console.error("Error submitting report:", error);
+            alert(error.message || "Failed to submit report. Please try again.");
+        }
     }
-
-    // Show custom crime type input field when "Others" is selected
-    document.getElementById("crimeType").addEventListener("change", function() {
-      const customCrimeTypeDiv = document.getElementById("customCrimeType");
-      if (this.value === "others") {
-        customCrimeTypeDiv.style.display = "block";
-      } else {
-        customCrimeTypeDiv.style.display = "none";
-      }
-    });
     </script>
 </body>
 </html>

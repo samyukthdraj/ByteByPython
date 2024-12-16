@@ -13,6 +13,7 @@
     <div class="ticket-list" id="ticket-list">
       <!-- Dynamically generate ticket cards here -->
     </div>
+    <button class="signout-button" onclick="signOut()">Sign Out</button>
   </div>
 
   <script>
@@ -113,6 +114,15 @@
       } catch (error) {
         console.error('Error updating ticket status:', error);
         alert('An error occurred while updating the ticket status. Please try again later.');
+      }
+    }
+
+    // Function to handle sign-out
+    function signOut() {
+      const confirmSignOut = confirm('Are you sure you want to sign out?');
+      if (confirmSignOut) {
+        localStorage.removeItem('access_token');
+        window.location.href = 'login.html';
       }
     }
 

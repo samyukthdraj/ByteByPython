@@ -17,7 +17,9 @@ from models import CrimeReport, PoliceStation, User, Ticket
 from typing import List, Optional
 from config import settings
 from fastapi import HTTPException
+from fastapi.responses import HTMLResponse
 from bson.objectid import ObjectId
+import os
 
 app = FastAPI()
 db = Database()
@@ -113,6 +115,16 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     if user is None:
         raise credentials_exception
     return user
+
+# Redirection while clicking http://127.0.0.1:8000/ in uvicorn main:app --reload
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    # Read the login.html file from the same directory
+    try:
+        with open("login.html", "r") as file:
+            return file.read()
+    except FileNotFoundError:
+        return HTMLResponse(content="Login page not found", status_code=404)
 
 # Authentication Routes
 @app.post("/token")
@@ -286,59 +298,59 @@ async def reset_password(reset_request: PasswordReset):
 # Crime Report Routes
 @app.post("/upload-crime-report")
 async def upload_crime_report(
+    file: UploadFile = File(None),
+    user_name: str = Form(...),
     pincode: str = Form(...),
     police_station: str = Form(...),
     phone_number: str = Form(...),
     crime_type: str = Form(...),
     description: Optional[str] = Form(None),
-    file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
+    # Ensure uploads directory exists
+    uploads_dir = "uploads"
+    os.makedirs(uploads_dir, exist_ok=True)
+
     # Generate a random 6-digit ticket number
     ticket_number = f"{random.randint(100000, 999999)}"
 
-    # Create ticket
-    db.create_ticket(
-        user_name=current_user['username'],  # Changed from user_id to user_name
-        pincode=pincode,
-        phone_number=phone_number,
-        crime_type=crime_type,
-        police_station=police_station,
-        description=description,
-        ticket_number=ticket_number  # Pass the generated ticket number
-    )
+    # Prepare file handling
+    file_path = None
+    if file:
+        # Generate a unique filename for the image
+        file_extension = file.filename.split('.')[-1] if file.filename else 'jpg'
+        unique_filename = f"{uuid.uuid4()}.{file_extension}"
+        file_path = os.path.join(uploads_dir, unique_filename)
+        
+        # Save file 
+        with open(file_path, "wb") as buffer:
+            buffer.write(await file.read())
+        
+        # Analyze image (optional)
+        try:
+            analysis_result = await analyze_image_detailed(file.file)
+        except Exception as e:
+            analysis_result = {"error": str(e)}
 
-    # Generate a unique filename for the image
-    file_extension = file.filename.split('.')[-1]
-    unique_filename = f"{uuid.uuid4()}.{file_extension}"
+    try:
+        # Create ticket using database method
+        ticket = db.create_ticket(
+            user_name=current_user['username'],
+            pincode=pincode,
+            phone_number=phone_number,
+            crime_type=crime_type,
+            police_station=police_station,
+            description=description,
+            ticket_number=ticket_number,
+            image_url=file_path
+        )
 
-    # Analyze image
-    analysis_result = await analyze_image_detailed(file.file)
-
-    # Save file 
-    file_path = f"uploads/{unique_filename}"
-    with open(file_path, "wb") as buffer:
-        buffer.write(await file.read())
-
-    # Create crime report document
-    crime_report = CrimeReport(
-        pincode=pincode,
-        police_station=police_station,
-        phone_number=phone_number,
-        crime_type=crime_type,
-        description=description,
-        image_url=file_path
-    )
-
-    # Insert into database
-    result = db.crime_reports_collection.insert_one(crime_report.dict())
-
-    return {
-        "message": "Crime report uploaded successfully",
-        "ticket_number": ticket_number,
-        "report_id": str(result.inserted_id),
-        "analysis": analysis_result
-    }
+        return {
+            "message": "Crime report uploaded successfully",
+            "ticket_number": ticket_number
+        }
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
 
 @app.get("/crime-reports", response_model=List[CrimeReport])
 async def get_crime_reports(current_user: dict = Depends(get_current_user)):

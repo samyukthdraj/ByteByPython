@@ -16,6 +16,11 @@
     <button class="new-ticket-button" onclick="window.location.href = 'index.html'">
       Submit New Ticket
     </button>
+
+    <!-- Sign Out Button -->
+    <button class="signout-button" onclick="confirmSignOut()">
+      Sign Out
+    </button>
   </div>
 
   <script>
@@ -67,7 +72,7 @@
         tickets.forEach(ticket => {
           const ticketCard = document.createElement('div');
           ticketCard.classList.add('ticket-card');
-          ticketCard.innerHTML = `
+          ticketCard.innerHTML = ` 
             <h3>Ticket #${ticket.ticket_number}</h3>
             <p>Crime Type: ${ticket.crime_type}</p>
             <p>Pincode: ${ticket.pincode}</p>
@@ -82,6 +87,17 @@
         console.error('Error fetching user tickets:', error);
         loadingMessage.textContent = 'An error occurred while loading tickets. Please try again later.';
         loadingMessage.style.color = 'red';
+      }
+    }
+
+    // Function to handle sign-out confirmation
+    function confirmSignOut() {
+      const confirmation = confirm("Are you sure you want to sign out?");
+      if (confirmation) {
+        // Clear the access token (sign out)
+        localStorage.removeItem('access_token');
+        // Redirect to login page
+        window.location.href = 'login.html';
       }
     }
 

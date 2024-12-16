@@ -47,9 +47,9 @@ Password: centralps
 police dashboard fetch 
 user dashboard fetch
     DONE: close button while submitting report should lead back to user dashboard
-signout button
-ai implementation in index.html
-50/50 login style 
+    DONE:signout button
+undone: ai implementation in index.html for analysing image and pincode with voice.
+    DONE:50/50 login style , forgot pass, signup css
 
 # python -m http.server 8000
 
