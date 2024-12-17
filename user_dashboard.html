@@ -40,22 +40,32 @@
       const ticketList = document.getElementById('ticket-list');
       
       try {
-        // Ensure authentication first
         if (!checkAuthentication()) return;
 
         const response = await fetch('http://localhost:8000/user-tickets', {
           method: 'GET',
+          // credentials: 'include',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
           }
         });
 
+        console.log('Response status:', response.status);
+
         if (!response.ok) {
-          throw new Error('Failed to fetch tickets');
+          const errorText = await response.text();
+          console.error('Error response:', {
+            status: response.status, 
+            statusText: response.statusText, 
+            errorText
+          });
+          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
         }
 
         const tickets = await response.json();
+        console.log('Tickets:', tickets);
 
         // Clear loading message
         loadingMessage.style.display = 'none';
@@ -73,20 +83,27 @@
           const ticketCard = document.createElement('div');
           ticketCard.classList.add('ticket-card');
           ticketCard.innerHTML = ` 
-            <h3>Ticket #${ticket.ticket_number}</h3>
-            <p>Crime Type: ${ticket.crime_type}</p>
-            <p>Pincode: ${ticket.pincode}</p>
-            <p>Phone Number: ${ticket.phone_number}</p>
-            <p>Status: ${ticket.status}</p>
+            <h3>Ticket #${ticket.ticket_number || 'N/A'}</h3>
+            <p>Crime Type: ${ticket.crime_type || 'Not specified'}</p>
+            <p>Pincode: ${ticket.pincode || 'N/A'}</p>
+            <p>Phone Number: ${ticket.phone_number || 'N/A'}</p>
+            <p>Status: ${ticket.status || 'Pending'}</p>
             <p>Police Station: ${ticket.police_station || 'Not assigned'}</p>
             ${ticket.description ? `<p>Description: ${ticket.description}</p>` : ''}
           `;
           ticketList.appendChild(ticketCard);
         });
       } catch (error) {
-        console.error('Error fetching user tickets:', error);
-        loadingMessage.textContent = 'An error occurred while loading tickets. Please try again later.';
+        console.error('Comprehensive error:', error);
+        loadingMessage.textContent = `An error occurred: ${error.message}`;
         loadingMessage.style.color = 'red';
+        
+        // Additional error handling
+        if (error.message.includes('401')) {
+          alert('Authentication failed. Please log in again.');
+          localStorage.removeItem('access_token');
+          window.location.href = 'login.html';
+        }
       }
     }
 
@@ -102,7 +119,7 @@
     }
 
     // Call authentication and fetch tickets when the page loads
-    document.addEventListener('DOMContentLoaded', fetchUserTickets);
+    document.addEventListener('DOMContentLoaded', fetchUserTickets);  // Updated to call fetchUserTickets when the page loads
   </script>
 </body>
 </html>

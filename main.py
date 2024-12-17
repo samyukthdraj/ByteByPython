@@ -27,14 +27,30 @@ db = Database()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# CORS Middleware
+# Function to convert ObjectId fields to strings
+def convert_objectid_to_str(data):
+    if isinstance(data, list):
+        return [{k: str(v) if isinstance(v, ObjectId) else v for k, v in item.items()} for item in data]
+    elif isinstance(data, dict):
+        return {k: str(v) if isinstance(v, ObjectId) else v for k, v in data.items()}
+    return data
+
+# CORS Middleware - Updated Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:8000",  # FastAPI server
+        "http://127.0.0.1:8000",  # Alternative localhost
+        "http://localhost:5500",   # Your frontend origin (NEW)
+        "http://127.0.0.1:5500", #live server origin
+        "null",  # For local file access
+        "*"  # Be cautious with this in production
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Models for Authentication
 class UserSignup(BaseModel):
@@ -299,24 +315,27 @@ async def reset_password(reset_request: PasswordReset):
 @app.post("/upload-crime-report")
 async def upload_crime_report(
     file: UploadFile = File(None),
-    user_name: str = Form(...),
-    pincode: str = Form(...),
-    police_station: str = Form(...),
-    phone_number: str = Form(...),
-    crime_type: str = Form(...),
+    user_name: str = Form(None),
+    pincode: str = Form(None),
+    police_station: str = Form(None),
+    phone_number: str = Form(None),
+    crime_type: str = Form(None),
     description: Optional[str] = Form(None),
     current_user: dict = Depends(get_current_user)
 ):
+
     # Ensure uploads directory exists
     uploads_dir = "uploads"
     os.makedirs(uploads_dir, exist_ok=True)
 
+    if not all([pincode, police_station, phone_number, crime_type]):
+        raise HTTPException(status_code=400, detail="Missing required fields")
     # Generate a random 6-digit ticket number
     ticket_number = f"{random.randint(100000, 999999)}"
 
     # Prepare file handling
     file_path = None
-    if file:
+    if file and file.filename:
         # Generate a unique filename for the image
         file_extension = file.filename.split('.')[-1] if file.filename else 'jpg'
         unique_filename = f"{uuid.uuid4()}.{file_extension}"
@@ -392,13 +411,13 @@ async def get_police_stations(current_user: dict = Depends(get_current_user)):
 # Ticket Routes
 @app.get("/police-tickets")
 async def get_police_station_tickets(current_user: dict = Depends(get_current_user)):
-    # Assuming the police station is part of the user's profile
-    police_station = current_user.get('police_station')
+    # Find the police station associated with the current user
+    police_station = current_user.get('name')  # Assuming the name is stored in the user document
     if not police_station:
         raise HTTPException(status_code=403, detail="Not authorized to view tickets")
     
     try:
-        tickets = db.get_police_station_tickets(police_station)
+        tickets = list(db.tickets_collection.find({"police_station": police_station}))
         
         # Convert ObjectId to string for JSON serialization
         for ticket in tickets:
@@ -439,9 +458,9 @@ async def create_ticket(
     ticket: Ticket, 
     current_user: dict = Depends(get_current_user)
 ):
-    # Add user_id to ticket
+    # Add user_id as the ObjectId string to ticket
     ticket_data = ticket.dict()
-    ticket_data['user_id'] = current_user['username']
+    ticket_data['user_id'] = str(current_user['_id'])
     ticket_data['timestamp'] = datetime.utcnow()
     
     # Insert ticket
@@ -476,9 +495,9 @@ async def new_feature(param1: str, param2: int):
 
 @app.get("/user-tickets")
 async def get_user_tickets(current_user: dict = Depends(get_current_user)):
-    # Fetch tickets for the current user
     try:
-        tickets = list(db.tickets_collection.find({"user_id": current_user['username']}))
+        # Find tickets by username instead of user_id
+        tickets = list(db.tickets_collection.find({"user_name": current_user['username']}))
         
         # Convert ObjectId to string for JSON serialization
         for ticket in tickets:
@@ -486,7 +505,12 @@ async def get_user_tickets(current_user: dict = Depends(get_current_user)):
         
         return tickets
     except Exception as e:
+        print(f"Error fetching tickets: {str(e)}")  # Add logging
         raise HTTPException(status_code=500, detail=f"Error fetching tickets: {str(e)}")
+    
+@app.options("/user-tickets")
+async def options_user_tickets():
+    return {"status": "OK"}
 
 
 

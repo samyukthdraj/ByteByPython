@@ -102,7 +102,8 @@ class Database:
         if not user:
             raise ValueError(f"User {user_name} not found")
 
-        # If police station is provided, verify its existence
+        # If police station is provided, retrieve its details
+        station = None
         if police_station:
             station = self.police_stations_collection.find_one({"name": police_station})
             if not station:
@@ -110,13 +111,13 @@ class Database:
 
         ticket_doc = {
             "ticket_number": ticket_number,
-            "user_id": str(user['_id']),  # Store user's ObjectId
+            "user_id": str(user['_id']),  # Ensure this is a string
             "user_name": user_name,
             "pincode": pincode,
             "phone_number": phone_number,
-            "crime_type": crime_type,
+            "crime_type": crime_type.lower(),
             "police_station": police_station,
-            "police_station_id": station['_id'] if police_station else None,
+            "police_station_id": str(station['_id']) if station else None,
             "description": description,
             "image_url": image_url,
             "audio_url": audio_url,
@@ -127,7 +128,6 @@ class Database:
 
         result = self.tickets_collection.insert_one(ticket_doc)
         return ticket_number
-
     def get_police_station_tickets(self, police_station):
         """Retrieve tickets for a specific police station."""
         return list(self.tickets_collection.find({"police_station": police_station}))

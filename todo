@@ -44,12 +44,16 @@ Password: centralps
 
 
 - undone: tickets not submitting successfully, ticket number(random 6 digit number) alongside with the form details should be in the schema sent to the backend. random id should be created which the police can access. foreign key and primary key should be submitted alongside the schema in the tickets, ie with the 
-police dashboard fetch 
-user dashboard fetch
+undone: police dashboard fetch 
+undone: user dashboard fetch
+undone: dashboard filtering
     DONE: close button while submitting report should lead back to user dashboard
     DONE:signout button
 undone: ai implementation in index.html for analysing image and pincode with voice.
     DONE:50/50 login style , forgot pass, signup css
+<!-- undone: when clicking the link in uvicorn, only login comes without any css. -->
+undone: project structure. optimise code.
+undone: forgot pass fixes.
 
 # python -m http.server 8000
 
@@ -60,4 +64,8 @@ undone: ai implementation in index.html for analysing image and pincode with voi
 # - Install VsCode
 # - Install Python 3.8+
 # - Install dependencies: pip install -r requirements.txt
-# - uvicorn main:app --reload
+# - uvicorn main:app --reload (backend folder)
+# - python -m http.server 5500 (frontend folder)
+# - both should run simultaneously in two split terminals.
+# - "http://localhost:5500/login.html" run this 
+
