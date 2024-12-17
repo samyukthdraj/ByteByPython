@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter, Request, UploadFile, File
 from fastapi.exceptions import HTTPException #Corrected import
-from .model import Incident, DescriptionResponse, ImageRequest
+from .model import Incident, DescriptionResponse, ImageRequest, GetIncident
 from pydantic import BaseModel 
 from .service import post_incident, get_all_incidents, get_incidents_by_username, get_image_description
 from datetime import datetime
@@ -32,7 +32,7 @@ def get_all_incidents_route():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@incident_router.get("/get/incidentsByUsername/{username}", response_model=List[Incident])
+@incident_router.get("/get/incidentsByUsername/{username}", response_model=List[GetIncident])
 def get_incidents_by_username_route(username: str):
     try:
         return get_incidents_by_username(username)

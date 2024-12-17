@@ -1,7 +1,7 @@
 import base64
 from typing import List, Optional
 from bson.objectid import ObjectId
-from .model import Incident, DescriptionResponse
+from .model import Incident, DescriptionResponse, GetIncident
 from datetime import datetime
 from ..database import user_collection
 from ..database import incident_collection
@@ -10,6 +10,9 @@ import google.generativeai as genai
 from fastapi.exceptions import HTTPException
 from PIL import Image
 from io import BytesIO
+import uuid
+from uuid import uuid4 
+
 import os
 async def get_image_description(base64_image: str) -> str:
     try:
@@ -48,14 +51,26 @@ async def get_image_description(base64_image: str) -> str:
         return f"An error occurred: {e}"
 
 def post_incident(new_incident: Incident) -> Incident:
+    # Generate a new UUID v4 for the _id field
+    _id = str(uuid4())
+    
+    new_incident._id = _id  # Ensure _id is explicitly set to the UUID
+
+    # Convert the Pydantic model to a dictionary
     incident_data = new_incident.dict()
+    incident_data["_id"] = _id  # Ensure the UUID is explicitly set as _id
+    print(incident_data)  # Debugging: Print the incident data
+    
+    # Insert the incident into the database
     result = incident_collection.insert_one(incident_data)
+
     if result.acknowledged:
-        incident_data["id"] = str(result.inserted_id)
         return Incident(**incident_data)
+    
     raise Exception("Failed to add new incident")
 
-def get_incidents_by_username(username: str) -> List[Incident]:
+
+def get_incidents_by_username(username: str) -> List[GetIncident]:
     incidents = incident_collection.find({"username": username})
     return [Incident(**{**incident, "id": str(incident["_id"])}) for incident in incidents]
 
@@ -78,7 +93,7 @@ def get_all_incidents() -> List[dict]:
         },
         {
             '$project': {
-                '_id': 1,  # Include the _id field
+                'id': 1,  # Include the _id field
                 'image': 1,
                 'audio': 1,
                 'pincode': 1,

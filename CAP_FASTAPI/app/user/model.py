@@ -1,4 +1,4 @@
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, Field
 from enum import Enum
 
 class UserTypeEnum(str, Enum):
@@ -7,6 +7,7 @@ class UserTypeEnum(str, Enum):
 
 
 class User(BaseModel):
+    id: str = Field(..., alias="_id")
     name: str
     mobileNumber: str
     username: str

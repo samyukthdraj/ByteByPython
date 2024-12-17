@@ -11,7 +11,7 @@ import { AuthContext } from '../../context/AuthContext';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import { useRef } from 'react';
-
+import crimeTypesData from '../../utils/crimeTypes.json';
 export default function NewIncident() {
   const { user, isLoading } = useContext(AuthContext);
   const [formData, setFormData] = useState({
@@ -19,24 +19,26 @@ export default function NewIncident() {
     audio: null,
     pincode: '',
     crimeType: '',
-    description: '', // Initialize with an empty string
+    description: '',
     policeStationId: '',
     username: user ? user.username : '',
     startDate: '',
     status: '1'
   });
 
-  const [response, setResponse] = useState(null); // State to hold the response from `getImageDescription`
+  const [response, setResponse] = useState(null);
+  const [crimeTypes, setCrimeTypes] = useState([]);
   const imageInputRef = useRef();
 
   useEffect(() => {
-    const SystemDate = new Date().toISOString(); // Update startDate with current date-time
+    const SystemDate = new Date().toISOString();
     setFormData((prevData) => ({ ...prevData, startDate: SystemDate }));
+    setCrimeTypes(crimeTypesData);
   }, []);
 
   const handleFileChange = (event) => {
     const { name, files } = event.target;
-  
+
     if (files && files[0]) {
       const reader = new FileReader();
       reader.onload = () => {
@@ -48,18 +50,39 @@ export default function NewIncident() {
           return updatedData;
         });
       };
-      reader.readAsDataURL(files[0]); // Converts file to Base64
+      reader.readAsDataURL(files[0]);
     }
   };
-  
+
+  // const getImageDescription = async (image_base64) => {
+  //   const image = image_base64.split(',')[1];
+
+  //   const payload = {
+  //     image: image,
+  //   };
+
+  //   try {
+  //     let parsedData = {
+  //       crime: 'True',
+  //       typeOfCrime: 'Illegal Parking',
+  //       description: 'Multiple vehicles are parked in a "No Parking" zon…age.  This is a violation of traffic regulations',
+  //     };
+
+  //     console.log(parsedData);
+  //     setResponse(parsedData);
+  //   } catch (error) {
+  //     console.error('Error:', error);
+  //   }
+  // };
+
   const getImageDescription = async (image_base64) => {
     const image = image_base64.split(',')[1]; // Remove the prefix
-  
+ 
     // Construct the payload
     const payload = {
       image: image, // Send image as a key-value pair
     };
-  
+ 
     // Make the POST request
     try {
       const response = await postData(payload, 'post/getImageDescription');
@@ -69,7 +92,7 @@ export default function NewIncident() {
         typeOfCrime: '',
         description: '',
       };
-  
+ 
       responseData.forEach((line) => {
         const [key, value] = line.split(':');
         if (key === 'crime') {
@@ -91,11 +114,16 @@ export default function NewIncident() {
     if (response) {
       setFormData((prevData) => ({
         ...prevData,
-        crimeType: response.typeOfCrime || '', // Update crimeType
-        description: response.description || '', // Update description
+        crimeType: response.typeOfCrime || '',
+        description: response.description || '',
       }));
+
+      const existingCrime = crimeTypes.find((crime) => crime === response.typeOfCrime);
+      if (!existingCrime) {
+        setCrimeTypes((prevTypes) => [...prevTypes, response.typeOfCrime]);
+      }
     }
-  }, [response]);
+  }, [response, crimeTypes]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -113,7 +141,7 @@ export default function NewIncident() {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>; // Or some loading indicator
+    return <div>Loading...</div>;
   }
 
   return (
@@ -133,7 +161,6 @@ export default function NewIncident() {
           <h2>New Incident</h2>
           <FormControl component="form" onSubmit={handleSubmit} fullWidth>
             <FormGroup>
-              {/* Image Upload */}
               <FormControl fullWidth sx={{ marginBottom: 2 }}>
                 <Input
                   type="file"
@@ -146,23 +173,13 @@ export default function NewIncident() {
                   ref={imageInputRef}
                 />
                 <label htmlFor="image">
-                  <Button
-                    component="span"
-                    variant="outlined"
-                    fullWidth
-                    sx={{
-                      textAlign: 'left',
-                      justifyContent: 'flex-start',
-                      color: 'black',
-                    }}
-                  >
+                  <Button component="span" variant="outlined" fullWidth sx={{ textAlign: 'left', justifyContent: 'flex-start', color: 'black' }}>
                     Upload Image
                   </Button>
                 </label>
                 {formData.image && <FormHelperText sx={{ color: 'black' }}>Image uploaded</FormHelperText>}
               </FormControl>
 
-              {/* Audio Upload */}
               <FormControl fullWidth sx={{ marginBottom: 2 }}>
                 <Input
                   type="file"
@@ -174,36 +191,13 @@ export default function NewIncident() {
                   sx={{ display: 'none' }}
                 />
                 <label htmlFor="audio">
-                  <Button
-                    component="span"
-                    variant="outlined"
-                    fullWidth
-                    sx={{
-                      textAlign: 'left',
-                      justifyContent: 'flex-start',
-                      color: 'black',
-                    }}
-                  >
+                  <Button component="span" variant="outlined" fullWidth sx={{ textAlign: 'left', justifyContent: 'flex-start', color: 'black' }}>
                     Upload Audio
                   </Button>
                 </label>
                 {formData.audio && <FormHelperText sx={{ color: 'black' }}>Audio uploaded</FormHelperText>}
               </FormControl>
 
-              {/* Pincode Input */}
-              <TextField
-                id="pincode"
-                name="pincode"
-                label="Enter Pincode"
-                variant="standard"
-                value={formData.pincode}
-                onChange={handleChange}
-                fullWidth
-                required
-                sx={{ marginBottom: 2 }}
-              />
-
-              {/* Description Input */}
               <TextField
                 id="description"
                 name="description"
@@ -217,7 +211,6 @@ export default function NewIncident() {
                 sx={{ marginBottom: 2 }}
               />
 
-              {/* Crime Type Select */}
               <FormControl variant="standard" fullWidth required sx={{ marginBottom: 2 }}>
                 <InputLabel id="crimeType-label">Type of Crime</InputLabel>
                 <Select
@@ -226,15 +219,28 @@ export default function NewIncident() {
                   name="crimeType"
                   value={formData.crimeType}
                   onChange={handleChange}
+                  fullWidth
                 >
-                  <MenuItem value="Theft">Theft</MenuItem>
-                  <MenuItem value="Assault">Assault</MenuItem>
-                  <MenuItem value="Fraud">Fraud</MenuItem>
-                  <MenuItem value="Robbery">Robbery</MenuItem>
-                  <MenuItem value="Other">Other</MenuItem>
+                  {crimeTypes.map((crime, index) => (
+                    <MenuItem key={index} value={crime}>
+                      {crime}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
 
+              <TextField
+                id="pincode"
+                name="pincode"
+                label="Enter Pincode"
+                variant="standard"
+                value={formData.pincode}
+                onChange={handleChange}
+                fullWidth
+                required
+                sx={{ marginBottom: 2 }}
+              />
+              
               {/* Police Station Select */}
               <FormControl variant="standard" fullWidth required sx={{ marginBottom: 2 }}>
                 <InputLabel id="policeStation-label">Nearest Police Station</InputLabel>
@@ -252,13 +258,7 @@ export default function NewIncident() {
                 </Select>
               </FormControl>
 
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                color="secondary"
-                variant="contained"
-                sx={{ marginTop: 2 }}
-              >
+              <Button type="submit" variant="contained" fullWidth sx={{ marginTop: 2 }}>
                 Submit
               </Button>
             </FormGroup>
