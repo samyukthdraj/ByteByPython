@@ -1,9 +1,9 @@
 from fastapi import FastAPI
-from .route import user_router
+from .route import civilian_router
 
 app = FastAPI()
 
-app.include_router(user_router, prefix="/users")
+app.include_router(civilian_router, prefix="/civilian")
 
 if __name__ == "__main__":
     import uvicorn

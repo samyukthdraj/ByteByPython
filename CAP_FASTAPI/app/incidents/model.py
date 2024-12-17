@@ -20,9 +20,11 @@ class Incident(BaseModel):
     audio: str
     pincode: str
     crimeType: str
-    description: str
+    imageDescription: str
+    audioDescription: str
+    userDescription: str
+    userId: str 
     policeStationId: str
-    username: str 
     startDate: datetime
     status: StatusEnum
 
@@ -32,13 +34,20 @@ class GetIncident(BaseModel):
     audio: str
     pincode: str
     crimeType: str
-    description: str
+    imageDescription: str
+    audioDescription: str
+    userDescription: str
     policeStationId: str
-    username: str
     startDate: datetime
     status: StatusEnum
-    name: Optional[str] = None 
-    mobileNumber: Optional[str] = None
+    userName: Optional[str] = None 
+    userMobileNumber: Optional[str] = None
+    policeStationName: str
+    policeMobileNumber: str
+    policeStationLocation: str
+    policeStationPincode: str
+    policeStaionlatitude: str
+    policeStationlongitude: str
 
     @validator("status", pre=True)
     def validate_status(cls, value: str) -> str:

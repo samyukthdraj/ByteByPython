@@ -13,7 +13,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { FormControl, FormGroup } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { getData } from '../../services/API';
+import { getData, postData } from '../../services/API';
 import { AuthContext } from '../../context/AuthContext';
 
 const theme = createTheme();
@@ -47,19 +47,34 @@ export default function SignIn() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const response = await getData(`get/userByUserName/${formData.username}`);
-      if (response && response.password === formData.password) {
-        login(response); // Use the login function from AuthContext
-        if (response.userType === '2') {
-          navigate('/civilian/newIncident'); // Direct to the correct route
-        } else if (response.userType === '1') {
+      const response = await postData(formData, 'login');
+      console.log(formData)
+      if (response) {
+        // Check for userType to avoid errors if the server response changes
+        const userType = response.userType || response.user_type; // Handle potential variations in response
+        if (userType === 'civilian') {
+          login(response); // Call the login function from AuthContext
+          navigate('/civilian/newIncident');
+        } else if (userType === 'police') {
+          login(response); // Call the login function from AuthContext
           navigate('/police/dashboard');
         }
       } else {
-        setSnackbarOpen(true); // Show snackbar with error message
+        setSnackbarOpen(true);
       }
     } catch (error) {
-      console.error('Error:', error);
+      // Handle specific error responses
+      if (error.response && error.response.data && error.response.data.detail) {
+        setSnackbarOpen(true);
+        //Set a more specific error message based on the response.
+        // This example assumes the server sends 'detail' in the response.
+        const errorMessage = error.response.data.detail;
+        // Update the Snackbar message to reflect the specific error.
+        // you will likely want to use a more sophisticated approach to display errors.
+      } else {
+        console.error('Error:', error);
+        setSnackbarOpen(true); //Generic error message.
+      }
     }
   };
   

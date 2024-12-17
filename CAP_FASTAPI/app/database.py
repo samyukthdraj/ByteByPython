@@ -6,6 +6,6 @@ client = MongoClient(settings.MONGODB_URI)
 db = client.get_database("test")
 
 # Example collections
-user_collection = db["user"]
+civilian_collection = db["civilian"]
+police_collection = db["police"]
 incident_collection = db["incident"]
-images_collection = db["images"]

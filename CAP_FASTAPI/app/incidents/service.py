@@ -3,9 +3,7 @@ from typing import List, Optional
 from bson.objectid import ObjectId
 from .model import Incident, DescriptionResponse, GetIncident
 from datetime import datetime
-from ..database import user_collection
-from ..database import incident_collection
-from ..database import images_collection
+from ..database import incident_collection, civilian_collection, police_collection
 import google.generativeai as genai
 from fastapi.exceptions import HTTPException
 from PIL import Image
