@@ -15,6 +15,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { getData, postData } from '../../services/API';
 import { AuthContext } from '../../context/AuthContext';
+import API_URLS from '../../services/ApiUrl';
 
 const theme = createTheme();
 
@@ -47,14 +48,14 @@ export default function SignIn() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const response = await postData(formData, 'login');
+      const response = await postData(formData, API_URLS.AUTH.signIn);
       console.log(formData)
       if (response) {
         // Check for userType to avoid errors if the server response changes
         const userType = response.userType || response.user_type; // Handle potential variations in response
         if (userType === 'civilian') {
           login(response); // Call the login function from AuthContext
-          navigate('/civilian/newIncident');
+          navigate('/civilian/dashboard');
         } else if (userType === 'police') {
           login(response); // Call the login function from AuthContext
           navigate('/police/dashboard');

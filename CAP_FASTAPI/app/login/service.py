@@ -9,7 +9,7 @@ def post_login(loginUserDetails: Login):
     user = civilian_collection.find_one({"username": loginUserDetails.username})
     if user:
         if bcrypt.checkpw(loginUserDetails.password.encode('utf-8'), user["password"].encode('utf-8')):
-            return LoginResponse(_id=str(user["_id"]), userType="civilian")  # More descriptive userType
+            return LoginResponse(_id=str(user["_id"]),name=str(user["name"]), userType="civilian")  # More descriptive userType
         else:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -19,7 +19,7 @@ def post_login(loginUserDetails: Login):
     user = police_collection.find_one({"username": loginUserDetails.username})
     if user:
         if bcrypt.checkpw(loginUserDetails.password.encode('utf-8'), user["password"].encode('utf-8')):
-            return LoginResponse(_id=str(user["_id"]), userType="police")  # More descriptive userType
+            return LoginResponse(_id=str(user["_id"]),name=str(user["stationName"]), userType="police")  # More descriptive userType
         else:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

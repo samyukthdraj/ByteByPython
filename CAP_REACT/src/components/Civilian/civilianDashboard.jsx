@@ -15,6 +15,7 @@ import DialogContent from '@mui/material/DialogContent';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import Button from '@mui/material/Button';
+import API_URLS from '../../services/ApiUrl';
 
 
 export default function CivilianDashboard() {
@@ -42,14 +43,14 @@ export default function CivilianDashboard() {
 
 
   useEffect(() => {
-    if (user?.username) {
+    if (user?._id) {
       userIncidents();
     }
   }, [user]);
 
   const userIncidents = async () => {
     try {
-      const response = await getData(`get/incidentsByUsername/${user.username}`);
+      const response = await getData(API_URLS.INCIDENTS.getIncidentByUserId(user._id));
       if (Array.isArray(response)) {
         setIncidents(response);
       } else if (Array.isArray(response?.data)) {

@@ -1,11 +1,6 @@
-const url = 'http://127.0.0.1:8000/';
-
-export async function getData(endPoint) {
+export async function getData(url) {
     try {
-        const response = await fetch(url + endPoint);
-        // if (!response.ok) {
-        //     throw new Error(`Error ${response.status}: ${response.statusText}`);
-        // }
+        const response = await fetch(url);
         const data = await response.json();
         return data;
     } catch (error) {
@@ -14,18 +9,15 @@ export async function getData(endPoint) {
     }
 }
 
-export async function postData(newTokenData, endPoint) {
+export async function postData(newTokenData, url) {
     try {
-        const response = await fetch(url + endPoint, {
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(newTokenData),
         });
-        // if (!response.ok) {
-        //     throw new Error(`Error ${response.status}: ${response.statusText}`);
-        // }
         const data = await response.json();
         return data;
     } catch (error) {

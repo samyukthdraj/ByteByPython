@@ -1,34 +1,43 @@
 import * as React from 'react';
-import { useEffect, useState, useContext } from 'react';
+import { useEffect, useState, useContext, useRef } from 'react';
 import Box from '@mui/material/Box';
+import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import Container from '@mui/material/Container';
 import TextField from '@mui/material/TextField';
+import InputLabel from '@mui/material/InputLabel';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Button, FormControl, FormGroup, FormHelperText, Input } from '@mui/material';
+import { Button, FormControl, FormGroup, FormHelperText, Input, Snackbar, Alert } from '@mui/material';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import API_URLS from '../../services/ApiUrl';
 import { postData } from '../../services/API';
 import { AuthContext } from '../../context/AuthContext';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
-import { useRef } from 'react';
 import crimeTypesData from '../../utils/crimeTypes.json';
+
 export default function NewIncident() {
   const { user, isLoading } = useContext(AuthContext);
+  const navigate = useNavigate(); // Initialize useNavigate
   const [formData, setFormData] = useState({
+    _id: '',
     image: null,
     audio: null,
     pincode: '',
     crimeType: '',
-    description: '',
-    policeStationId: '',
-    username: user ? user.username : '',
+    imageDescription: '',
+    audioDescription: '',
+    userDescription: '',
+    policeStationId: 'f5d64cc9-40e9-4152-a930-07a7f223b30f',
+    userId: user ? user._id : '',
     startDate: '',
-    status: '1'
+    status: '1',
   });
 
   const [response, setResponse] = useState(null);
   const [crimeTypes, setCrimeTypes] = useState([]);
   const imageInputRef = useRef();
+
+  const [snackbarOpen, setSnackbarOpen] = useState(false); // Snackbar state
+  const [snackbarMessage, setSnackbarMessage] = useState(''); // Snackbar message
 
   useEffect(() => {
     const SystemDate = new Date().toISOString();
@@ -54,45 +63,22 @@ export default function NewIncident() {
     }
   };
 
-  // const getImageDescription = async (image_base64) => {
-  //   const image = image_base64.split(',')[1];
-
-  //   const payload = {
-  //     image: image,
-  //   };
-
-  //   try {
-  //     let parsedData = {
-  //       crime: 'True',
-  //       typeOfCrime: 'Illegal Parking',
-  //       description: 'Multiple vehicles are parked in a "No Parking" zon…age.  This is a violation of traffic regulations',
-  //     };
-
-  //     console.log(parsedData);
-  //     setResponse(parsedData);
-  //   } catch (error) {
-  //     console.error('Error:', error);
-  //   }
-  // };
-
   const getImageDescription = async (image_base64) => {
     const image = image_base64.split(',')[1]; // Remove the prefix
- 
-    // Construct the payload
+
     const payload = {
-      image: image, // Send image as a key-value pair
+      image: image,
     };
- 
-    // Make the POST request
+
     try {
-      const response = await postData(payload, 'post/getImageDescription');
-      const responseData = response.description.split('\n'); // Split the description string by lines
+      const response = await postData(payload, API_URLS.INCIDENTS.getImageDescription);
+      const responseData = response.description.split('\n');
       let parsedData = {
         crime: '',
         typeOfCrime: '',
-        description: '',
+        imageDescription: '',
       };
- 
+
       responseData.forEach((line) => {
         const [key, value] = line.split(':');
         if (key === 'crime') {
@@ -100,11 +86,10 @@ export default function NewIncident() {
         } else if (key === 'typeOfCrime') {
           parsedData.typeOfCrime = value.trim();
         } else if (key === 'description') {
-          parsedData.description = value.trim();
+          parsedData.imageDescription = value.trim();
         }
       });
-      console.log(parsedData);
-      setResponse(parsedData); // Store the parsed response in the state
+      setResponse(parsedData);
     } catch (error) {
       console.error('Error:', error);
     }
@@ -115,7 +100,7 @@ export default function NewIncident() {
       setFormData((prevData) => ({
         ...prevData,
         crimeType: response.typeOfCrime || '',
-        description: response.description || '',
+        imageDescription: response.imageDescription || '',
       }));
 
       const existingCrime = crimeTypes.find((crime) => crime === response.typeOfCrime);
@@ -133,11 +118,23 @@ export default function NewIncident() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const response = await postData(formData, 'post/incident');
-      console.log('Response:', response);
+      const response = await postData(formData, API_URLS.INCIDENTS.postIncident);
+        setSnackbarMessage(response.detail);
+        setSnackbarOpen(true);
+      if(response.detail === '201: Incident created successfully.'){
+        setTimeout(() => {
+          navigate('/civilian/dashboard'); // Navigate after showing the message
+        }, 2000); // Wait for 2 seconds
+      }
     } catch (error) {
       console.error('Error submitting form:', error);
+      setSnackbarMessage('Failed to submit incident. Please try again.');
+      setSnackbarOpen(true); // Open Snackbar
     }
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
   };
 
   if (isLoading) {
@@ -199,12 +196,38 @@ export default function NewIncident() {
               </FormControl>
 
               <TextField
-                id="description"
-                name="description"
+                id="imageDescription"
+                name="imageDescription"
+                label="Image Description"
+                multiline
+                variant="standard"
+                value={formData.imageDescription}
+                onChange={handleChange}
+                fullWidth
+                required
+                sx={{ marginBottom: 2 }}
+              />
+
+              <TextField
+                id="audioDescription"
+                name="audioDescription"
+                label="Audio Description"
+                multiline
+                variant="standard"
+                value={formData.audioDescription}
+                onChange={handleChange}
+                fullWidth
+                required
+                sx={{ marginBottom: 2 }}
+              />
+
+              <TextField
+                id="userDescription"
+                name="userDescription"
                 label="Description"
                 multiline
                 variant="standard"
-                value={formData.description}
+                value={formData.userDescription}
                 onChange={handleChange}
                 fullWidth
                 required
@@ -240,7 +263,7 @@ export default function NewIncident() {
                 required
                 sx={{ marginBottom: 2 }}
               />
-              
+
               {/* Police Station Select */}
               <FormControl variant="standard" fullWidth required sx={{ marginBottom: 2 }}>
                 <InputLabel id="policeStation-label">Nearest Police Station</InputLabel>

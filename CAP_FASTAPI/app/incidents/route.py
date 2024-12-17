@@ -25,14 +25,14 @@ def post_incident_route(incident: Incident):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@incident_router.get("/get/AllIncidents", response_model=List[Incident])
+@incident_router.get("/get/AllIncident", response_model=List[Incident])
 def get_all_incidents_route():
     try:
         return get_all_incidents()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@incident_router.get("/get/incidentsByUsername/{username}", response_model=List[GetIncident])
+@incident_router.get("/get/incidentByUserId/{_id}", response_model=List[GetIncident])
 def get_incidents_by_username_route(username: str):
     try:
         return get_incidents_by_username(username)

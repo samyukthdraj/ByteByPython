@@ -8,8 +8,7 @@ from .service import post_login
 login_router = APIRouter()
 
 @login_router.post("/login", response_model=LoginResponse)
-def post_login_route(form_data: OAuth2PasswordRequestForm = Depends()):
-    loginUserDetail = Login(username=form_data.username, password=form_data.password) # Create User object from form data
+def post_login_route(loginUserDetail: Login):
     user = post_login(loginUserDetail) #call asynchronously
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")

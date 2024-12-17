@@ -5,7 +5,8 @@ from .model import Incident, DescriptionResponse, GetIncident
 from datetime import datetime
 from ..database import incident_collection, civilian_collection, police_collection
 import google.generativeai as genai
-from fastapi.exceptions import HTTPException
+from fastapi import FastAPI, HTTPException, status, Depends
+from pymongo.errors import DuplicateKeyError, PyMongoError
 from PIL import Image
 from io import BytesIO
 import uuid
@@ -48,25 +49,37 @@ async def get_image_description(base64_image: str) -> str:
         print(f"An error occurred: {e}")
         return f"An error occurred: {e}"
 
-def post_incident(new_incident: Incident) -> Incident:
+def post_incident(new_incident: Incident) -> None:
     # Generate a new UUID v4 for the _id field
     _id = str(uuid4())
-    
     new_incident._id = _id  # Ensure _id is explicitly set to the UUID
 
     # Convert the Pydantic model to a dictionary
-    incident_data = new_incident.dict()
-    incident_data["_id"] = _id  # Ensure the UUID is explicitly set as _id
-    print(incident_data)  # Debugging: Print the incident data
-    
-    # Insert the incident into the database
-    result = incident_collection.insert_one(incident_data)
+    incident_data = new_incident.model_dump(exclude={"id"})
+    incident_data["_id"] = _id  # Explicitly set the UUID as _id
 
-    if result.acknowledged:
-        return Incident(**incident_data)
-    
-    raise Exception("Failed to add new incident")
-
+    try:
+        # Insert the incident into the database
+        result = incident_collection.insert_one(incident_data)
+        if result.acknowledged:
+            # Send a success response message
+            raise HTTPException(
+                status_code=status.HTTP_201_CREATED,
+                detail="Incident created successfully."
+            )
+        else:
+            # Handle the case where insert_one is not acknowledged
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create incident; database operation not acknowledged."
+            )
+    except PyMongoError as e:  # Catch specific pymongo errors
+        # Log the error for debugging
+        print(f"MongoDB error during incident creation: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected database error occurred. Please try again later."
+        )
 
 def get_incidents_by_username(username: str) -> List[GetIncident]:
     incidents = incident_collection.find({"username": username})

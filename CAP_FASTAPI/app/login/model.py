@@ -7,4 +7,6 @@ class Login(BaseModel):
 
 class LoginResponse(BaseModel):
     id: str = Field(..., alias="_id")
+    name: str
     userType: str
+    

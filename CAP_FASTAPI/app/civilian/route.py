@@ -11,7 +11,7 @@ civilian_router = APIRouter()
 def post_civilian_route(civilian: Civilian):
     return post_civilian(civilian)
 
-@civilian_router.get("/get/civilianDetailsById/{id}", response_model=GetCivilianDetailsById)
+@civilian_router.get("/get/civilianDetailById/{id}", response_model=GetCivilianDetailsById)
 def get_civilianDetailsById_route(id: str):
     user = get_civilianDetailsById(id)
     if user is None:

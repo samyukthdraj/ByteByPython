@@ -13,16 +13,16 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { FormControl, FormGroup } from '@mui/material';
 import Snackbar from '@mui/material/Snackbar';
 import { getData, postData } from '../../services/API';
-
+import API_URLS from '../../services/ApiUrl';
 const theme = createTheme();
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
+    _id: '',
     name: '',
     mobileNumber: '',
     username: '',
     password: '',
-    type: '2',
   });
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -38,19 +38,21 @@ export default function SignUp() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
     try {
-      const response = await getData(`get/userByUserName/${formData.username}`);
-      if (response.detail === 'User not found') {
-        const postResponse = await postData(formData, 'post/user');
-        console.log(postResponse);
+      // Call the API to create the new civilian
+      const postResponse = await postData(formData, API_URLS.CIVILIAN.signUp);
+
+      if (postResponse.detail === 'User created successfully') {
         navigate('/'); // Navigate to the Sign In page after successful signup
-      } else {
+      } else if (postResponse.detail = 'Username already exists') {
         setSnackbarOpen(true);
       }
     } catch (error) {
-      console.log(error);
+      console.error('An unexpected error occurred:', error.message);
     }
-  };  
+  };
+
 
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
