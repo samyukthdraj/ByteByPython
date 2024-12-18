@@ -13,7 +13,7 @@ import uuid
 from uuid import uuid4 
 
 import os
-async def get_image_description(base64_image: str) -> str:
+async def post_getImageDescription(base64_image: str) -> str:
     try:
         # Set API key directly
         os.environ["GOOGLE_API_KEY"] = "AIzaSyCxDkmeh9i9av4ZA_qJ42FxyQgm-6X4rOY"  # Replace with your actual API key
@@ -81,47 +81,174 @@ def post_incident(new_incident: Incident) -> None:
             detail="An unexpected database error occurred. Please try again later."
         )
 
-def get_incidents_by_username(username: str) -> List[GetIncident]:
-    incidents = incident_collection.find({"username": username})
-    return [Incident(**{**incident, "id": str(incident["_id"])}) for incident in incidents]
-
-def get_all_incidents() -> List[dict]:
-    # Aggregate incidents with user details
+def get_allIncident() -> List[GetIncident]:
+    # Aggregate incidents with user and police station details
     pipeline = [
         {
             '$lookup': {
-                'from': 'user',  # Collection to join with
-                'localField': 'username',  # Field in the incidents collection
-                'foreignField': 'username',  # Field in the users collection
+                'from': 'civilian',  # Join with the user collection
+                'localField': 'userId',  # Field in the incident collection
+                'foreignField': '_id',  # Field in the user collection
                 'as': 'userDetails'  # Name of the new field for the joined documents
             }
         },
         {
             '$unwind': {
-                'path': '$userDetails',  # Flatten the array of joined documents
+                'path': '$userDetails',  # Flatten the array of joined user documents
                 'preserveNullAndEmptyArrays': True  # Include null when no user details match
             }
         },
         {
+            '$lookup': {
+                'from': 'police',  # Join with the police collection
+                'localField': 'policeStationId',  # Field in the incident collection
+                'foreignField': '_id',  # Field in the police collection
+                'as': 'policeDetails'  # Name of the new field for the joined documents
+            }
+        },
+        {
+            '$unwind': {
+                'path': '$policeDetails',  # Flatten the array of joined police documents
+                'preserveNullAndEmptyArrays': True  # Include null when no police details match
+            }
+        },
+        {
             '$project': {
-                'id': 1,  # Include the _id field
+                '_id': 1,  # Incident ID
                 'image': 1,
                 'audio': 1,
                 'pincode': 1,
                 'crimeType': 1,
-                'description': 1,
-                'policeStationId': 1,
-                'username': 1,
+                'imageDescription': 1,
+                'audioDescription': 1,
+                'userDescription': 1,
                 'startDate': 1,
                 'status': 1,
-                'userDetails.username': 1,
                 'userDetails.name': 1,
-                'userDetails.mobileNumber': 1
+                'userDetails.mobileNumber': 1,
+                'policeDetails.stationName': 1,
+                'policeDetails.mobileNumber': 1,
+                'policeDetails.location': 1,
+                'policeDetails.pincode': 1,
+                'policeDetails.latitude': 1,
+                'policeDetails.longitude': 1
             }
         }
     ]
 
     # Execute the aggregation pipeline
     incidents = list(incident_collection.aggregate(pipeline))
-    
-    return [Incident(**{**incident, "id": str(incident["_id"])}) for incident in incidents]
+    #print(incidents)
+    # Map the result to the GetIncident model
+    return [
+        GetIncident(
+            id=str(incident["_id"]),
+            image=incident.get("image"),
+            audio=incident.get("audio"),
+            pincode=incident.get("pincode"),
+            crimeType=incident.get("crimeType"),
+            imageDescription=incident.get("imageDescription"),
+            audioDescription=incident.get("audioDescription"),
+            userDescription=incident.get("userDescription"),
+            policeStationId=incident.get("policeStationId"),
+            startDate=incident.get("startDate"),
+            status=incident.get("status"),
+            userName=incident.get("userDetails", {}).get("name"),
+            userMobileNumber=incident.get("userDetails", {}).get("mobileNumber"),
+            policeStationName=incident.get("policeDetails", {}).get("stationName"),
+            policeMobileNumber=incident.get("policeDetails", {}).get("mobileNumber"),
+            policeStationLocation=incident.get("policeDetails", {}).get("location"),
+            policeStationPincode=incident.get("policeDetails", {}).get("pincode"),
+            policeStaionlatitude=incident.get("policeDetails", {}).get("latitude"),
+            policeStationlongitude=incident.get("policeDetails", {}).get("longitude"),
+        )
+        for incident in incidents
+    ]
+
+def get_incidentByUserId(_id: str) -> List[GetIncident]:
+    """Fetches incident details for a given user ID."""
+    pipeline = [
+    {
+        '$match': {  # Add a matching stage to filter by userId
+            'userId': _id
+        }
+    },
+    {
+        '$lookup': {
+        'from': 'civilian',
+        'localField': 'userId',
+        'foreignField': '_id',
+        'as': 'userDetails'
+        }
+    },
+    {
+        '$unwind': {
+        'path': '$userDetails',
+        'preserveNullAndEmptyArrays': True
+        }
+    },
+    {
+        '$lookup': {
+        'from': 'police',
+        'localField': 'policeStationId',
+        'foreignField': '_id',
+        'as': 'policeDetails'
+        }
+    },
+    {
+        '$unwind': {
+        'path': '$policeDetails',
+        'preserveNullAndEmptyArrays': True
+        }
+    },
+    {
+        '$project': {
+        '_id': 1,
+        'image': 1,
+        'audio': 1,
+        'pincode': 1,
+        'crimeType': 1,
+        'imageDescription': 1,
+        'audioDescription': 1,
+        'userDescription': 1,
+        'startDate': 1,
+        'status': 1,
+        'userDetails.name': 1,
+        'userDetails.mobileNumber': 1,
+        'policeDetails.stationName': 1,
+        'policeDetails.mobileNumber': 1,
+        'policeDetails.location': 1,
+        'policeDetails.pincode': 1,
+        'policeDetails.latitude': 1,
+        'policeDetails.longitude': 1
+        }
+    }
+    ]
+
+    incidents = list(incident_collection.aggregate(pipeline))
+
+    #Corrected return statement, after list comprehension
+    return [
+        GetIncident(
+            id=str(incident["_id"]),
+            image=incident.get("image"),
+            audio=incident.get("audio"),
+            pincode=incident.get("pincode"),
+            crimeType=incident.get("crimeType"),
+            imageDescription=incident.get("imageDescription"),
+            audioDescription=incident.get("audioDescription"),
+            userDescription=incident.get("userDescription"),
+            policeStationId=incident.get("policeStationId"),
+            startDate=incident.get("startDate"),
+            status=incident.get("status"),
+            userName=incident.get("userDetails", {}).get("name"),
+            userMobileNumber=incident.get("userDetails", {}).get("mobileNumber"),
+            policeStationName=incident.get("policeDetails", {}).get("stationName"),
+            policeMobileNumber=incident.get("policeDetails", {}).get("mobileNumber"),
+            policeStationLocation=incident.get("policeDetails", {}).get("location"),
+            policeStationPincode=incident.get("policeDetails", {}).get("pincode"),
+            policeStaionlatitude=incident.get("policeDetails", {}).get("latitude"),
+            policeStationlongitude=incident.get("policeDetails", {}).get("longitude"),
+        )
+        for incident in incidents
+    ]

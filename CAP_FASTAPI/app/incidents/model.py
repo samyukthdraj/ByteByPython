@@ -29,7 +29,7 @@ class Incident(BaseModel):
     status: StatusEnum
 
 class GetIncident(BaseModel):
-    id: str = Field(..., alias="_id")
+    id: str
     image: str
     audio: str
     pincode: str
@@ -37,7 +37,6 @@ class GetIncident(BaseModel):
     imageDescription: str
     audioDescription: str
     userDescription: str
-    policeStationId: str
     startDate: datetime
     status: StatusEnum
     userName: Optional[str] = None 

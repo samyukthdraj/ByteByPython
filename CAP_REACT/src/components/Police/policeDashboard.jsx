@@ -15,6 +15,7 @@ import DialogContent from '@mui/material/DialogContent';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import Button from '@mui/material/Button';
+import API_URLS from '../../services/ApiUrl';
 
 
 export default function PoliceDashboard() {
@@ -35,14 +36,13 @@ export default function PoliceDashboard() {
             case '3':
                 return 'Dismissed';
             default:
-                console.warn(`Unexpected status number: ${statusNumber}`);
                 return 'Unknown';
         }
     };
 
     const userIncidents = async () => {
         try {
-            const response = await getData('getAll/incidents');
+            const response = await getData(API_URLS.INCIDENTS.getAllIncident);
             if (Array.isArray(response)) {
                 setIncidents(response);
             } else if (Array.isArray(response?.data)) {
@@ -58,7 +58,7 @@ export default function PoliceDashboard() {
     };
 
     useEffect(() => {
-        if (user?.username) {
+        if (user?._id) {
             userIncidents();
         }
     }, [user]);
@@ -90,7 +90,6 @@ export default function PoliceDashboard() {
         setSelectedIncident(incident);
     };
 
-
     return (
         <>
             <TableContainer component={Paper}>
@@ -99,18 +98,21 @@ export default function PoliceDashboard() {
                         <TableRow>
                             <TableCell>Image</TableCell>
                             <TableCell>Audio</TableCell>
-                            <TableCell>Pincode</TableCell>
                             <TableCell>Crime Type</TableCell>
+                            <TableCell>Image Description</TableCell>
+                            <TableCell>Audio Description</TableCell>
                             <TableCell>Description</TableCell>
-                            <TableCell>Police Station</TableCell>
-                            <TableCell>Username</TableCell>
+                            <TableCell>Civilian Name</TableCell>
+                            <TableCell>Civilian Mobile Number</TableCell>
+                            <TableCell>Police Station Name</TableCell>
+                            <TableCell>Police Station Location</TableCell>
                             <TableCell>Start Date</TableCell>
                             <TableCell>Status</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {incidents.map((incident) => (
-                            <TableRow key={incident.id || incident.incidentId}> {/* Use incidentId or index if no id */}
+                            <TableRow key={incident.id}>
                                 <TableCell>
                                     <Button onClick={() => handleOpenImageDialog(incident)}>
                                         {incident.image ? 'View Image' : 'No Image'}
@@ -121,24 +123,23 @@ export default function PoliceDashboard() {
                                         {incident.audio ? 'Play Audio' : 'No Audio'}
                                     </Button>
                                 </TableCell>
-                                <TableCell>{incident.pincode}</TableCell>
                                 <TableCell>{incident.crimeType}</TableCell>
-                                <TableCell>{incident.description}</TableCell>
-                                <TableCell>{incident.policeStation}</TableCell>
-                                <TableCell>{incident.username}</TableCell>
+                                <TableCell>{incident.imageDescription}</TableCell>
+                                <TableCell>{incident.audioDescription}</TableCell>
+                                <TableCell>{incident.userDescription}</TableCell>
+                                <TableCell>{incident.userName}</TableCell>
+                                <TableCell>{incident.userMobileNumber}</TableCell>
+                                <TableCell>{incident.policeStationName}</TableCell>
+                                <TableCell>{incident.policeStationLocation}</TableCell>
                                 <TableCell>{new Date(incident.startDate).toLocaleString()}</TableCell>
                                 <TableCell>{getStatus(incident.status)}</TableCell>
                             </TableRow>
                         ))}
-                        {incidents.length === 0 && (
-                            <TableRow>
-                                <TableCell colSpan={9}>No incidents found.</TableCell>
-                            </TableRow>
-                        )}
                     </TableBody>
                 </Table>
             </TableContainer>
 
+            {/* Image Dialog */}
             <Dialog open={openImageDialog} onClose={handleCloseDialog}>
                 <DialogTitle>
                     Incident Image
@@ -166,6 +167,7 @@ export default function PoliceDashboard() {
                 </DialogContent>
             </Dialog>
 
+            {/* Audio Dialog */}
             <Dialog open={openAudioDialog} onClose={handleCloseDialog}>
                 <DialogTitle>
                     Incident Audio

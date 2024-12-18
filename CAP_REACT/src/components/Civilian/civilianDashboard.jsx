@@ -17,17 +17,15 @@ import CloseIcon from '@mui/icons-material/Close';
 import Button from '@mui/material/Button';
 import API_URLS from '../../services/ApiUrl';
 
-
 export default function CivilianDashboard() {
   const { user } = useContext(AuthContext);
   const [incidents, setIncidents] = useState([]);
-  const [openImageDialog, setOpenImageDialog] = useState(null); // State for image dialog
-  const [openAudioDialog, setOpenAudioDialog] = useState(null); // State for audio dialog
-  const [selectedIncident, setSelectedIncident] = useState(null); // Selected incident data
+  const [openImageDialog, setOpenImageDialog] = useState(null);
+  const [openAudioDialog, setOpenAudioDialog] = useState(null);
+  const [selectedIncident, setSelectedIncident] = useState(null);
 
   const getStatus = (statusNumber) => {
-    const statusString = String(statusNumber); // Convert to string
-
+    const statusString = String(statusNumber);
     switch (statusString) {
       case '1':
         return 'Awaiting Action';
@@ -36,11 +34,9 @@ export default function CivilianDashboard() {
       case '3':
         return 'Dismissed';
       default:
-        console.warn(`Unexpected status number: ${statusNumber}`);
         return 'Unknown';
     }
   };
-
 
   useEffect(() => {
     if (user?._id) {
@@ -52,16 +48,17 @@ export default function CivilianDashboard() {
     try {
       const response = await getData(API_URLS.INCIDENTS.getIncidentByUserId(user._id));
       if (Array.isArray(response)) {
-        setIncidents(response);
+          setIncidents(response);
       } else if (Array.isArray(response?.data)) {
-        setIncidents(response.data);
+          setIncidents(response.data);
       } else {
-        console.error('Unexpected response format:', response);
-        setIncidents([]);
+          console.error('Unexpected response format:', response);
+          setIncidents([]);
       }
-    } catch (error) {
+  } catch (error) {
       console.error('Error fetching incidents:', error);
-    }
+      setIncidents([]);
+  }
   };
 
   const handleCloseDialog = () => {
@@ -82,13 +79,18 @@ export default function CivilianDashboard() {
 
   const convertBase64ToBlobUrl = (base64, mimeType) => {
     if (!base64) return null;
-    const binary = atob(base64.split(',')[1]);
-    const array = [];
-    for (let i = 0; i < binary.length; i++) {
-      array.push(binary.charCodeAt(i));
+    try {
+      const binary = atob(base64.split(',')[1]);
+      const array = [];
+      for (let i = 0; i < binary.length; i++) {
+        array.push(binary.charCodeAt(i));
+      }
+      const blob = new Blob([new Uint8Array(array)], { type: mimeType });
+      return URL.createObjectURL(blob);
+    } catch (error) {
+      console.error("Error converting base64:", error);
+      return null;
     }
-    const blob = new Blob([new Uint8Array(array)], { type: mimeType });
-    return URL.createObjectURL(blob);
   };
 
   return (
@@ -100,16 +102,18 @@ export default function CivilianDashboard() {
               <TableCell>Image</TableCell>
               <TableCell>Audio</TableCell>
               <TableCell>Crime Type</TableCell>
+              <TableCell>Image Description</TableCell>
+              <TableCell>Audio Description</TableCell>
               <TableCell>Description</TableCell>
-              <TableCell>Pincode</TableCell>
-              <TableCell>Police Station</TableCell>
+              <TableCell>Police Station Name</TableCell>
+              <TableCell>Police Station Location</TableCell>
               <TableCell>Start Date</TableCell>
               <TableCell>Status</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {incidents.map((incident) => (
-              <TableRow key={incident.id}> {/* Assuming each incident has an 'id' */}
+              <TableRow key={incident.id}>
                 <TableCell>
                   <Button onClick={() => handleOpenImageDialog(incident)}>
                     {incident.image ? 'View Image' : 'No Image'}
@@ -121,12 +125,12 @@ export default function CivilianDashboard() {
                   </Button>
                 </TableCell>
                 <TableCell>{incident.crimeType}</TableCell>
-                <TableCell>{incident.description}</TableCell>
-                <TableCell>{incident.pincode}</TableCell>
-                <TableCell>{incident.policeStation}</TableCell>
-                <TableCell>
-                  {new Date(incident.startDate).toLocaleString()}
-                </TableCell>
+                <TableCell>{incident.imageDescription}</TableCell>
+                <TableCell>{incident.audioDescription}</TableCell>
+                <TableCell>{incident.userDescription}</TableCell>
+                <TableCell>{incident.policeStationName}</TableCell>
+                <TableCell>{incident.policeStationLocation}</TableCell>
+                <TableCell>{new Date(incident.startDate).toLocaleString()}</TableCell>
                 <TableCell>{getStatus(incident.status)}</TableCell>
               </TableRow>
             ))}
