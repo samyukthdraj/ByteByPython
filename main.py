@@ -18,7 +18,8 @@ from typing import List, Optional
 from config import settings
 from fastapi import HTTPException
 from fastapi.responses import HTMLResponse
-from bson.objectid import ObjectId
+from bson import ObjectId
+from fastapi.encoders import jsonable_encoder
 import os
 
 app = FastAPI()
@@ -500,8 +501,9 @@ async def get_user_tickets(current_user: dict = Depends(get_current_user)):
         tickets = list(db.tickets_collection.find({"user_name": current_user['username']}))
         
         # Convert ObjectId to string for JSON serialization
-        for ticket in tickets:
-            ticket['_id'] = str(ticket['_id'])
+        # for ticket in tickets:
+        #     ticket['_id'] = str(ticket['_id'])
+        tickets = convert_objectid_to_str(tickets)
         
         return tickets
     except Exception as e:
