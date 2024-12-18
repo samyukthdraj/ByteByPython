@@ -241,7 +241,7 @@ async def police_login(login_data: dict = Body(...)):
     if not verify_password(station_password, db_station["hashed_password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials.")
 
-    # Generate access token
+    # Generate access token using the station's username
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": db_station["username"]}, expires_delta=access_token_expires
@@ -409,30 +409,47 @@ async def get_police_stations(current_user: dict = Depends(get_current_user)):
     stations = list(db.police_stations_collection.find())
     return stations
 
+async def get_current_police_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    
+    # Check in police stations collection
+    police_station = db.police_stations_collection.find_one({"username": username})
+    if police_station is None:
+        raise credentials_exception
+    return police_station
+
+
 # Ticket Routes
 @app.get("/police-tickets")
-async def get_police_station_tickets(current_user: dict = Depends(get_current_user)):
-    # Find the police station associated with the current user
-    police_station = current_user.get('name')  # Assuming the name is stored in the user document
-    if not police_station:
-        raise HTTPException(status_code=403, detail="Not authorized to view tickets")
-    
+async def get_police_station_tickets(current_user: dict = Depends(get_current_police_user)):
     try:
-        tickets = list(db.tickets_collection.find({"police_station": police_station}))
+        # Use the police station name from the authenticated police station
+        tickets = list(db.tickets_collection.find({"police_station": current_user.get('name')}))
         
         # Convert ObjectId to string for JSON serialization
-        for ticket in tickets:
-            ticket['_id'] = str(ticket['_id'])
+        tickets = convert_objectid_to_str(tickets)
         
         return tickets
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching police tickets: {str(e)}")
+        print(f"Error fetching tickets: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching tickets: {str(e)}")
 
 @app.post("/update-ticket/{ticket_number}")
 async def update_ticket_status(
     ticket_number: str, 
     status_update: dict = Body(...), 
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_police_user)
 ):
     new_status = status_update.get('status')
     if not new_status:
