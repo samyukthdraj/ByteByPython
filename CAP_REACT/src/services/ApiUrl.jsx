@@ -14,6 +14,9 @@ const API_URLS = {
     getAllIncident: `${BASE_URL}/get/AllIncident`,
     getIncidentByUserId: (id) => `${BASE_URL}/get/incidentByUserId/${id}`,
   },
+  POLICE: {
+    getPoliceStationDetail: `${BASE_URL}/get/policeStationDetails`,
+  }
 };
 
 export default API_URLS;

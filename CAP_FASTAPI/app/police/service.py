@@ -6,7 +6,7 @@ from pymongo.errors import DuplicateKeyError, PyMongoError
 from .model import Police
 from ..database import police_collection
 
-def post_police(new_police: Police) -> None:
+def post_policeStation(new_police: Police) -> None:
     existing_user = police_collection.find_one({"username": new_police.username})
     if existing_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already exists")
@@ -31,3 +31,16 @@ def post_police(new_police: Police) -> None:
     except PyMongoError as e: # Catch specific pymongo errors.
         print(f"MongoDB error: {e}") #Log this error for debugging.  Don't send it to the user.
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="A database error occurred.")
+
+def get_policeStationDetails() -> Optional[Police]:
+    try:
+        # Fetch a single document from the collection
+        policeStationDetails = police_collection.find_one()
+        if policeStationDetails:
+            # Convert the MongoDB document to a Police model instance
+            return Police(**policeStationDetails)
+    except Exception as e:
+        print(f"Error fetching police station details: {e}")
+    
+    # Return None if no details are found or an error occurs
+    return None

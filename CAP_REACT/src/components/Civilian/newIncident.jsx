@@ -10,7 +10,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { Button, FormControl, FormGroup, FormHelperText, Input, Snackbar, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import API_URLS from '../../services/ApiUrl';
-import { postData } from '../../services/API';
+import { getData, postData } from '../../services/API';
 import { AuthContext } from '../../context/AuthContext';
 import crimeTypesData from '../../utils/crimeTypes.json';
 
@@ -26,7 +26,7 @@ export default function NewIncident() {
     imageDescription: '',
     audioDescription: '',
     userDescription: '',
-    policeStationId: 'f5d64cc9-40e9-4152-a930-07a7f223b30f',
+    policeStationId: '',
     userId: user ? user._id : '',
     startDate: '',
     status: '1',
@@ -35,15 +35,37 @@ export default function NewIncident() {
   const [response, setResponse] = useState(null);
   const [crimeTypes, setCrimeTypes] = useState([]);
   const imageInputRef = useRef();
+  const [policeStationDetial, setPoliceStationDetail] = useState([]);
 
   const [snackbarOpen, setSnackbarOpen] = useState(false); // Snackbar state
   const [snackbarMessage, setSnackbarMessage] = useState(''); // Snackbar message
+  const [filteredStations, setFilteredStations] = useState([]);
 
   useEffect(() => {
     const SystemDate = new Date().toISOString();
     setFormData((prevData) => ({ ...prevData, startDate: SystemDate }));
     setCrimeTypes(crimeTypesData);
+    getPoliceStationDetail();
   }, []);
+
+  const getPoliceStationDetail = async () => {
+    try {
+      const response = await getData(API_URLS.POLICE.getPoliceStationDetail);
+      if (response && Array.isArray(response)) {
+        // If response is a list, set it directly
+        setPoliceStationDetail(response);
+      } else if (response) {
+        // If response is not an array but still valid
+        setPoliceStationDetail([response]);
+      } else {
+        console.error("Unexpected response format:", response);
+        setPoliceStationDetail([]); // Fallback to an empty list
+      }
+    } catch (error) {
+      console.error("Error fetching police station details:", error);
+    }
+  };
+
 
   const handleFileChange = (event) => {
     const { name, files } = event.target;
@@ -115,13 +137,34 @@ export default function NewIncident() {
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
+  // Handle pincode change and filter police station details
+  const handlePincodeChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
+
+    if (value.length === 6) { // Assuming pincode is 6 digits
+      const filteredStations = policeStationDetial.filter(
+        (station) => station.pincode === value
+      );
+      setFilteredStations(filteredStations);
+    } else {
+      setFilteredStations([]); // Reset the list if pincode is invalid
+    }
+  };
+
+  const handlePoliceStationChange = (e) => {
+    const { value } = e.target;
+    setFormData((prevData) => ({ ...prevData, policeStationId: value }));
+  };
+
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
       const response = await postData(formData, API_URLS.INCIDENTS.postIncident);
-        setSnackbarMessage(response.detail);
-        setSnackbarOpen(true);
-      if(response.detail === '201: Incident created successfully.'){
+      setSnackbarMessage(response.detail);
+      setSnackbarOpen(true);
+      if (response.detail === '201: Incident created successfully.') {
         setTimeout(() => {
           navigate('/civilian/dashboard'); // Navigate after showing the message
         }, 2000); // Wait for 2 seconds
@@ -258,7 +301,7 @@ export default function NewIncident() {
                 label="Enter Pincode"
                 variant="standard"
                 value={formData.pincode}
-                onChange={handleChange}
+                onChange={handlePincodeChange}
                 fullWidth
                 required
                 sx={{ marginBottom: 2 }}
@@ -272,12 +315,14 @@ export default function NewIncident() {
                   id="policeStationId"
                   name="policeStationId"
                   value={formData.policeStationId}
-                  onChange={handleChange}
+                  onChange={handlePoliceStationChange}
+                  disabled={!filteredStations.length}
                 >
-                  <MenuItem value="Station A">Station A</MenuItem>
-                  <MenuItem value="Station B">Station B</MenuItem>
-                  <MenuItem value="Station C">Station C</MenuItem>
-                  <MenuItem value="Station D">Station D</MenuItem>
+                  {filteredStations.map((station) => (
+                    <MenuItem key={station._id} value={station._id}>
+                      {station.stationName}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
 
