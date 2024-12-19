@@ -16,6 +16,14 @@
     <button class="signout-button" onclick="signOut()">Sign Out</button>
   </div>
 
+  <!-- Modal for ticket details -->
+  <div id="ticketModal" class="modal">
+    <div class="modal-content">
+      <span class="close-button" onclick="closeModal()">&times;</span>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
   <script>
     // Function to check authentication
     async function checkAuthentication() {
@@ -27,48 +35,44 @@
       return true;
     }
 
-    // In your police login script
+    // Police login function
     async function policeLogin(event) {
-        event.preventDefault();
-        const stationId = document.getElementById('stationId').value;
-        const stationPassword = document.getElementById('stationPassword').value;
+      event.preventDefault();
+      const stationId = document.getElementById('stationId').value;
+      const stationPassword = document.getElementById('stationPassword').value;
 
-        try {
-            const response = await fetch('http://localhost:8000/police-login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    stationId: stationId,
-                    stationPassword: stationPassword
-                })
-            });
+      try {
+        const response = await fetch('http://localhost:8000/police-login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            stationId: stationId,
+            stationPassword: stationPassword
+          })
+        });
 
-            const data = await response.json();
+        const data = await response.json();
 
-            if (data.success) {
-                // Store the access token
-                localStorage.setItem('access_token', data.access_token);
-                
-                // Redirect to police dashboard
-                window.location.href = 'police_dashboard.html';
-            } else {
-                alert('Login failed');
-            }
-        } catch (error) {
-            console.error('Login error:', error);
-            alert('An error occurred during login');
+        if (data.success) {
+          localStorage.setItem('access_token', data.access_token);
+          window.location.href = 'police_dashboard.html';
+        } else {
+          alert('Login failed');
         }
+      } catch (error) {
+        console.error('Login error:', error);
+        alert('An error occurred during login');
+      }
     }
 
-    // Fetch tickets assigned to the police station and populate the dashboard
+    // Fetch tickets function
     async function fetchPoliceTickets() {
       const loadingMessage = document.getElementById('loading-message');
       const ticketList = document.getElementById('ticket-list');
       
       try {
-        // Ensure authentication first
         if (!await checkAuthentication()) return;
 
         const response = await fetch('http://localhost:8000/police-tickets', {
@@ -78,25 +82,14 @@
             'Content-Type': 'application/json'
           }
         });
-        console.log('Response status:', response.status);
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Error response:', {
-                status: response.status, 
-                statusText: response.statusText, 
-                errorText
-            });
-            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+          const errorText = await response.text();
+          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
         }
 
         const tickets = await response.json();
-        console.log('Tickets:', tickets);
-
-        // Clear loading message
         loadingMessage.style.display = 'none';
-
-        // Clear previous tickets
         ticketList.innerHTML = '';
 
         if (tickets.length === 0) {
@@ -104,7 +97,6 @@
           return;
         }
 
-        // Populate tickets
         tickets.forEach(ticket => {
           const ticketCard = document.createElement('div');
           ticketCard.classList.add('ticket-card');
@@ -112,10 +104,11 @@
             <h3>Ticket #${ticket.ticket_number}</h3>
             <p>Crime Type: ${ticket.crime_type}</p>
             <p>Pincode: ${ticket.pincode}</p>
-            <p>Phone Number: ${ticket.phone_number}</p>
             <p>Status: ${ticket.status}</p>
-            ${ticket.description ? `<p>Description: ${ticket.description}</p>` : ''}
             <div class="ticket-actions">
+              <button onclick="viewTicketDetails('${ticket.ticket_number}')">
+                View Details
+              </button>
               <button onclick="updateTicketStatus('${ticket.ticket_number}', 'In Progress')">
                 Set to In Progress
               </button>
@@ -133,18 +126,66 @@
         console.error('Error fetching police tickets:', error);
         loadingMessage.textContent = `An error occurred while fetching tickets: ${error.message}`;
         loadingMessage.style.color = 'red';
-          // Additional error handling
         if (error.message.includes('401')) {
           alert('Authentication failed. Please log in again.');
           localStorage.removeItem('access_token');
           window.location.href = 'login.html';
-          }
+        }
       }
     }
 
-    // Call fetch tickets when the page loads
-    document.addEventListener('DOMContentLoaded', fetchPoliceTickets);
-    // Function to update ticket status
+    // View ticket details function
+    async function viewTicketDetails(ticketNumber) {
+      try {
+        const response = await fetch(`http://localhost:8000/ticket-details/${ticketNumber}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const ticket = await response.json();
+        const modalContent = document.getElementById('modalContent');
+        
+        modalContent.innerHTML = `
+          <h2>Ticket Details #${ticket.ticket_number}</h2>
+          <p><strong>Reported by:</strong> ${ticket.user_name}</p>
+          <p><strong>Crime Type:</strong> ${ticket.crime_type}</p>
+          <p><strong>Pincode:</strong> ${ticket.pincode}</p>
+          <p><strong>Phone Number:</strong> ${ticket.phone_number}</p>
+          <p><strong>Status:</strong> ${ticket.status}</p>
+          <p><strong>Description:</strong> ${ticket.description || 'No description provided'}</p>
+          <p><strong>Created at:</strong> ${new Date(ticket.created_at).toLocaleString()}</p>
+          
+          <div class="media-container">
+            ${ticket.image_url ? `
+              <h3>Uploaded Image</h3>
+              <img src="${ticket.image_url}" alt="Crime scene image">
+            ` : ''}
+            
+            ${ticket.audio_url ? `
+              <h3>Uploaded Audio</h3>
+              <audio controls>
+                <source src="${ticket.audio_url}" type="audio/mpeg">
+                Your browser does not support the audio element.
+              </audio>
+            ` : ''}
+          </div>
+        `;
+
+        document.getElementById('ticketModal').style.display = 'block';
+      } catch (error) {
+        console.error('Error fetching ticket details:', error);
+        alert('Error fetching ticket details. Please try again.');
+      }
+    }
+
+    // Update ticket status function
     async function updateTicketStatus(ticketNumber, newStatus) {
       try {
         const response = await fetch(`http://localhost:8000/update-ticket/${ticketNumber}`, {
@@ -155,40 +196,41 @@
           },
           body: JSON.stringify({ status: newStatus })
         });
-        console.log('Update ticket response:', response);
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Error response:', {
-                status: response.status, 
-                statusText: response.statusText, 
-                errorText
-            });
-            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+          const errorText = await response.text();
+          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
         }
 
         const result = await response.json();
-        console.log('Ticket update result:', result);
-
-        // Refresh the tickets
         await fetchPoliceTickets();
-        
-        // Optional: Show a success message
         alert(`Ticket #${ticketNumber} status updated to ${newStatus}`);
-    } catch (error) {
+      } catch (error) {
         console.error('Error updating ticket status:', error);
-        
-        // Detailed error handling
         if (error.message.includes('401')) {
-            alert('Authentication failed. Please log in again.');
-            localStorage.removeItem('access_token');
-            window.location.href = 'login.html';
+          alert('Authentication failed. Please log in again.');
+          localStorage.removeItem('access_token');
+          window.location.href = 'login.html';
         } else {
-            alert(`Failed to update ticket status: ${error.message}`);
+          alert(`Failed to update ticket status: ${error.message}`);
         }
+      }
     }
-}
-    // Function to handle sign-out
+
+    // Modal control functions
+    function closeModal() {
+      document.getElementById('ticketModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const modal = document.getElementById('ticketModal');
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    }
+
+    // Sign out function
     function signOut() {
       const confirmSignOut = confirm('Are you sure you want to sign out?');
       if (confirmSignOut) {
@@ -197,7 +239,7 @@
       }
     }
 
-    // Call fetch tickets when the page loads
+    // Initialize dashboard
     document.addEventListener('DOMContentLoaded', fetchPoliceTickets);
   </script>
 </body>

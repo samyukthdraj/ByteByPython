@@ -20,6 +20,7 @@ from fastapi import HTTPException
 from fastapi.responses import HTMLResponse
 from bson import ObjectId
 from fastapi.encoders import jsonable_encoder
+from fastapi.staticfiles import StaticFiles
 import os
 
 app = FastAPI()
@@ -27,6 +28,10 @@ db = Database()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+uploads_path = "uploads"
+os.makedirs(uploads_path, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
 
 # Function to convert ObjectId fields to strings
 def convert_objectid_to_str(data):
@@ -469,7 +474,37 @@ async def update_ticket_status(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating ticket status: {str(e)}")
 
-
+@app.get("/ticket-details/{ticket_number}")
+async def get_ticket_details(
+    ticket_number: str,
+    current_user: dict = Depends(get_current_police_user)
+):
+    try:
+        # Find the ticket in the database
+        ticket = db.tickets_collection.find_one({"ticket_number": ticket_number})
+        
+        if not ticket:
+            raise HTTPException(status_code=404, detail="Ticket not found")
+            
+        # Verify that this ticket belongs to the current police station
+        if ticket.get('police_station') != current_user.get('name'):
+            raise HTTPException(
+                status_code=403, 
+                detail="Not authorized to view this ticket"
+            )
+            
+        # Convert ObjectId to string for JSON serialization
+        ticket = convert_objectid_to_str(ticket)
+        
+        # If there are file URLs, construct full URLs
+        if ticket.get('image_url'):
+            ticket['image_url'] = f"http://localhost:8000/uploads/{ticket['image_url']}"
+        if ticket.get('audio_url'):
+            ticket['audio_url'] = f"http://localhost:8000/uploads/{ticket['audio_url']}"
+            
+        return ticket
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/create-ticket")
 async def create_ticket(

@@ -47,7 +47,7 @@ Password: centralps
 done: police dashboard fetch 
 done: user dashboard fetch
 undone: dashboard filtering 
-UNDONE: when submitting new ticket, failed to fetch popup is coming instead of redirecting to dashboard.
+UNDONE: when submitting new ticket, failed to fetch popup is coming instead of redirecting to dashboard. also add a back button which redirects it to their database.
     DONE: close button while submitting report should lead back to user dashboard
     DONE:signout button
 done: ai implementation in index.html for analysing image 
