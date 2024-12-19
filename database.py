@@ -33,20 +33,21 @@ class Database:
     def pre_configure_police_stations(self):
         """Pre-configure police stations if they don't already exist in the database."""
         police_stations = [
-            PoliceStation(
-                name="Central Police Station",
-                address="123 Main Street, Anytown",
-                username="central_ps",
-                hashed_password=self.hash_password("centralps"),
-                contact_number="1234567890"
-            ),
+            {
+                "name": "Central Police Station",
+                "address": "123 Main Street, Anytown",
+                "username": "central_ps",
+                "hashed_password": self.hash_password("centralps"),
+                "contact_number": "1234567890"
+            },
             # Add more stations as needed
         ]
 
+
         for station in police_stations:
-            existing = self.police_stations_collection.find_one({"username": station.username})
+            existing = self.police_stations_collection.find_one({"username": station["username"]})
             if not existing:
-                self.insert_police_station(station)
+                self.police_stations_collection.insert_one(station)
 
     def create_user(self, username, email, password, full_name=None):
         """Create a new user in the database."""
