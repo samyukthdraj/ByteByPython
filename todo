@@ -57,6 +57,12 @@ undone: and pincode with voice.
 undone: project structure. optimise code.
 undone: forgot pass fixes.
 
+
+undone: i want the dropdown to be consisting all police stations in alphabetical order
+undone: pincode give nearest 3 stations with distances give.
+undone: update the database with the pincode field,
+DONE: find password for each station ( default_password )
+
 # python -m http.server 8000
 
 

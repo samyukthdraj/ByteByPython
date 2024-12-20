@@ -5,6 +5,8 @@ from passlib.context import CryptContext
 from datetime import datetime
 from models import PoliceStation
 import random
+import csv
+import os
 
 class Database:
     def __init__(self):
@@ -31,23 +33,35 @@ class Database:
         return self.pwd_context.verify(plain_password, hashed_password)
 
     def pre_configure_police_stations(self):
-        """Pre-configure police stations if they don't already exist in the database."""
-        police_stations = [
-            {
-                "name": "Central Police Station",
-                "address": "123 Main Street, Anytown",
-                "username": "central_ps",
-                "hashed_password": self.hash_password("centralps"),
-                "contact_number": "1234567890"
-            },
-            # Add more stations as needed
-        ]
+        """Pre-configure police stations from CSV if they don't already exist in the database."""
+        csv_file_path = os.path.join(os.path.dirname(__file__), 'police_stations', 'policestation.csv')
 
+        try:
+            with open(csv_file_path, mode='r') as file:
+                csv_reader = csv.DictReader(file)
 
-        for station in police_stations:
-            existing = self.police_stations_collection.find_one({"username": station["username"]})
-            if not existing:
-                self.police_stations_collection.insert_one(station)
+                for row in csv_reader:
+                    station = {
+                        "name": row["Name of Police Station"],
+                        "address": row["Address"],
+                        "longitude": float(row["Longitude"]),
+                        "latitude": float(row["Latitude"]),
+                        "username": row["Name of Police Station"].lower().replace(" ", "_"),
+                        "hashed_password": self.hash_password("default_password"),  # Default password
+                        "contact_number": row.get("Contact Number", "N/A"),  # Add contact number if present
+                        "pincode": int(row["Pincode"])  # Add pincode as an integer
+                    }
+
+                    existing = self.police_stations_collection.find_one({"username": station["username"]})
+                    if not existing:
+                        self.police_stations_collection.insert_one(station)
+
+        except FileNotFoundError:
+            print(f"Error: {csv_file_path} not found. Ensure the file exists and try again.")
+        except Exception as e:
+            print(f"An error occurred while reading the CSV file: {e}")
+
+    # Other methods remain unchanged
 
     def create_user(self, username, email, password, full_name=None):
         """Create a new user in the database."""
@@ -88,11 +102,9 @@ class Database:
             return None
         return station
 
-    # Append this to your existing database.py file, right after the existing methods
-
-    def create_ticket(self, user_name, pincode, phone_number, crime_type, 
-                    police_station=None, description=None, ticket_number=None, 
-                    image_url=None, audio_url=None):
+    def create_ticket(self, user_name, pincode, phone_number, crime_type,
+                      police_station=None, description=None, ticket_number=None,
+                      image_url=None, audio_url=None):
         """Create a new ticket in the database."""
         # If no ticket number is provided, generate a random 6-digit number
         if not ticket_number:
@@ -129,6 +141,7 @@ class Database:
 
         result = self.tickets_collection.insert_one(ticket_doc)
         return ticket_number
+
     def get_police_station_tickets(self, police_station):
         """Retrieve tickets for a specific police station."""
         return list(self.tickets_collection.find({"police_station": police_station}))
