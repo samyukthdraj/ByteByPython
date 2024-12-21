@@ -6,7 +6,7 @@
   <title>Civilians As Police (CAP)</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body>`
   <div class="window">
     <h1 class="title">Civilians As Police (CAP)</h1>
 
@@ -78,70 +78,82 @@
       <button class="submit-button" onclick="submitReport()">Submit Report</button>
     </div>
   </div>
-  <script>
-    async function submitReport() {
-        const userName = document.getElementById("userName").value;
-        const pincode = document.getElementById("pincode").value;
-        const policeStation = document.getElementById("policeStation").value;
-        const phoneNumber = document.getElementById("phoneNumber").value;
-        const crimeType = document.getElementById("crimeType").value === 'others' 
-            ? document.getElementById('customCrimeTypeInput').value 
-            : document.getElementById("crimeType").value;
-        const description = document.getElementById("description").value;
-    
-        // Image upload handling
-        const imageFile = document.getElementById("uploadImage").files[0];
-        const voiceFile = document.getElementById("uploadVoice").files[0];
-    
-        const formData = new FormData();
-        formData.append('user_name', userName);
-        formData.append('pincode', pincode);
-        formData.append('police_station', policeStation);
-        formData.append('phone_number', phoneNumber);
-        formData.append('crime_type', crimeType);
-        formData.append('description', description);
-        
-        // Append files if they exist
-        if (imageFile) {
-            formData.append('file', imageFile);
-        }
-        
-        try {
-            const accessToken = localStorage.getItem('access_token');
-            if (!accessToken) {
-                throw new Error('No access token found. Please log in.');
-            }
-    
-            const response = await fetch("http://localhost:8000/upload-crime-report", {
-                method: "POST",
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                },
-                body: formData
-            });
-    
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'Failed to submit report');
-            }
-    
-            const result = await response.json();
-    
-            // Show ticket generation popup
-            const popup = document.createElement('div');
-            popup.innerHTML = `
-                <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 2px solid blue; z-index: 1000; text-align: center;">
-                    <h2>Report Submitted Successfully!</h2>
-                    <p>Your Ticket Number is: <strong>${result.ticket_number}</strong></p>
-                    <button onclick="this.parentElement.remove(); window.location.href='user_dashboard.html'">View Dashboard</button>
-                </div>
-            `;
-            document.body.appendChild(popup);
-        } catch (error) {
-            console.error("Error submitting report:", error);
-            alert(error.message || "Failed to submit report. Please try again.");
-        }
+  <script>    
+  async function submitReport() {
+  const userName = document.getElementById("userName").value;
+  const pincode = document.getElementById("pincode").value;
+  const policeStation = document.getElementById("policeStation").value;
+  const phoneNumber = document.getElementById("phoneNumber").value;
+  const crimeType =
+    document.getElementById("crimeType").value === "others"
+      ? document.getElementById("customCrimeTypeInput").value
+      : document.getElementById("crimeType").value;
+  const description = document.getElementById("description").value;
+
+  // Image and voice file handling
+  const imageFile = document.getElementById("uploadImage").files[0];
+  const voiceFile = document.getElementById("uploadVoice").files[0];
+
+  // FormData to send data to the backend
+  const formData = new FormData();
+  formData.append("user_name", userName);
+  formData.append("pincode", pincode);
+  formData.append("police_station", policeStation);
+  formData.append("phone_number", phoneNumber);
+  formData.append("crime_type", crimeType);
+  formData.append("description", description);
+
+  // Append files if they exist
+  if (imageFile) {
+    formData.append("image_file", imageFile); // Match the backend field name
+  }
+  if (voiceFile) {
+    formData.append("voice_file", voiceFile); // Match the backend field name
+  }
+
+  try {
+    // Fetch the access token from localStorage
+    const accessToken = localStorage.getItem("access_token");
+    if (!accessToken) {
+      throw new Error("No access token found. Please log in.");
     }
+
+    // Send the POST request to the `/upload-crime-report` endpoint
+    const response = await fetch("http://localhost:8000/upload-crime-report", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Failed to submit report");
+    }
+
+    const result = await response.json();
+
+    // Show success popup with ticket number
+    showSuccessPopup(result.ticket_number);
+  } catch (error) {
+    console.error("Error submitting report:", error);
+    alert(error.message || "Failed to submit report. Please try again.");
+  }
+}
+
+function showSuccessPopup(ticketNumber) {
+  const popup = document.createElement("div");
+  popup.innerHTML = `
+    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 2px solid blue; z-index: 1000; text-align: center;">
+        <h2>Report Submitted Successfully!</h2>
+        <p>Your Ticket Number is: <strong>${ticketNumber}</strong></p>
+        <button onclick="this.parentElement.remove(); window.location.href='user_dashboard.html'">View Dashboard</button>
+    </div>
+  `;
+  document.body.appendChild(popup);
+}
+
 
     // Function to analyze image and dynamically update description and crime type
     async function analyzeImage(file) {
