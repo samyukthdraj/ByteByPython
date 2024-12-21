@@ -322,8 +322,14 @@ async function processVoice(file) {
     const descriptionBox = document.getElementById("description");
     descriptionBox.value = `Voice Transcription: ${data.transcription}`;
 }
-
+let isSubmitting = false;
 async function submitReport() {
+    if (isSubmitting) {
+        console.log('Submission already in progress');
+        return;
+    }
+    try {
+        isSubmitting = true;
     const userName = document.getElementById("userName").value;
     const pincode = document.getElementById("pincode").value;
     const policeStation = document.getElementById("policeStation").value;
@@ -337,18 +343,21 @@ async function submitReport() {
     const voiceFile = document.getElementById("uploadVoice").files[0];
 
     const formData = new FormData();
-    formData.append('user_name', userName);
-    formData.append('pincode', pincode);
-    formData.append('police_station', policeStation);
-    formData.append('phone_number', phoneNumber);
-    formData.append('crime_type', crimeType);
-    formData.append('description', description);
+  // FormData to send data to the backend
+    formData.append("user_name", userName);
+    formData.append("pincode", pincode);
+    formData.append("police_station", policeStation);
+    formData.append("phone_number", phoneNumber);
+    formData.append("crime_type", crimeType);
+    formData.append("description", description);
     
+
     if (imageFile) {
-        formData.append('file', imageFile);
-    }
-    
-    try {
+        formData.append("image_file", imageFile); // Match the backend field name
+      }
+      if (voiceFile) {
+        formData.append("voice_file", voiceFile); // Match the backend field name
+      }
         const accessToken = localStorage.getItem('access_token');
         if (!accessToken) {
             throw new Error('No access token found. Please log in.');
@@ -369,20 +378,26 @@ async function submitReport() {
 
         const result = await response.json();
 
-        const popup = document.createElement('div');
-        popup.innerHTML = `
-            <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 2px solid blue; z-index: 1000; text-align: center;">
-                <h2>Report Submitted Successfully!</h2>
-                <p>Your Ticket Number is: <strong>${result.ticket_number}</strong></p>
-                <button onclick="this.parentElement.remove(); window.location.href='user_dashboard.html'">View Dashboard</button>
-            </div>
-        `;
-        document.body.appendChild(popup);
-    } catch (error) {
+        // Show success popup with ticket number
+        showSuccessPopup(result.ticket_number);
+      } catch (error) {
         console.error("Error submitting report:", error);
         alert(error.message || "Failed to submit report. Please try again.");
+      } finally {isSubmitting = false;}
     }
-}
+    
+    function showSuccessPopup(ticketNumber) {
+      const popup = document.createElement("div");
+      popup.innerHTML = `
+        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 2px solid blue; z-index: 1000; text-align: center;">
+            <h2>Report Submitted Successfully!</h2>
+            <p>Your Ticket Number is: <strong>${ticketNumber}</strong></p>
+            <button onclick="this.parentElement.remove(); window.location.href='user_dashboard.html'">View Dashboard</button>
+        </div>
+      `;
+      document.body.appendChild(popup);
+    }
+    
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
@@ -399,7 +414,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const uploadVoiceInput = document.getElementById("uploadVoice");
     const pincodeInput = document.getElementById("pincode");
     const crimeTypeSelect = document.getElementById("crimeType");
-    const submitButton = document.querySelector(".submit-button");
 
     if (uploadImageInput) {
         uploadImageInput.addEventListener("change", (e) => {
@@ -435,7 +449,4 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    if (submitButton) {
-        submitButton.addEventListener("click", submitReport);
-    }
 });

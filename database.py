@@ -34,7 +34,7 @@ class Database:
 
     def pre_configure_police_stations(self):
         """Pre-configure police stations from CSV if they don't already exist in the database."""
-        csv_file_path = os.path.join(os.path.dirname(__file__), 'police_stations', 'policestation.csv')
+        csv_file_path = os.path.join(os.path.dirname(__file__), 'police_stations', 'policestations.csv')
 
         try:
             with open(csv_file_path, mode='r') as file:
@@ -102,46 +102,6 @@ class Database:
             return None
         return station
 
-    def create_ticket(self, user_name, pincode, phone_number, crime_type,
-                      police_station=None, description=None, ticket_number=None,
-                      image_url=None, audio_url=None):
-        """Create a new ticket in the database."""
-        # If no ticket number is provided, generate a random 6-digit number
-        if not ticket_number:
-            ticket_number = f"{random.randint(100000, 999999)}"
-
-        # Retrieve the user document
-        user = self.users_collection.find_one({"username": user_name})
-        if not user:
-            raise ValueError(f"User {user_name} not found")
-
-        # If police station is provided, retrieve its details
-        station = None
-        if police_station:
-            station = self.police_stations_collection.find_one({"name": police_station})
-            if not station:
-                raise ValueError(f"Police station {police_station} not found")
-
-        ticket_doc = {
-            "ticket_number": ticket_number,
-            "user_id": str(user['_id']),  # Ensure this is a string
-            "user_name": user_name,
-            "pincode": pincode,
-            "phone_number": phone_number,
-            "crime_type": crime_type.lower(),
-            "police_station": police_station,
-            "police_station_id": str(station['_id']) if station else None,
-            "description": description,
-            "image_url": image_url,
-            "audio_url": audio_url,
-            "status": "New",
-            "created_at": datetime.utcnow(),
-            "updated_at": None
-        }
-
-        result = self.tickets_collection.insert_one(ticket_doc)
-        return ticket_number
-
     def get_police_station_tickets(self, police_station):
         """Retrieve tickets for a specific police station."""
         return list(self.tickets_collection.find({"police_station": police_station}))
@@ -158,6 +118,47 @@ class Database:
             }
         )
         return result.modified_count > 0
+    def create_ticket(self, user_name, pincode, phone_number, crime_type, 
+                    police_station=None, description=None, ticket_number=None, 
+                    image_url=None, audio_url=None):
+        """Create a new ticket in the database."""
+        # If no ticket number is provided, generate a random 6-digit number
+        if not ticket_number:
+            ticket_number = f"{random.randint(100000, 999999)}"
+
+        # Retrieve the user document
+        user = self.users_collection.find_one({"username": user_name})
+        if not user:
+            raise ValueError(f"User {user_name} not found")
+
+        # If police station is provided, retrieve its details
+        station = None
+        if police_station:
+            station = self.police_stations_collection.find_one({"name": police_station})
+            if not station:
+                raise ValueError(f"Police station {police_station} not found")
+        
+        # Ensure image_url and audio_url are not None (or set them to empty strings)
+        if not image_url:
+            image_url = None  # Or you can leave it as None depending on your database schema
+        if not audio_url:
+            audio_url = None  # Or handle it as needed
+
+        # Now, insert the ticket into the database
+        ticket = {
+            "ticket_number": ticket_number,
+            "user_name": user_name,
+            "pincode": pincode,
+            "phone_number": phone_number,
+            "crime_type": crime_type,
+            "police_station": police_station,
+            "description": description,
+            "image_url": image_url,
+            "audio_url": audio_url
+        }
+
+        result = self.tickets_collection.insert_one(ticket)
+        return result.inserted_id
 
     def insert_police_station(self, police_station):
         """Insert a new police station into the database."""

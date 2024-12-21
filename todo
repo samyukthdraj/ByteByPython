@@ -7,32 +7,28 @@
 
 - ToDo: 
 
-- done: Photo should be automatically analysed and the description box should be filled automatically.
-- undone: the nearby police station distances are updated after giving the pincode but the names of the stations arent updated dynamically.
-- undone: the picture is analysed and keywords are received and the dropdown is also updated dynamically but the user can't edit the crime type from the dropdown by appending their own views in the description.
-- done: Add a user name text box to help the police identify the user reporting the crime.(create a login page for the user if time allows.)
 - undone: After clicking the submit button a popup should come which says, your report has been submitted/ ticket generated. 
 There should be a random ticket number which should come after you press the submit button and raise the ticket, 
 the status of the ticket can be tracked by entering the ticket number.
 Police can take action based on the ticket number as well.
 This ticket number will be stored in the database which the police can then use as reference to track.
-- undone: Types of crime and the keywords received are not accurate to the crime, ie. crime detection is not accurate and is slow.
-- undone: Create a login page for a user and a signup page for a user and then another section in the login for police
+- done: Types of crime and the keywords received are not accurate to the crime, ie. crime detection is not accurate and is slow.
+- done: Create a login page for a user and a signup page for a user and then another section in the login for police
 Police should have a dashboard when they login and for the users the dashboard is the current page ie tthe main index.html
-- undone : Check if backend is working.
-- undone: Create user database, change names of police stations to match the ones in the front end, 
+- done : Check if backend is working.
+- done: Create user database, change names of police stations to match the ones in the front end, 
 Create user login, police login, police dashboard and then connections.
-- undone: Link frontend and backend.
+- done: Link frontend and backend.
 
 - done: signup page; username password(hash if possible) email, forgot password (email), store both in the database.
 - done: main.py (rest of the code)
 
-- undone: signup.html error while creating account fix, 
+- done: signup.html error while creating account fix, 
 forgot password otp fix (add a text field for otp which will later be cross checked with the otp sent in mail).
 police login issue.
 dashboard should get the details from the database.
 
-- undone: Your Ticket Number is: undefined when submit is clicked.
+- done: Your Ticket Number is: undefined when submit is clicked.
 When i click close i want to be re-routed to the user dashboard.
 Add a signout button which will get us back to login page.
 make login.html look 50/50 on the left and right    
@@ -43,28 +39,29 @@ Password: centralps
 
 
 
-- undone: tickets not submitting successfully, ticket number(random 6 digit number) alongside with the form details should be in the schema sent to the backend. random id should be created which the police can access. foreign key and primary key should be submitted alongside the schema in the tickets, ie with the 
-done: police dashboard fetch 
-done: user dashboard fetch
+    done: tickets not submitting successfully, ticket number(random 6 digit number) alongside with the form details should be in the schema sent to the backend. random id should be created which the police can access. foreign key and primary key should be submitted alongside the schema in the tickets, ie with the 
+    done: police dashboard fetch 
+    done: user dashboard fetch
 undone: dashboard filtering 
-UNDONE: when submitting new ticket, failed to fetch popup is coming instead of redirecting to dashboard. also add a back button which redirects it to their database.
+    DONE: when submitting new ticket, failed to fetch popup is coming instead of redirecting to dashboard. also add a back button which redirects it to their database.
     DONE: close button while submitting report should lead back to user dashboard
     DONE:signout button
-done: ai implementation in index.html for analysing image 
-undone: and pincode with voice.
+    done: ai implementation in index.html for analysing image 
+undone: voice.
     DONE:50/50 login style , forgot pass, signup css
 <!-- undone: when clicking the link in uvicorn, only login comes without any css. -->
 undone: project structure. optimise code.
 undone: forgot pass fixes.
 
 
-undone: i want the dropdown to be consisting all police stations in alphabetical order
-undone: pincode give nearest 3 stations with distances give.
-undone: update the database with the pincode field,
+    done: i want the dropdown to be consisting all police stations in alphabetical order
+    done: pincode give nearest 3 stations with distances give.
+    done: update the database with the pincode field,
 undone: view details on user dashboard put, police dashboard view details must access image and audio in the drive.
-undone: add a back button in index.html which takes us to dashboard.
+    done: add a back button in index.html which takes us to dashboard.
 undone: login update, a button which on clicking will be like a card with a backside with police login.
 DONE: find password for each station ( default_password )
+undone: 2 tickets being created when creating ticket
 
 # python -m http.server 8000
 

@@ -28,6 +28,23 @@ body {
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3); /* Elevate on hover */
 }
 
+.back-button {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  text-decoration: none;
+  color: #0078d4;
+  font-weight: bold;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.back-button:hover {
+  color: #0056b3;
+}
+
+
 .title {
   text-align: center;
   color: #0078d4;

@@ -56,6 +56,10 @@ source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
 3. Install dependencies
 ```bash
 pip install -r requirements.txt
+seperately 
+pip install google-api-core
+pip install google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib
+
 ```
 
 4. Configure Environment Variables

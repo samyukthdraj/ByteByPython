@@ -2,7 +2,7 @@ import uuid
 import random
 import smtplib
 from email.mime.text import MIMEText
-from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, status, Body
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, status, Body, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import jwt, JWTError
@@ -22,6 +22,13 @@ from bson import ObjectId
 from fastapi.encoders import jsonable_encoder
 from fastapi.staticfiles import StaticFiles
 import os
+from database import Database
+
+from googleapiclient.http import MediaIoBaseUpload
+import io
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+
 
 app = FastAPI()
 db = Database()
@@ -29,6 +36,7 @@ db = Database()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+#putting into uploads.
 uploads_path = "uploads"
 os.makedirs(uploads_path, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
@@ -318,64 +326,65 @@ async def reset_password(reset_request: PasswordReset):
     return {"message": "Password reset successfully"}
 
 # Crime Report Routes
-@app.post("/upload-crime-report")
-async def upload_crime_report(
-    file: UploadFile = File(None),
-    user_name: str = Form(None),
-    pincode: str = Form(None),
-    police_station: str = Form(None),
-    phone_number: str = Form(None),
-    crime_type: str = Form(None),
-    description: Optional[str] = Form(None),
-    current_user: dict = Depends(get_current_user)
-):
 
-    # Ensure uploads directory exists
-    uploads_dir = "uploads"
-    os.makedirs(uploads_dir, exist_ok=True)
+# @app.post("/upload-crime-report")
+# async def upload_crime_report(
+#     file: UploadFile = File(None),
+#     user_name: str = Form(None),
+#     pincode: str = Form(None),
+#     police_station: str = Form(None),
+#     phone_number: str = Form(None),
+#     crime_type: str = Form(None),
+#     description: Optional[str] = Form(None),
+#     current_user: dict = Depends(get_current_user)
+# ):
 
-    if not all([pincode, police_station, phone_number, crime_type]):
-        raise HTTPException(status_code=400, detail="Missing required fields")
-    # Generate a random 6-digit ticket number
-    ticket_number = f"{random.randint(100000, 999999)}"
+#     # Ensure uploads directory exists
+#     uploads_dir = "uploads"
+#     os.makedirs(uploads_dir, exist_ok=True)
 
-    # Prepare file handling
-    file_path = None
-    if file and file.filename:
-        # Generate a unique filename for the image
-        file_extension = file.filename.split('.')[-1] if file.filename else 'jpg'
-        unique_filename = f"{uuid.uuid4()}.{file_extension}"
-        file_path = os.path.join(uploads_dir, unique_filename)
+#     if not all([pincode, police_station, phone_number, crime_type]):
+#         raise HTTPException(status_code=400, detail="Missing required fields")
+#     # Generate a random 6-digit ticket number
+#     ticket_number = f"{random.randint(100000, 999999)}"
+
+#     # Prepare file handling
+#     file_path = None
+#     if file and file.filename:
+#         # Generate a unique filename for the image
+#         file_extension = file.filename.split('.')[-1] if file.filename else 'jpg'
+#         unique_filename = f"{uuid.uuid4()}.{file_extension}"
+#         file_path = os.path.join(uploads_dir, unique_filename)
         
-        # Save file 
-        with open(file_path, "wb") as buffer:
-            buffer.write(await file.read())
+#         # Save file 
+#         with open(file_path, "wb") as buffer:
+#             buffer.write(await file.read())
         
-        # Analyze image (optional)
-        try:
-            analysis_result = await analyze_image_detailed(file.file)
-        except Exception as e:
-            analysis_result = {"error": str(e)}
+#         # Analyze image (optional)
+#         try:
+#             analysis_result = await analyze_image_detailed(file.file)
+#         except Exception as e:
+#             analysis_result = {"error": str(e)}
 
-    try:
-        # Create ticket using database method
-        ticket = db.create_ticket(
-            user_name=current_user['username'],
-            pincode=pincode,
-            phone_number=phone_number,
-            crime_type=crime_type,
-            police_station=police_station,
-            description=description,
-            ticket_number=ticket_number,
-            image_url=file_path
-        )
+#     try:
+#         # Create ticket using database method
+#         ticket = db.create_ticket(
+#             user_name=current_user['username'],
+#             pincode=pincode,
+#             phone_number=phone_number,
+#             crime_type=crime_type,
+#             police_station=police_station,
+#             description=description,
+#             ticket_number=ticket_number,
+#             image_url=file_path
+#         )
 
-        return {
-            "message": "Crime report uploaded successfully",
-            "ticket_number": ticket_number
-        }
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+#         return {
+#             "message": "Crime report uploaded successfully",
+#             "ticket_number": ticket_number
+#         }
+#     except ValueError as ve:
+#         raise HTTPException(status_code=400, detail=str(ve))
 
 @app.get("/crime-reports", response_model=List[CrimeReport])
 async def get_crime_reports(current_user: dict = Depends(get_current_user)):
@@ -438,17 +447,18 @@ async def get_current_police_user(token: str = Depends(oauth2_scheme)):
 # Ticket Routes
 @app.get("/police-tickets")
 async def get_police_station_tickets(current_user: dict = Depends(get_current_police_user)):
+    # Find the police station associated with the current user
+    police_station = current_user.get('name')  # Assuming the name is stored in the user document
+    if not police_station:
+        raise HTTPException(status_code=403, detail="Not authorized to view tickets")
     try:
-        # Use the police station name from the authenticated police station
-        tickets = list(db.tickets_collection.find({"police_station": current_user.get('name')}))
-        
+        tickets = list(db.tickets_collection.find({"police_station": police_station}))
         # Convert ObjectId to string for JSON serialization
         tickets = convert_objectid_to_str(tickets)
-        
         return tickets
     except Exception as e:
-        print(f"Error fetching tickets: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error fetching tickets: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching police tickets: {str(e)}")
+
 
 @app.post("/update-ticket/{ticket_number}")
 async def update_ticket_status(
@@ -543,9 +553,6 @@ async def new_feature(param1: str, param2: int):
 
     return {"message": f"New feature with {param1} and {param2} added successfully."}
 
-# --- Appended Functionality Ends Here -------------------------------------------------------------
-# Add this to your main.py file, under the existing routes
-
 @app.get("/user-tickets")
 async def get_user_tickets(current_user: dict = Depends(get_current_user)):
     try:
@@ -566,8 +573,104 @@ async def get_user_tickets(current_user: dict = Depends(get_current_user)):
 async def options_user_tickets():
     return {"status": "OK"}
 
-
-
-
-
 # ------------------------------------------------------------------------------------------
+# Google Drive folder ID for the `cap` folder
+FOLDER_ID = "1dxymA4Lejnbuv2_y3dXjgBUNRh9ZtO3x"
+
+# Function to get Google Drive service
+def get_drive_service():
+    SCOPES = ['https://www.googleapis.com/auth/drive.file']
+    SERVICE_ACCOUNT_FILE = 'service_account.json'  # Path to your service account JSON file
+    
+    credentials = service_account.Credentials.from_service_account_file(
+        SERVICE_ACCOUNT_FILE, scopes=SCOPES
+    )
+    service = build('drive', 'v3', credentials=credentials)
+    return service
+
+# Function to upload a file to Google Drive
+async def upload_to_drive(file: UploadFile, file_name: str, mime_type: str):
+    try:
+        drive_service = get_drive_service()
+        file_metadata = {'name': file_name, 'parents': [FOLDER_ID]}  # Upload to the specific folder
+        
+        # Read the file content as bytes and create a file-like object using BytesIO
+        file_content = io.BytesIO(await file.read())
+
+        # Create a MediaIoBaseUpload instance for the Google Drive API
+        media = MediaIoBaseUpload(file_content, mimetype=mime_type)
+
+        # Upload the file to Google Drive
+        uploaded_file = drive_service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields='id'
+        ).execute()
+
+        # Construct the public file URL
+        return f"https://drive.google.com/file/d/{uploaded_file['id']}/view?usp=sharing"
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to upload file: {str(e)}")
+
+# Endpoint to handle crime report upload
+@app.post("/upload-crime-report")
+async def upload_crime_report(
+    image_file: UploadFile = File(None),
+    voice_file: UploadFile = File(None),
+    user_name: str = Form(...),
+    pincode: str = Form(...),
+    police_station: str = Form(...),
+    phone_number: str = Form(...),
+    crime_type: str = Form(...),
+    description: str = Form(None),
+    current_user: dict = Depends(get_current_user)
+):
+     # Log the incoming data for debugging
+    print(f"Received data: user_name={user_name}, pincode={pincode}, police_station={police_station}, phone_number={phone_number}, crime_type={crime_type}, description={description}")
+
+    # Ensure all required fields are present
+    if not all([user_name, pincode, police_station, phone_number, crime_type]):
+        raise HTTPException(status_code=400, detail="Missing required fields")
+
+    # Generate a unique ticket number
+    ticket_number = str(random.randint(100000, 999999))
+
+    image_url = None
+    audio_url = None
+
+    # Handle image upload if provided
+    if image_file:
+        try:
+            image_url = await upload_to_drive(image_file, image_file.filename, image_file.content_type)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
+
+    # Handle audio upload if provided
+    if voice_file:
+        try:
+            audio_url = await upload_to_drive(voice_file, voice_file.filename, voice_file.content_type)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to upload audio: {str(e)}")
+
+    # Save ticket details to the database
+    try:
+        ticket = db.create_ticket(
+            user_name=current_user['username'],
+            pincode=pincode,
+            phone_number=phone_number,
+            crime_type=crime_type,
+            police_station=police_station,
+            description=description,
+            ticket_number=ticket_number,
+            image_url=image_url,
+            audio_url=audio_url
+        )
+
+        return {
+            "message": "Crime report uploaded successfully",
+            "ticket_number": ticket_number,
+            "image_url": image_url,
+            "audio_url": audio_url
+        }
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))

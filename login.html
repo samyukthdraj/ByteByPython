@@ -8,39 +8,45 @@
 </head>
 <body>
   <div class="login-container">
-    <div class="user-login">
-      <h2>User Login</h2>
-      <form>
-        <input type="text" placeholder="Username" id="user-username">
-        <input type="password" placeholder="Password" id="user-password">
-        <button type="submit">Login</button>
-        <a href="signup.html" id="signup-link">Sign Up</a>
-        <a href="forgotpass.html" id="forgot-password-link">Forgot Password</a>
-      </form>
-    </div>
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <!-- Front Card (User Login) -->
+        <div class="flip-card-front">
+          <div class="user-login">
+            <h2>User Login</h2>
+            <form>
+              <input type="text" placeholder="Username" id="user-username">
+              <input type="password" placeholder="Password" id="user-password">
+              <button type="submit">Login</button>
+              <a href="signup.html" id="signup-link">Sign Up</a>
+              <a href="forgotpass.html" id="forgot-password-link">Forgot Password</a>
+            </form>
+            <button class="flip-button">Go to Police Login</button>
+          </div>
+        </div>
 
-    <!-- Simple gray line divider -->
-    <div class="divider"></div>
-
-    <div class="police-login">
-      <h2>Police Login</h2>
-      <form>
-        <input type="text" placeholder="Police Station ID" id="police-station-id">
-        <input type="password" placeholder="Police Station Password" id="police-station-password">
-        <button type="submit">Login</button>
-      </form>
+        <!-- Back Card (Police Login) -->
+        <div class="flip-card-back">
+          <div class="police-login">
+            <h2>Police Login</h2>
+            <form>
+              <input type="text" placeholder="Police Station ID" id="police-station-id">
+              <input type="password" placeholder="Police Station Password" id="police-station-password">
+              <button type="submit">Login</button>
+            </form>
+            <button class="flip-button">Back to User Login</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
   <script src="loginapp.js"></script>
   <script>
-    // Optional: Add event listeners for signup and forgot password links
-    document.getElementById('signup-link').addEventListener('click', () => {
-      window.location.href = 'signup.html';
-    });
-
-    document.getElementById('forgot-password-link').addEventListener('click', () => {
-      window.location.href = 'forgotpass.html';
+    document.querySelectorAll('.flip-button').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelector('.flip-card-inner').classList.toggle('flipped');
+      });
     });
   </script>
 </body>
