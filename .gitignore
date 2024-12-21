@@ -33,3 +33,5 @@ build/
 .env
 
 uploads/
+
+service_account.json
