@@ -61,6 +61,9 @@ undone: forgot pass fixes.
 undone: i want the dropdown to be consisting all police stations in alphabetical order
 undone: pincode give nearest 3 stations with distances give.
 undone: update the database with the pincode field,
+undone: view details on user dashboard put, police dashboard view details must access image and audio in the drive.
+undone: add a back button in index.html which takes us to dashboard.
+undone: login update, a button which on clicking will be like a card with a backside with police login.
 DONE: find password for each station ( default_password )
 
 # python -m http.server 8000
