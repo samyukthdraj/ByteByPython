@@ -23,10 +23,8 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.staticfiles import StaticFiles
 import os
 from database import Database
-
 import aiohttp
 import asyncio
-
 from googleapiclient.http import MediaIoBaseUpload
 import io
 from google.oauth2 import service_account
@@ -36,8 +34,6 @@ from googleapiclient.discovery import build
 
 app = FastAPI()
 db = Database()
-
-# app.mount("/static", StaticFiles(directory="static"), name="static")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -558,12 +554,7 @@ async def get_user_tickets(current_user: dict = Depends(get_current_user)):
     try:
         # Find tickets by username instead of user_id
         tickets = list(db.tickets_collection.find({"user_name": current_user['username']}))
-        
-        # Convert ObjectId to string for JSON serialization
-        # for ticket in tickets:
-        #     ticket['_id'] = str(ticket['_id'])
         tickets = convert_objectid_to_str(tickets)
-        
         return tickets
     except Exception as e:
         print(f"Error fetching tickets: {str(e)}")  # Add logging

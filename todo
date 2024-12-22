@@ -63,10 +63,11 @@ undone: police dashboard view details must access image and audio in the drive.
     done: login update, a button which on clicking will be like a card with a backside with police login.
 DONE: find password for each station ( default_password )
     done: 2 tickets being created when creating ticket
-undone: status is undefined, timestamp also undefined for the ticket.
-undone: speech to text using assemblyapi
+    done: status is undefined, timestamp also undefined for the ticket.
+    done: speech to text using assemblyapi
 undone: police dash audio playback.
-undone: image description shouldn't overwrite the current description, if any description exists previously it should only append over it.
+    done: image description shouldn't overwrite the current description, if any description exists previously it should only append over it.
+undone: image should have fixed height and width if possible.
 
 
 # python -m http.server 8000

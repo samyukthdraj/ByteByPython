@@ -107,13 +107,24 @@ class Database:
         return list(self.tickets_collection.find({"police_station": police_station}))
 
     def update_ticket_status(self, ticket_number: str, new_status: str):
-        """Update the status of a ticket."""
+        """
+        Update the status of a ticket and record the timestamp of the update.
+        
+        Args:
+            ticket_number (str): The ticket number to update
+            new_status (str): The new status to set
+            
+        Returns:
+            bool: True if update was successful, False otherwise
+        """
+        current_time = datetime.utcnow()
+        
         result = self.tickets_collection.update_one(
             {"ticket_number": ticket_number},
             {
                 "$set": {
                     "status": new_status,
-                    "updated_at": datetime.utcnow()
+                    "updated_at": current_time  # Will be set only when status is updated
                 }
             }
         )
@@ -154,7 +165,10 @@ class Database:
             "police_station": police_station,
             "description": description,
             "image_url": image_url,
-            "audio_url": audio_url
+            "audio_url": audio_url,
+            "status": "New",  # Initial status
+            "created_at": datetime.utcnow(),  # Creation timestamp
+            "updated_at": None   # Initial update timestamp is null.
         }
 
         result = self.tickets_collection.insert_one(ticket)

@@ -220,7 +220,7 @@ function handleAudioError(audio) {
                         'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ status: newStatus })
+                    body: JSON.stringify({ status: newStatus, updated_at: new Date().toISOString() })
                 });
 
                 if (!response.ok) {
@@ -234,6 +234,7 @@ function handleAudioError(audio) {
                 handleUpdateError(error);
             }
         }
+
 
         // View ticket details function (modal remains for text details)
         async function viewTicketDetails(ticketNumber) {
@@ -261,6 +262,8 @@ function handleAudioError(audio) {
         // Display ticket modal function (unchanged)
         function displayTicketModal(ticket) {
             const modalContent = document.getElementById('modalContent');
+            const createdDate = new Date(ticket.created_at).toLocaleString();
+            const updatedDate = ticket.updated_at ? new Date(ticket.updated_at).toLocaleString() : 'Not updated yet';
             modalContent.innerHTML = `
                 <h2>Ticket Details #${ticket.ticket_number}</h2>
                 <p><strong>Reported by:</strong> ${ticket.user_name}</p>
@@ -269,7 +272,8 @@ function handleAudioError(audio) {
                 <p><strong>Phone Number:</strong> ${ticket.phone_number}</p>
                 <p><strong>Status:</strong> ${ticket.status}</p>
                 <p><strong>Description:</strong> ${ticket.description || 'No description provided'}</p>
-                <p><strong>Created at:</strong> ${new Date(ticket.created_at).toLocaleString()}</p>
+                <p><strong>Created at:</strong> ${createdDate}</p>
+                <p><strong>Last Updated:</strong> ${updatedDate}</p>
             `;
             
             document.getElementById('ticketModal').style.display = 'block';
