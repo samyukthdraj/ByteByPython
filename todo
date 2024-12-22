@@ -57,13 +57,18 @@ undone: forgot pass fixes.
     done: i want the dropdown to be consisting all police stations in alphabetical order
     done: pincode give nearest 3 stations with distances give.
     done: update the database with the pincode field,
-undone: view details on user dashboard put, police dashboard view details must access image and audio in the drive.
+    done: view details on user dashboard put, 
+undone: police dashboard view details must access image and audio in the drive.
     done: add a back button in index.html which takes us to dashboard.
     done: login update, a button which on clicking will be like a card with a backside with police login.
 DONE: find password for each station ( default_password )
     done: 2 tickets being created when creating ticket
 undone: status is undefined, timestamp also undefined for the ticket.
-undone: speech to text using gemini.
+undone: speech to text using assemblyapi
+undone: police dash audio playback.
+undone: image description shouldn't overwrite the current description, if any description exists previously it should only append over it.
+
+
 # python -m http.server 8000
 
 

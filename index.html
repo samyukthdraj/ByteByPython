@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Civilians As Police (CAP)</title>
   <link rel="stylesheet" href="styles.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 </head>
 <body>
   <div class="window">
@@ -26,11 +27,25 @@
       <input type="file" id="uploadImage" accept="image/*">
     </div>
 
-    <!-- Voice Note Upload -->
+
+    <!-- Voice Recorder -->
     <div class="form-group">
-      <label for="uploadVoice">Upload Voice:</label>
-      <input type="file" id="uploadVoice" accept="audio/*">
+      <label>Record Voice Note:</label>
+      <div id="voiceRecorder">
+        <button id="startRecording" onclick="startRecording()" class="record-button">
+          <i class="fas fa-microphone"></i>
+        </button>
+        <button id="stopRecording" onclick="stopRecording()" class="record-button" style="display: none;">
+          <i class="fas fa-stop-circle"></i>
+        </button>
+        <button id="removeRecording" onclick="removeRecording()" class="remove-button" style="display: none;">
+          <i class="fas fa-times"></i>
+        </button>
+        <audio id="recordedAudio" controls style="display: none;"></audio>
+        </div>
     </div>
+    <!-- Hidden Audio File Input -->
+    <input type="file" id="uploadVoice" style="display: none;">
 
     <!-- Pincode Input -->
     <div class="form-group">
@@ -43,7 +58,6 @@
       <label for="policeStation">Nearest Police Station:</label>
       <select id="policeStation">
         <option value="">Select a station</option>
-        <option value="Central Police Station">CENTRAL POLICE STATION</option>
       </select>
     </div>
 

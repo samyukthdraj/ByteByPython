@@ -59,6 +59,7 @@ pip install -r requirements.txt
 seperately 
 pip install google-api-core
 pip install google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib
+pip install aiohttp (3.11.11)
 
 ```
 

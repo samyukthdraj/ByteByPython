@@ -1,3 +1,164 @@
+let mediaRecorder;
+let audioChunks = [];
+
+async function startRecording() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+
+        // Store the username and timestamp at the start of the recording
+        const timestamp = Date.now();
+        const userName = document.getElementById('userName').value || 'anonymous';
+        const sanitizedUsername = userName.replace(/[^a-zA-Z0-9]/g, '_');
+        const uniqueFileName = `recorded_audio_${sanitizedUsername}_${timestamp}.webm`;
+
+        mediaRecorder.ondataavailable = event => {
+            audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            audioChunks = [];
+
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const recordedAudio = document.getElementById('recordedAudio');
+            recordedAudio.src = audioUrl;
+            recordedAudio.style.display = 'block';
+
+            // Create a file-like object for upload
+            const file = new File([audioBlob], uniqueFileName, { type: 'audio/webm' });
+            
+            // Add loading message to description box
+            const descriptionBox = document.getElementById("description");
+            let existingContent = descriptionBox.value.trim();
+            if (existingContent) {
+                descriptionBox.value = `${existingContent}\n\nProcessing voice recording...`;
+            } else {
+                descriptionBox.value = 'Processing voice recording...';
+            }
+
+            // Process the voice recording
+            try {
+                const formData = new FormData();
+                formData.append("file", file);
+
+                const response = await fetch("http://127.0.0.1:8000/process-speech", {
+                    method: "POST",
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to process voice file.");
+                }
+
+                const data = await response.json();
+                const transcription = data.transcription;
+
+                // Update description box with transcription
+                existingContent = descriptionBox.value
+                    .replace('Processing voice recording...', '')
+                    .trim();
+                
+                if (existingContent) {
+                    descriptionBox.value = `${existingContent}\n\nVoice Description: ${transcription}`;
+                } else {
+                    descriptionBox.value = `Voice Description: ${transcription}`;
+                }
+
+                // Scroll to the bottom of the description box
+                descriptionBox.scrollTop = descriptionBox.scrollHeight;
+
+            } catch (error) {
+                console.error("Error processing voice:", error);
+                // Remove the processing message and show error
+                descriptionBox.value = existingContent;
+                alert("Voice processing failed. Please try again.");
+            }
+
+            // Store the file in the upload input
+            const uploadVoice = document.getElementById('uploadVoice');
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            uploadVoice.files = dataTransfer.files;
+        };
+
+        mediaRecorder.start();
+        document.getElementById('startRecording').style.display = 'none';
+        document.getElementById('stopRecording').style.display = 'inline-block';
+        document.getElementById('removeRecording').style.display = 'none';
+
+    } catch (error) {
+        console.error('Error starting recording:', error);
+        alert('Failed to access microphone. Please ensure your microphone is enabled.');
+    }
+}
+
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        
+        document.getElementById('startRecording').style.display = 'inline-block';
+        document.getElementById('stopRecording').style.display = 'none';
+        document.getElementById('removeRecording').style.display = 'inline-block';
+    }
+}
+
+function removeRecording() {
+    // Reset the audio player
+    const recordedAudio = document.getElementById('recordedAudio');
+    recordedAudio.src = '';
+    recordedAudio.style.display = 'none';
+
+    // Clear the file input
+    const uploadVoice = document.getElementById('uploadVoice');
+    const dataTransfer = new DataTransfer();
+    uploadVoice.files = dataTransfer.files;
+
+    // Remove the last voice description from the description box
+    const descriptionBox = document.getElementById('description');
+    const content = descriptionBox.value;
+    const lastVoiceDescIndex = content.lastIndexOf('Voice Description:');
+    if (lastVoiceDescIndex !== -1) {
+        // Find the end of this voice description (either the next voice description or the end of text)
+        const nextVoiceDescIndex = content.indexOf('Voice Description:', lastVoiceDescIndex + 1);
+        if (nextVoiceDescIndex !== -1) {
+            // Remove this voice description up to the next one
+            descriptionBox.value = content.slice(0, lastVoiceDescIndex) + content.slice(nextVoiceDescIndex);
+        } else {
+            // Remove this voice description to the end
+            descriptionBox.value = content.slice(0, lastVoiceDescIndex).trim();
+        }
+    }
+
+    // Reset buttons
+    document.getElementById('startRecording').style.display = 'inline-block';
+    document.getElementById('stopRecording').style.display = 'none';
+    document.getElementById('removeRecording').style.display = 'none';
+}
+
+async function showLoadingPopup() {
+  // Create the loading popup
+  const popup = document.createElement("div");
+  popup.innerHTML = `
+    <div id="report-popup" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 2px solid blue; z-index: 1000; text-align: center;">
+        <h2>Submitting Report...</h2>
+        <div>Loading...</div> <!-- Static loading text -->
+    </div>
+  `;
+  document.body.appendChild(popup); // Add to the body of the document
+  
+  // Force reflow to ensure the popup is displayed immediately
+  popup.offsetHeight; // Accessing this forces the browser to reflow the DOM
+  return popup; // Return the popup element to modify it later
+}
+
+
+
+
 // Store police stations data globally
 let policeStationsData = [];
 
@@ -272,9 +433,21 @@ async function analyzeImage(file) {
                 const customCrimeTypeInput = document.getElementById("customCrimeTypeInput");
                 const customCrimeTypeContainer = document.getElementById("customCrimeType");
 
-                descriptionBox.value = "";
+                // Get existing content and trim any trailing whitespace
+                let existingContent = descriptionBox.value.trim();
+                
+                // Create the new image analysis content
+                const imageAnalysis = `Keywords: ${analysisResult.keywords.join(", ")}\n\nImage Description: ${analysisResult.description}`;
+                
+                // Append the new content to existing content if there is any
+                if (existingContent) {
+                    descriptionBox.value = `${existingContent}\n\n${imageAnalysis}`;
+                } else {
+                    descriptionBox.value = imageAnalysis;
+                }
 
-                descriptionBox.value = `Keywords: ${analysisResult.keywords.join(", ")}\n\nDescription: ${analysisResult.description}`;
+                // Scroll to the bottom of the description box
+                descriptionBox.scrollTop = descriptionBox.scrollHeight;
 
                 if (analysisResult.crime_type) {
                     const normalizedCrimeType = analysisResult.crime_type.toLowerCase();
@@ -309,19 +482,51 @@ async function analyzeImage(file) {
     });
 }
 
+
 async function processVoice(file) {
-    const formData = new FormData();
-    formData.append("file", file);
+    try {
+        const formData = new FormData();
+        formData.append("file", file);
 
-    const response = await fetch("http://127.0.0.1:8000/speech-to-text/", {
-        method: "POST",
-        body: formData,
-    });
-    const data = await response.json();
+        const response = await fetch("http://127.0.0.1:8000/process-speech", {
+            method: "POST",
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            body: formData
+        });
 
-    const descriptionBox = document.getElementById("description");
-    descriptionBox.value = `Voice Transcription: ${data.transcription}`;
+        if (!response.ok) {
+            throw new Error("Failed to process voice file.");
+        }
+
+        const data = await response.json();
+        const transcription = data.transcription;
+
+        // Get the description box element
+        const descriptionBox = document.getElementById("description");
+        
+        // Get existing content and trim any extra whitespace
+        let existingContent = descriptionBox.value.trim();
+        
+        // Append the transcription with proper formatting
+        if (existingContent) {
+            descriptionBox.value = `${existingContent}\n\nVoice Description: ${transcription}`;
+        } else {
+            descriptionBox.value = `Voice Description: ${transcription}`;
+        }
+
+        // Optional: Scroll to the bottom of the description box
+        descriptionBox.scrollTop = descriptionBox.scrollHeight;
+        
+    } catch (error) {
+        console.error("Error processing voice:", error);
+        alert("Voice processing failed. Please try again.");
+    }
 }
+
+
+
 let isSubmitting = false;
 async function submitReport() {
     if (isSubmitting) {
@@ -330,34 +535,38 @@ async function submitReport() {
     }
     try {
         isSubmitting = true;
-    const userName = document.getElementById("userName").value;
-    const pincode = document.getElementById("pincode").value;
-    const policeStation = document.getElementById("policeStation").value;
-    const phoneNumber = document.getElementById("phoneNumber").value;
-    const crimeType = document.getElementById("crimeType").value === 'others' 
-        ? document.getElementById('customCrimeTypeInput').value 
-        : document.getElementById("crimeType").value;
-    const description = document.getElementById("description").value;
 
-    const imageFile = document.getElementById("uploadImage").files[0];
-    const voiceFile = document.getElementById("uploadVoice").files[0];
+        // Show the "Submitting Report..." popup
+        const popup = await showLoadingPopup();
 
-    const formData = new FormData();
-  // FormData to send data to the backend
-    formData.append("user_name", userName);
-    formData.append("pincode", pincode);
-    formData.append("police_station", policeStation);
-    formData.append("phone_number", phoneNumber);
-    formData.append("crime_type", crimeType);
-    formData.append("description", description);
-    
+        const userName = document.getElementById("userName").value;
+        const pincode = document.getElementById("pincode").value;
+        const policeStation = document.getElementById("policeStation").value;
+        const phoneNumber = document.getElementById("phoneNumber").value;
+        const crimeType = document.getElementById("crimeType").value === 'others' 
+            ? document.getElementById('customCrimeTypeInput').value 
+            : document.getElementById("crimeType").value;
+        const description = document.getElementById("description").value;
 
-    if (imageFile) {
-        formData.append("image_file", imageFile); // Match the backend field name
-      }
-      if (voiceFile) {
-        formData.append("voice_file", voiceFile); // Match the backend field name
-      }
+        const imageFile = document.getElementById("uploadImage").files[0];
+        const voiceFile = document.getElementById("uploadVoice").files[0];
+
+        const formData = new FormData();
+        // FormData to send data to the backend
+        formData.append("user_name", userName);
+        formData.append("pincode", pincode);
+        formData.append("police_station", policeStation);
+        formData.append("phone_number", phoneNumber);
+        formData.append("crime_type", crimeType);
+        formData.append("description", description);
+
+        if (imageFile) {
+            formData.append("image_file", imageFile); // Match the backend field name
+        }
+        if (voiceFile) {
+            formData.append("voice_file", voiceFile); // Match the backend field name
+        }
+
         const accessToken = localStorage.getItem('access_token');
         if (!accessToken) {
             throw new Error('No access token found. Please log in.');
@@ -380,11 +589,14 @@ async function submitReport() {
 
         // Show success popup with ticket number
         showSuccessPopup(result.ticket_number);
-      } catch (error) {
+
+    } catch (error) {
         console.error("Error submitting report:", error);
         alert(error.message || "Failed to submit report. Please try again.");
-      } finally {isSubmitting = false;}
+    } finally {
+        isSubmitting = false;
     }
+}
     
     function showSuccessPopup(ticketNumber) {
       const popup = document.createElement("div");

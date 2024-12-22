@@ -7,7 +7,7 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    overflow: hidden;
+    overflow: visible;
   }
   
   .dashboard-container {
@@ -23,6 +23,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
   }
   
   h1 {
@@ -87,3 +88,118 @@ body {
     background-color: #d32f2f;
   }
   
+  /* General styles for recorder buttons */
+.record-button, .remove-button {
+  background-color: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  margin: 0 5px;
+  display: inline-block; /* Ensure they are inline */
+}
+
+/* Icon styles for record button */
+.record-button i {
+  color: #007bff;
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Icon and animation when recording */
+.record-button i.recording {
+  color: #dc3545; /* Red color while recording */
+  animation: pulse 1.5s infinite;
+}
+
+/* Remove button styling */
+.remove-button i {
+  color: #dc3545; /* Red color for remove button */
+}
+
+/* Show recorded audio */
+audio {
+  margin-top: 10px;
+  display: block;
+}
+
+/* Pulse animation for recording gesture */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Ensure buttons are properly hidden when disabled or canceled */
+.record-button[disabled], .remove-button[disabled] {
+  opacity: 0.5;
+  pointer-events: none; /* Disable interaction */
+}
+
+#removeRecording {
+  display: none; /* Hide remove button initially */
+}
+
+/* Show buttons properly after stopping recording */
+.record-button.active {
+  display: none;
+}
+
+.remove-button.active {
+  display: inline-block;
+}
+
+/* Popup for report submission (Loading state) */
+#report-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  border: 2px solid #0078d4;
+  z-index: 9999; /* Ensure it appears on top of everything else */
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  width: 300px;
+}
+
+/* Loading Popup Text */
+#report-popup h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #0078d4;
+}
+
+#report-popup p {
+  font-size: 16px;
+  color: #333;
+  margin-top: 10px;
+}
+
+/* Success Popup Style */
+#report-popup.success {
+  background-color: #d4edda;
+  border-color: #28a745;
+  color: #155724;
+}
+
+/* Success Popup Button */
+#report-popup.success button {
+  background-color: #28a745;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+#report-popup.success button:hover {
+  background-color: #218838;
+}

@@ -24,10 +24,14 @@ from fastapi.staticfiles import StaticFiles
 import os
 from database import Database
 
+import aiohttp
+import asyncio
+
 from googleapiclient.http import MediaIoBaseUpload
 import io
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+
 
 
 app = FastAPI()
@@ -333,16 +337,71 @@ async def get_crime_reports(current_user: dict = Depends(get_current_user)):
     reports = list(db.crime_reports_collection.find({"user_id": current_user['username']}))
     return reports
 
+
+
+
 # Speech to Text Route
+async def process_speech_to_text(audio_file: UploadFile):
+    ASSEMBLY_API_KEY = '9e493625da8c4a9aa8ea4125507e4d4a'  # Replace with your API key
+    headers = {
+        'authorization': ASSEMBLY_API_KEY
+    }
+    
+    # First, upload the audio file to AssemblyAI
+    upload_endpoint = "https://api.assemblyai.com/v2/upload"
+    transcript_endpoint = "https://api.assemblyai.com/v2/transcript"
+    
+    async with aiohttp.ClientSession() as session:
+        # Read and upload the file
+        audio_data = await audio_file.read()
+        
+        async with session.post(upload_endpoint,
+                              headers=headers,
+                              data=audio_data) as upload_response:
+            if upload_response.status != 200:
+                raise HTTPException(status_code=500, detail="Failed to upload audio file")
+            
+            upload_url = (await upload_response.json())['upload_url']
+            
+        # Start transcription
+        json = {
+            "audio_url": upload_url,
+            "language_code": "en"  # You can change this for other languages
+        }
+        
+        async with session.post(transcript_endpoint,
+                              json=json,
+                              headers=headers) as transcript_response:
+            if transcript_response.status != 200:
+                raise HTTPException(status_code=500, detail="Failed to start transcription")
+            
+            transcript_id = (await transcript_response.json())['id']
+            
+        # Poll for transcription completion
+        polling_endpoint = f"https://api.assemblyai.com/v2/transcript/{transcript_id}"
+        while True:
+            await asyncio.sleep(1)
+            async with session.get(polling_endpoint, headers=headers) as polling_response:
+                polling_result = await polling_response.json()
+                
+                if polling_result['status'] == 'completed':
+                    return polling_result['text']
+                elif polling_result['status'] == 'error':
+                    raise HTTPException(status_code=500, 
+                                     detail="Transcription failed: " + polling_result.get('error', 'Unknown error'))
+                    
+                # Continue polling if status is 'queued' or 'processing'
+
 @app.post("/process-speech")
 async def process_speech(
-    file: UploadFile = File(...), 
+    file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
-    # Process speech file
-    transcription = await process_speech_to_text(file.file)
-    
-    return {"transcription": transcription}
+    try:
+        transcription = await process_speech_to_text(file)
+        return {"transcription": transcription}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Police Station Routes
 @app.post("/add-police-station")
