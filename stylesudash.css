@@ -1,89 +1,205 @@
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f9;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    overflow: hidden;
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f9;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow: visible; /* Ensure popups are visible */
+}
+
+.dashboard-container {
+  width: 80%;
+  max-width: 900px;
+  height: 90vh;
+  background: #fff;
+  border: 2px solid #0078d4;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative; /* Ensure the popup appears on top of this container */
+}
+
+h1 {
+  text-align: center;
+  color: #0078d4;
+  margin-bottom: 20px;
+}
+
+.ticket-list {
+  width: 100%;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  overflow-y: auto;
+}
+
+.ticket-card {
+  background-color: #f9f9fc;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ticket-card h3 {
+  color: #0078d4;
+  margin: 0 0 10px;
+}
+
+.ticket-card p {
+  margin: 5px 0;
+  color: #333;
+}
+
+.new-ticket-button {
+  background: #0078d4;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
+  align-self: flex-start;
+}
+
+.new-ticket-button:hover {
+  background-color: #005bb5;
+}
+
+.signout-button {
+  background-color: #f44336; /* Red color */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.signout-button:hover {
+  background-color: #d32f2f;
+}
+
+/* General styles for recorder buttons */
+.record-button, .remove-button {
+  background-color: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  margin: 0 5px;
+  display: inline-block; /* Ensure they are inline */
+}
+
+/* Icon styles for record button */
+.record-button i {
+  color: #007bff;
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Icon and animation when recording */
+.record-button i.recording {
+  color: #dc3545; /* Red color while recording */
+  animation: pulse 1.5s infinite;
+}
+
+/* Remove button styling */
+.remove-button i {
+  color: #dc3545; /* Red color for remove button */
+}
+
+/* Show recorded audio */
+audio {
+  margin-top: 10px;
+  display: block;
+}
+
+/* Pulse animation for recording gesture */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
   }
-  
-  .dashboard-container {
-    width: 80%;
-    max-width: 900px;
-    height: 90vh;
-    background: #fff;
-    border: 2px solid #0078d4;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  50% {
+    transform: scale(1.2);
   }
-  
-  h1 {
-    text-align: center;
-    color: #0078d4;
-    margin-bottom: 20px;
+  100% {
+    transform: scale(1);
   }
-  
-  .ticket-list {
-    width: 100%;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    overflow-y: auto;
-  }
-  
-  .ticket-card {
-    background-color: #f9f9fc;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 15px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  .ticket-card h3 {
-    color: #0078d4;
-    margin: 0 0 10px;
-  }
-  
-  .ticket-card p {
-    margin: 5px 0;
-    color: #333;
-  }
-  
-  .new-ticket-button {
-    background: #0078d4;
-    color: #fff;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    margin-top: 20px;
-    align-self: flex-start;
-  }
-  
-  .new-ticket-button:hover {
-    background-color: #005bb5;
-  }
-  
-  .signout-button {
-    background-color: #f44336; /* Red color */
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .signout-button:hover {
-    background-color: #d32f2f;
-  }
-  
+}
+
+/* Ensure buttons are properly hidden when disabled or canceled */
+.record-button[disabled], .remove-button[disabled] {
+  opacity: 0.5;
+  pointer-events: none; /* Disable interaction */
+}
+
+#removeRecording {
+  display: none; /* Hide remove button initially */
+}
+
+/* Show buttons properly after stopping recording */
+.record-button.active {
+  display: none;
+}
+
+.remove-button.active {
+  display: inline-block;
+}
+
+/* Popup for report submission (Loading state) */
+#report-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  border: 2px solid #0078d4;
+  z-index: 9999; /* Ensure it appears on top of everything else */
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  width: 300px;
+}
+
+/* Loading Popup Text */
+#report-popup h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #0078d4;
+}
+
+#report-popup p {
+  font-size: 16px;
+  color: #333;
+  margin-top: 10px;
+}
+
+/* Success Popup Style */
+#report-popup.success {
+  background-color: #d4edda;
+  border-color: #28a745;
+  color: #155724;
+}
+
+/* Success Popup Button */
+#report-popup.success button {
+  background-color: #28a745;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+#report-popup.success button:hover {
+  background-color: #218838;
+}
