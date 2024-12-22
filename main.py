@@ -33,6 +33,8 @@ from googleapiclient.discovery import build
 app = FastAPI()
 db = Database()
 
+# app.mount("/static", StaticFiles(directory="static"), name="static")
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -325,67 +327,6 @@ async def reset_password(reset_request: PasswordReset):
     
     return {"message": "Password reset successfully"}
 
-# Crime Report Routes
-
-# @app.post("/upload-crime-report")
-# async def upload_crime_report(
-#     file: UploadFile = File(None),
-#     user_name: str = Form(None),
-#     pincode: str = Form(None),
-#     police_station: str = Form(None),
-#     phone_number: str = Form(None),
-#     crime_type: str = Form(None),
-#     description: Optional[str] = Form(None),
-#     current_user: dict = Depends(get_current_user)
-# ):
-
-#     # Ensure uploads directory exists
-#     uploads_dir = "uploads"
-#     os.makedirs(uploads_dir, exist_ok=True)
-
-#     if not all([pincode, police_station, phone_number, crime_type]):
-#         raise HTTPException(status_code=400, detail="Missing required fields")
-#     # Generate a random 6-digit ticket number
-#     ticket_number = f"{random.randint(100000, 999999)}"
-
-#     # Prepare file handling
-#     file_path = None
-#     if file and file.filename:
-#         # Generate a unique filename for the image
-#         file_extension = file.filename.split('.')[-1] if file.filename else 'jpg'
-#         unique_filename = f"{uuid.uuid4()}.{file_extension}"
-#         file_path = os.path.join(uploads_dir, unique_filename)
-        
-#         # Save file 
-#         with open(file_path, "wb") as buffer:
-#             buffer.write(await file.read())
-        
-#         # Analyze image (optional)
-#         try:
-#             analysis_result = await analyze_image_detailed(file.file)
-#         except Exception as e:
-#             analysis_result = {"error": str(e)}
-
-#     try:
-#         # Create ticket using database method
-#         ticket = db.create_ticket(
-#             user_name=current_user['username'],
-#             pincode=pincode,
-#             phone_number=phone_number,
-#             crime_type=crime_type,
-#             police_station=police_station,
-#             description=description,
-#             ticket_number=ticket_number,
-#             image_url=file_path
-#         )
-
-#         return {
-#             "message": "Crime report uploaded successfully",
-#             "ticket_number": ticket_number
-#         }
-#     except ValueError as ve:
-#         raise HTTPException(status_code=400, detail=str(ve))
-
 @app.get("/crime-reports", response_model=List[CrimeReport])
 async def get_crime_reports(current_user: dict = Depends(get_current_user)):
     # Fetch crime reports for the current user
@@ -577,10 +518,9 @@ async def options_user_tickets():
 # Google Drive folder ID for the `cap` folder
 FOLDER_ID = "1dxymA4Lejnbuv2_y3dXjgBUNRh9ZtO3x"
 
-# Function to get Google Drive service
 def get_drive_service():
-    SCOPES = ['https://www.googleapis.com/auth/drive.file']
-    SERVICE_ACCOUNT_FILE = 'service_account.json'  # Path to your service account JSON file
+    SCOPES = ['https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/drive']
+    SERVICE_ACCOUNT_FILE = 'service_account.json'
     
     credentials = service_account.Credentials.from_service_account_file(
         SERVICE_ACCOUNT_FILE, scopes=SCOPES
@@ -588,30 +528,44 @@ def get_drive_service():
     service = build('drive', 'v3', credentials=credentials)
     return service
 
-# Function to upload a file to Google Drive
 async def upload_to_drive(file: UploadFile, file_name: str, mime_type: str):
     try:
         drive_service = get_drive_service()
-        file_metadata = {'name': file_name, 'parents': [FOLDER_ID]}  # Upload to the specific folder
+        file_metadata = {
+            'name': file_name,
+            'parents': [FOLDER_ID]
+        }
         
-        # Read the file content as bytes and create a file-like object using BytesIO
         file_content = io.BytesIO(await file.read())
+        media = MediaIoBaseUpload(file_content, mimetype=mime_type, resumable=True)
 
-        # Create a MediaIoBaseUpload instance for the Google Drive API
-        media = MediaIoBaseUpload(file_content, mimetype=mime_type)
-
-        # Upload the file to Google Drive
-        uploaded_file = drive_service.files().create(
+        file = drive_service.files().create(
             body=file_metadata,
             media_body=media,
-            fields='id'
+            fields='id, webContentLink',
+            supportsAllDrives=True
         ).execute()
 
-        # Construct the public file URL
-        return f"https://drive.google.com/file/d/{uploaded_file['id']}/view?usp=sharing"
+        # Set file permissions to be publicly readable
+        permission = {
+            'type': 'anyone',
+            'role': 'reader'
+        }
+        drive_service.permissions().create(
+            fileId=file['id'],
+            body=permission
+        ).execute()
+
+        # Generate appropriate URL based on file type
+        if mime_type.startswith('image/'):
+            return f"https://drive.google.com/uc?export=view&id={file['id']}"
+        elif mime_type.startswith('audio/'):
+            return f"https://drive.google.com/file/d/{file['id']}/view"
+            
+        return file.get('webContentLink')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to upload file: {str(e)}")
-
+    
 # Endpoint to handle crime report upload
 @app.post("/upload-crime-report")
 async def upload_crime_report(

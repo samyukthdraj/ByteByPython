@@ -1,37 +1,37 @@
 - Context: Instead of using Google cloud to convert the voice to text we are using these two alternatives:
-- Done: AssemblyAI (for speech-to-text): Offers a free tier for speech-to-text.
-- Undone: DeepL (for translation): Provides a free version with some limitations. {considering alternatives}
+-   Done: AssemblyAI (for speech-to-text): Offers a free tier for speech-to-text.
+-Undone: DeepL (for translation): Provides a free version with some limitations. {considering alternatives}
 <!-- not doing any translations since getting a translation service for indian regional languages for free is a difficulty. -->
 
-- Done: Used HuggingFace instead of OpenAI. 
+-   Done: Used HuggingFace instead of OpenAI. 
 
 - ToDo: 
 
-- undone: After clicking the submit button a popup should come which says, your report has been submitted/ ticket generated. 
-There should be a random ticket number which should come after you press the submit button and raise the ticket, 
-the status of the ticket can be tracked by entering the ticket number.
-Police can take action based on the ticket number as well.
-This ticket number will be stored in the database which the police can then use as reference to track.
-- done: Types of crime and the keywords received are not accurate to the crime, ie. crime detection is not accurate and is slow.
-- done: Create a login page for a user and a signup page for a user and then another section in the login for police
-Police should have a dashboard when they login and for the users the dashboard is the current page ie tthe main index.html
-- done : Check if backend is working.
-- done: Create user database, change names of police stations to match the ones in the front end, 
+    - done: After clicking the submit button a popup should come which says, your report has been submitted/ ticket generated. 
+    There should be a random ticket number which should come after you press the submit button and raise the ticket, 
+    the status of the ticket can be tracked by entering the ticket number.
+    Police can take action based on the ticket number as well.
+    This ticket number will be stored in the database which the police can then use as reference to track.
+    - done: Types of crime and the keywords received are not accurate to the crime, ie. crime detection is not accurate and is slow.
+    - done: Create a login page for a user and a signup page for a user and then another section in the login for police
+    Police should have a dashboard when they login and for the users the dashboard is the current page ie tthe main index.html
+-   done : Check if backend is working.
+-   done: Create user database, change names of police stations to match the ones in the front end, 
 Create user login, police login, police dashboard and then connections.
-- done: Link frontend and backend.
+-   done: Link frontend and backend.
 
-- done: signup page; username password(hash if possible) email, forgot password (email), store both in the database.
-- done: main.py (rest of the code)
+-   done: signup page; username password(hash if possible) email, forgot password (email), store both in the database.
+-   done: main.py (rest of the code)
 
-- done: signup.html error while creating account fix, 
-forgot password otp fix (add a text field for otp which will later be cross checked with the otp sent in mail).
-police login issue.
-dashboard should get the details from the database.
+    - done: signup.html error while creating account fix, 
+    forgot password otp fix (add a text field for otp which will later be cross checked with the otp sent in mail).
+    police login issue.
+    dashboard should get the details from the database.
 
-- done: Your Ticket Number is: undefined when submit is clicked.
-When i click close i want to be re-routed to the user dashboard.
-Add a signout button which will get us back to login page.
-make login.html look 50/50 on the left and right    
+    - done: Your Ticket Number is: undefined when submit is clicked.
+    When i click close i want to be re-routed to the user dashboard.
+    Add a signout button which will get us back to login page.
+    make login.html look 50/50 on the left and right    
 
 - testing: signup works: username samyukth, samyukthterawe@outlook.com, 12345678
 Username: central_ps
@@ -47,7 +47,7 @@ undone: dashboard filtering
     DONE: close button while submitting report should lead back to user dashboard
     DONE:signout button
     done: ai implementation in index.html for analysing image 
-undone: voice.
+undone: voice.{ashwin in index.html}, integrate the speech to text.
     DONE:50/50 login style , forgot pass, signup css
 <!-- undone: when clicking the link in uvicorn, only login comes without any css. -->
 undone: project structure. optimise code.
@@ -59,10 +59,11 @@ undone: forgot pass fixes.
     done: update the database with the pincode field,
 undone: view details on user dashboard put, police dashboard view details must access image and audio in the drive.
     done: add a back button in index.html which takes us to dashboard.
-undone: login update, a button which on clicking will be like a card with a backside with police login.
+    done: login update, a button which on clicking will be like a card with a backside with police login.
 DONE: find password for each station ( default_password )
-undone: 2 tickets being created when creating ticket
-
+    done: 2 tickets being created when creating ticket
+undone: status is undefined, timestamp also undefined for the ticket.
+undone: speech to text using gemini.
 # python -m http.server 8000
 
 

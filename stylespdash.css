@@ -159,3 +159,47 @@ h1 {
 #modalContent strong {
   color: #333;
 }
+
+
+
+
+
+
+.media-container {
+  margin-top: 20px;
+}
+
+.media-container img {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 15px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.media-container audio {
+  width: 100%;
+  margin-bottom: 15px;
+}
+.media-error {
+  color: #d32f2f;
+  font-style: italic;
+  margin: 5px 0;
+}
+
+
+
+
+
+.media-container {
+  margin: 20px 0;
+}
+
+.image-container, .audio-container {
+  margin: 15px 0;
+}
+
+.media-error {
+  color: red;
+  font-style: italic;
+}
