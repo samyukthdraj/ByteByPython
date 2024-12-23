@@ -30,10 +30,21 @@ import io
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from fastapi.responses import StreamingResponse
+import webbrowser
 
 
 app = FastAPI()
 db = Database()
+
+@app.on_event("startup")
+async def startup_event():
+    # Open the login page when the server starts
+    webbrowser.open_new_tab("http://127.0.0.1:5500/login.html")
+
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the root!"}
+
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -148,15 +159,15 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         raise credentials_exception
     return user
 
-# Redirection while clicking http://127.0.0.1:8000/ in uvicorn main:app --reload
-@app.get("/", response_class=HTMLResponse)
-async def root():
-    # Read the login.html file from the same directory
-    try:
-        with open("login.html", "r") as file:
-            return file.read()
-    except FileNotFoundError:
-        return HTMLResponse(content="Login page not found", status_code=404)
+# # Redirection while clicking http://127.0.0.1:8000/ in uvicorn main:app --reload
+# @app.get("/", response_class=HTMLResponse)
+# async def root():
+#     # Read the login.html file from the same directory
+#     try:
+#         with open("login.html", "r") as file:
+#             return file.read()
+#     except FileNotFoundError:
+#         return HTMLResponse(content="Login page not found", status_code=404)
 
 # Authentication Routes
 @app.post("/token")
