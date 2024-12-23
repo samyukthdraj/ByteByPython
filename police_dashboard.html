@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Civilians As Police (CAP) - Police Dashboard</title>
-  <link rel="stylesheet" href="stylespdash.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civilians As Police (CAP) - Police Dashboard</title>
+    <link rel="stylesheet" href="stylespdash.css">
 </head>
 <body>
     <div class="dashboard-container">
@@ -25,7 +25,7 @@
     </div>
 
     <script>
-        // Authentication check function
+        // Authentication check function (unchanged)
         async function checkAuthentication() {
             const accessToken = localStorage.getItem('access_token');
             if (!accessToken) {
@@ -73,7 +73,8 @@
             }
         }
 
-        // Create ticket card function
+
+        // Create ticket card function with updated audio handling
         function createTicketCard(ticket) {
             const ticketCard = document.createElement('div');
             ticketCard.classList.add('ticket-card');
@@ -84,11 +85,11 @@
                 <p>Status: ${ticket.status}</p>
                 <div class="media-container">
                     ${createImageContent(ticket.image_url)}
-                    ${createAudioContent(ticket.audio_url)}
+                    ${createAudioContent(ticket.audio_url, ticket.ticket_number)}
                 </div>
                 <div class="ticket-actions">
                     <button onclick="viewTicketDetails('${ticket.ticket_number}')">
-                        View Text Details
+                        View Details
                     </button>
                     <button onclick="updateTicketStatus('${ticket.ticket_number}', 'In Progress')">
                         Set to In Progress
@@ -104,115 +105,169 @@
             return ticketCard;
         }
 
-        // Create image content
-function createImageContent(imageUrl) {
-    if (!imageUrl) return '<p>No image uploaded</p>';
-    
-    // Convert to thumbnail URL for better performance
-    const processedUrl = processGoogleDriveUrl(imageUrl);
-    return `
-        <div class="image-container">
-            <h4>Uploaded Image</h4>
-            <img 
-                src="${processedUrl}" 
-                alt="Crime scene image"
-                style="max-width: 100%; height: auto;"
-                onerror="handleImageError(this)"
-                data-original-url="${imageUrl}"
-            />
-        </div>
-    `;
-}
+        // Create image content function (unchanged)
+        function createImageContent(imageUrl) {
+            if (!imageUrl) return '<p>No image uploaded</p>';
+            
+            const processedUrl = processGoogleDriveUrl(imageUrl);
+            return `
+                <div class="image-container">
+                    <h4>Uploaded Image</h4>
+                    <img 
+                        src="${processedUrl}" 
+                        alt="Crime scene image"
+                        style="max-width: 100%; height: auto;"
+                        onerror="handleImageError(this)"
+                        data-original-url="${imageUrl}"
+                    />
+                </div>
+            `;
+        }
 
-// Create audio content
-function createAudioContent(audioUrl) {
-    if (!audioUrl) return '<p>No audio uploaded</p>';
-    
-    const processedUrl = processGoogleDriveUrl(audioUrl, true);
-    return `
-        <div class="audio-container">
-            <h4>Uploaded Audio</h4>
-            <audio controls style="width: 100%;" onerror="handleAudioError(this)">
-                <source src="${processedUrl}" type="audio/mpeg">
-                <source src="${processedUrl}" type="audio/mp4">
-                Your browser does not support the audio element.
-            </audio>
-            <a href="${processedUrl}" target="_blank" class="download-link">Download Audio</a>
-        </div>
-    `;
-}
+        // Updated audio content function
+        // Updated createAudioContent function
+        function createAudioContent(audioUrl, ticketNumber) {
+            if (!audioUrl) return '<p>No audio uploaded</p>';
+            
+            const fileId = extractGoogleDriveFileId(audioUrl);
+            if (!fileId) return '<p>Invalid audio URL</p>';
 
-        // Process Google Drive URL
-// Process Google Drive URL
-// Process Google Drive URL
-function processGoogleDriveUrl(url, isAudio = false) {
-    if (!url) return '';
+            return `
+                <div class="audio-container" id="audio-${ticketNumber}">
+                    <h4>Uploaded Audio</h4>
+                    <div id="audio-player-${ticketNumber}" class="audio-player">
+                        <audio controls style="width: 100%;" 
+                               src="http://localhost:8000/proxy-audio/${fileId}"
+                               onerror="handleAudioError('${ticketNumber}', '${fileId}')">
+                            Your browser does not support the audio element.
+                        </audio>
+                    </div>
+                    <div class="audio-controls">
+                        <a href="https://drive.google.com/file/d/${fileId}/view" 
+                           target="_blank" 
+                           class="audio-button">
+                           Open in Drive
+                        </a>
+                        <a href="https://docs.google.com/uc?export=download&id=${fileId}" 
+                           class="audio-button" 
+                           download="audio_${ticketNumber}.mp3">
+                           Download
+                        </a>
+                    </div>
+                    <div id="audio-status-${ticketNumber}" class="audio-status"></div>
+                </div>
+            `;
+        }
 
-    // Handle different Google Drive URL formats
-    let fileId = '';
-    
-    // Handle sharing URL format
-    if (url.includes('drive.google.com/file/d/')) {
-        fileId = url.split('/file/d/')[1].split('/')[0];
-    }
-    // Handle old format
-    else if (url.includes('drive.google.com/open?id=')) {
-        fileId = url.split('open?id=')[1].split('&')[0];
-    }
-    // Handle view format
-    else if (url.includes('drive.google.com/uc?id=')) {
-        fileId = url.split('uc?id=')[1].split('&')[0];
-    }
-    // Handle direct file ID
-    else if (url.match(/^[a-zA-Z0-9_-]{25,}$/)) {
-        fileId = url;
-    } else {
-        console.warn('Unrecognized Google Drive URL format:', url);
-        return url;
-    }
 
-    // For images, use the thumbnail API which is more reliable
-    if (!isAudio) {
-        return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
-    }
-    
-    // For audio, use the direct download link
-    return `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=YOUR_API_KEY`;
-}
+        // New function to handle audio playback
+        async function handleAudioPlayback(fileId, ticketNumber) {
+            const statusDiv = document.getElementById(`audio-status-${ticketNumber}`);
+            const playerContainer = document.getElementById(`audio-player-container-${ticketNumber}`);
+            const audioPlayer = document.getElementById(`player-${ticketNumber}`);
+            
+            try {
+                statusDiv.innerHTML = '<div class="loading-spinner"></div>Preparing audio...';
+                
+                // First try the direct download URL
+                const directUrl = `https://docs.google.com/uc?export=download&id=${fileId}`;
+                
+                // Create a new audio element to test the URL
+                const testAudio = new Audio(directUrl);
+                
+                testAudio.onloadeddata = () => {
+                    // If we successfully loaded the audio, show the player
+                    audioPlayer.src = directUrl;
+                    playerContainer.style.display = 'block';
+                    statusDiv.innerHTML = '';
+                    audioPlayer.play();
+                };
+                
+                testAudio.onerror = () => {
+                    // If direct playback fails, show appropriate message
+                    statusDiv.innerHTML = `
+                        Unable to play directly. Please use the "Open in Drive" or "Download" options.
+                        <br>
+                        <small>This is due to Google Drive's security restrictions.</small>
+                    `;
+                };
+                
+                // Set a timeout in case the audio takes too long to load
+                setTimeout(() => {
+                    if (statusDiv.innerHTML.includes('Preparing')) {
+                        statusDiv.innerHTML = `
+                            Taking too long to load. Please use the "Open in Drive" or "Download" options.
+                            <br>
+                            <small>This is due to Google Drive's security restrictions.</small>
+                        `;
+                    }
+                }, 5000);
 
-// Enhanced error handlers
-function handleImageError(img) {
-    const originalUrl = img.getAttribute('data-original-url');
-    console.warn('Image failed to load:', originalUrl);
-    
-    // Replace with error message and direct link
-    const container = img.closest('.image-container');
-    container.innerHTML = `
-        <div class="media-error">
-            <p>Unable to load image directly. Please ensure the file is publicly accessible.</p>
-            <a href="${originalUrl}" target="_blank" class="view-link">
-                View Image in Google Drive
-            </a>
-        </div>
-    `;
-}
+            } catch (error) {
+                console.error('Error playing audio:', error);
+                statusDiv.innerHTML = 'Error playing audio. Please try the download option.';
+            }
+        }
 
-function handleAudioError(audio) {
-    const container = audio.closest('.audio-container');
-    const sourceUrl = audio.querySelector('source').src;
-    
-    container.innerHTML = `
-        <div class="media-error">
-            <p>Unable to play audio directly. Please ensure the file is publicly accessible.</p>
-            <a href="${sourceUrl}" target="_blank" class="download-link">
-                Download Audio File
-            </a>
-        </div>
-    `;
-}
+        // New function to extract Google Drive file ID
+        function extractGoogleDriveFileId(url) {
+            if (!url) return null;
+            
+            let fileId = '';
+            
+            // Handle different Google Drive URL formats
+            if (url.includes('/file/d/')) {
+                fileId = url.split('/file/d/')[1].split('/')[0];
+            } else if (url.includes('id=')) {
+                fileId = url.split('id=')[1].split('&')[0];
+            } else if (url.match(/^[a-zA-Z0-9_-]{25,}$/)) {
+                fileId = url;
+            }
+            
+            return fileId;
+        }
 
-        // Update ticket status function
-        async function updateTicketStatus(ticketNumber, newStatus) {
+        // Process Google Drive URL (for images)
+        function processGoogleDriveUrl(url) {
+            if (!url) return '';
+            
+            const fileId = extractGoogleDriveFileId(url);
+            if (!fileId) return url;
+            
+            return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+        }
+
+        // Error handlers
+        function handleImageError(img) {
+            const originalUrl = img.getAttribute('data-original-url');
+            const container = img.closest('.image-container');
+            container.innerHTML = `
+                <div class="media-error">
+                    <p>Unable to load image directly.</p>
+                    <a href="${originalUrl}" target="_blank" class="view-link">
+                        View Image in Google Drive
+                    </a>
+                </div>
+            `;
+        }
+         // Handle audio errors
+         function handleAudioError(ticketNumber, fileId) {
+            const playerDiv = document.getElementById(`audio-player-${ticketNumber}`);
+            const statusDiv = document.getElementById(`audio-status-${ticketNumber}`);
+            
+            // Hide the audio player
+            playerDiv.style.display = 'none';
+            
+            // Show error message
+            statusDiv.innerHTML = `
+                <div style="color: #856404; background-color: #fff3cd; padding: 10px; border-radius: 4px; margin-top: 10px;">
+                    Unable to play audio directly. Please use the alternative options above.
+                </div>
+            `;
+        }
+
+         // Update ticket status function
+         async function updateTicketStatus(ticketNumber, newStatus) {
             try {
                 const response = await fetch(`http://localhost:8000/update-ticket/${ticketNumber}`, {
                     method: 'POST',
@@ -279,7 +334,7 @@ function handleAudioError(audio) {
             document.getElementById('ticketModal').style.display = 'block';
         }
 
-        // Modal control functions
+        // Modal control functions (unchanged)
         function closeModal() {
             document.getElementById('ticketModal').style.display = 'none';
         }
@@ -291,7 +346,7 @@ function handleAudioError(audio) {
             }
         }
 
-        // Sign out function
+        // Sign out function (unchanged)
         function signOut() {
             if (confirm('Are you sure you want to sign out?')) {
                 localStorage.removeItem('access_token');

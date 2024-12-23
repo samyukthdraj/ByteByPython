@@ -25,11 +25,11 @@ import os
 from database import Database
 import aiohttp
 import asyncio
-from googleapiclient.http import MediaIoBaseUpload
+from googleapiclient.http import MediaIoBaseUpload,MediaIoBaseDownload
 import io
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-
+from fastapi.responses import StreamingResponse
 
 
 app = FastAPI()
@@ -678,3 +678,32 @@ async def upload_crime_report(
         }
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
+    
+@app.get("/proxy-audio/{file_id}")
+async def proxy_audio(file_id: str):
+    try:
+        drive_service = get_drive_service()
+        request = drive_service.files().get_media(fileId=file_id)
+        
+        # Create a BytesIO object to store the file data
+        file_buffer = io.BytesIO()
+        downloader = MediaIoBaseDownload(file_buffer, request)
+        
+        done = False
+        while not done:
+            status, done = downloader.next_chunk()
+            
+        # Reset buffer position to start
+        file_buffer.seek(0)
+        
+        # Return the audio file as a streaming response
+        return StreamingResponse(
+            file_buffer,
+            media_type="audio/mpeg",
+            headers={
+                "Accept-Ranges": "bytes",
+                "Content-Disposition": f"inline; filename=audio_{file_id}.mp3"
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error streaming audio: {str(e)}")
