@@ -21,6 +21,8 @@
         <div class="modal-content">
             <span class="close-button" onclick="closeModal()">&times;</span>
             <div id="modalContent"></div>
+            <div id="mediaContent"></div>
+            <div id="statusActions"></div>
         </div>
     </div>
 
@@ -69,12 +71,12 @@
                     ticketList.appendChild(ticketCard);
                 });
             } catch (error) {
-                handleFetchError(error, loadingMessage);
+                console.error('Error fetching tickets:', error);
+                loadingMessage.innerHTML = 'Error loading tickets. Please try again.';
             }
         }
 
-
-        // Create ticket card function with updated audio handling
+        // Create simplified ticket card function
         function createTicketCard(ticket) {
             const ticketCard = document.createElement('div');
             ticketCard.classList.add('ticket-card');
@@ -83,29 +85,14 @@
                 <p>Crime Type: ${ticket.crime_type}</p>
                 <p>Pincode: ${ticket.pincode}</p>
                 <p>Status: ${ticket.status}</p>
-                <div class="media-container">
-                    ${createImageContent(ticket.image_url)}
-                    ${createAudioContent(ticket.audio_url, ticket.ticket_number)}
-                </div>
-                <div class="ticket-actions">
-                    <button onclick="viewTicketDetails('${ticket.ticket_number}')">
-                        View Details
-                    </button>
-                    <button onclick="updateTicketStatus('${ticket.ticket_number}', 'In Progress')">
-                        Set to In Progress
-                    </button>
-                    <button onclick="updateTicketStatus('${ticket.ticket_number}', 'Resolved')">
-                        Set to Resolved
-                    </button>
-                    <button onclick="updateTicketStatus('${ticket.ticket_number}', 'Closed')">
-                        Set to Closed
-                    </button>
-                </div>
+                <button onclick="viewTicketDetails('${ticket.ticket_number}')">
+                    View Details
+                </button>
             `;
             return ticketCard;
         }
 
-        // Create image content function (unchanged)
+        // Create image content function
         function createImageContent(imageUrl) {
             if (!imageUrl) return '<p>No image uploaded</p>';
             
@@ -124,8 +111,7 @@
             `;
         }
 
-        // Updated audio content function
-        // Updated createAudioContent function
+        // Create audio content function
         function createAudioContent(audioUrl, ticketNumber) {
             if (!audioUrl) return '<p>No audio uploaded</p>';
             
@@ -159,139 +145,28 @@
             `;
         }
 
-
-        // New function to handle audio playback
-        async function handleAudioPlayback(fileId, ticketNumber) {
-            const statusDiv = document.getElementById(`audio-status-${ticketNumber}`);
-            const playerContainer = document.getElementById(`audio-player-container-${ticketNumber}`);
-            const audioPlayer = document.getElementById(`player-${ticketNumber}`);
-            
-            try {
-                statusDiv.innerHTML = '<div class="loading-spinner"></div>Preparing audio...';
-                
-                // First try the direct download URL
-                const directUrl = `https://docs.google.com/uc?export=download&id=${fileId}`;
-                
-                // Create a new audio element to test the URL
-                const testAudio = new Audio(directUrl);
-                
-                testAudio.onloadeddata = () => {
-                    // If we successfully loaded the audio, show the player
-                    audioPlayer.src = directUrl;
-                    playerContainer.style.display = 'block';
-                    statusDiv.innerHTML = '';
-                    audioPlayer.play();
-                };
-                
-                testAudio.onerror = () => {
-                    // If direct playback fails, show appropriate message
-                    statusDiv.innerHTML = `
-                        Unable to play directly. Please use the "Open in Drive" or "Download" options.
-                        <br>
-                        <small>This is due to Google Drive's security restrictions.</small>
-                    `;
-                };
-                
-                // Set a timeout in case the audio takes too long to load
-                setTimeout(() => {
-                    if (statusDiv.innerHTML.includes('Preparing')) {
-                        statusDiv.innerHTML = `
-                            Taking too long to load. Please use the "Open in Drive" or "Download" options.
-                            <br>
-                            <small>This is due to Google Drive's security restrictions.</small>
-                        `;
-                    }
-                }, 5000);
-
-            } catch (error) {
-                console.error('Error playing audio:', error);
-                statusDiv.innerHTML = 'Error playing audio. Please try the download option.';
-            }
-        }
-
-        // New function to extract Google Drive file ID
-        function extractGoogleDriveFileId(url) {
-            if (!url) return null;
-            
-            let fileId = '';
-            
-            // Handle different Google Drive URL formats
-            if (url.includes('/file/d/')) {
-                fileId = url.split('/file/d/')[1].split('/')[0];
-            } else if (url.includes('id=')) {
-                fileId = url.split('id=')[1].split('&')[0];
-            } else if (url.match(/^[a-zA-Z0-9_-]{25,}$/)) {
-                fileId = url;
-            }
-            
-            return fileId;
-        }
-
-        // Process Google Drive URL (for images)
-        function processGoogleDriveUrl(url) {
-            if (!url) return '';
-            
-            const fileId = extractGoogleDriveFileId(url);
-            if (!fileId) return url;
-            
-            return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
-        }
-
-        // Error handlers
-        function handleImageError(img) {
-            const originalUrl = img.getAttribute('data-original-url');
-            const container = img.closest('.image-container');
-            container.innerHTML = `
-                <div class="media-error">
-                    <p>Unable to load image directly.</p>
-                    <a href="${originalUrl}" target="_blank" class="view-link">
-                        View Image in Google Drive
-                    </a>
-                </div>
-            `;
-        }
-         // Handle audio errors
-         function handleAudioError(ticketNumber, fileId) {
-            const playerDiv = document.getElementById(`audio-player-${ticketNumber}`);
-            const statusDiv = document.getElementById(`audio-status-${ticketNumber}`);
-            
-            // Hide the audio player
-            playerDiv.style.display = 'none';
-            
-            // Show error message
-            statusDiv.innerHTML = `
-                <div style="color: #856404; background-color: #fff3cd; padding: 10px; border-radius: 4px; margin-top: 10px;">
-                    Unable to play audio directly. Please use the alternative options above.
+        // Create status update buttons
+        function createStatusButtons(ticketNumber, currentStatus) {
+            return `
+                <div class="status-buttons">
+                    <h4>Update Status</h4>
+                    <button onclick="updateTicketStatus('${ticketNumber}', 'In Progress')" 
+                            ${currentStatus === 'In Progress' ? 'disabled' : ''}>
+                        Set to In Progress
+                    </button>
+                    <button onclick="updateTicketStatus('${ticketNumber}', 'Resolved')"
+                            ${currentStatus === 'Resolved' ? 'disabled' : ''}>
+                        Set to Resolved
+                    </button>
+                    <button onclick="updateTicketStatus('${ticketNumber}', 'Closed')"
+                            ${currentStatus === 'Closed' ? 'disabled' : ''}>
+                        Set to Closed
+                    </button>
                 </div>
             `;
         }
 
-         // Update ticket status function
-         async function updateTicketStatus(ticketNumber, newStatus) {
-            try {
-                const response = await fetch(`http://localhost:8000/update-ticket/${ticketNumber}`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ status: newStatus, updated_at: new Date().toISOString() })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                await response.json();
-                await fetchPoliceTickets();
-                alert(`Ticket #${ticketNumber} status updated to ${newStatus}`);
-            } catch (error) {
-                handleUpdateError(error);
-            }
-        }
-
-
-        // View ticket details function (modal remains for text details)
+        // View ticket details function
         async function viewTicketDetails(ticketNumber) {
             try {
                 const response = await fetch(`http://localhost:8000/ticket-details/${ticketNumber}`, {
@@ -314,11 +189,16 @@
             }
         }
 
-        // Display ticket modal function (unchanged)
+        // Display ticket modal function
         function displayTicketModal(ticket) {
             const modalContent = document.getElementById('modalContent');
+            const mediaContent = document.getElementById('mediaContent');
+            const statusActions = document.getElementById('statusActions');
+            
             const createdDate = new Date(ticket.created_at).toLocaleString();
             const updatedDate = ticket.updated_at ? new Date(ticket.updated_at).toLocaleString() : 'Not updated yet';
+
+            // Display ticket information
             modalContent.innerHTML = `
                 <h2>Ticket Details #${ticket.ticket_number}</h2>
                 <p><strong>Reported by:</strong> ${ticket.user_name}</p>
@@ -330,11 +210,92 @@
                 <p><strong>Created at:</strong> ${createdDate}</p>
                 <p><strong>Last Updated:</strong> ${updatedDate}</p>
             `;
+
+            // Display media content
+            mediaContent.innerHTML = `
+                <div class="media-section">
+                    ${createImageContent(ticket.image_url)}
+                    ${createAudioContent(ticket.audio_url, ticket.ticket_number)}
+                </div>
+            `;
+
+            // Display status update buttons
+            statusActions.innerHTML = createStatusButtons(ticket.ticket_number, ticket.status);
             
             document.getElementById('ticketModal').style.display = 'block';
         }
 
-        // Modal control functions (unchanged)
+        // Update ticket status function
+        async function updateTicketStatus(ticketNumber, newStatus) {
+            try {
+                const response = await fetch(`http://localhost:8000/update-ticket/${ticketNumber}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus, updated_at: new Date().toISOString() })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                await response.json();
+                await fetchPoliceTickets();
+                await viewTicketDetails(ticketNumber); // Refresh the modal content
+                alert(`Ticket #${ticketNumber} status updated to ${newStatus}`);
+            } catch (error) {
+                console.error('Error updating ticket status:', error);
+                alert('Error updating ticket status. Please try again.');
+            }
+        }
+
+        // Utility functions remain unchanged
+        function processGoogleDriveUrl(url) {
+            if (!url) return '';
+            const fileId = extractGoogleDriveFileId(url);
+            if (!fileId) return url;
+            return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+        }
+
+        function extractGoogleDriveFileId(url) {
+            if (!url) return null;
+            let fileId = '';
+            if (url.includes('/file/d/')) {
+                fileId = url.split('/file/d/')[1].split('/')[0];
+            } else if (url.includes('id=')) {
+                fileId = url.split('id=')[1].split('&')[0];
+            } else if (url.match(/^[a-zA-Z0-9_-]{25,}$/)) {
+                fileId = url;
+            }
+            return fileId;
+        }
+
+        function handleImageError(img) {
+            const originalUrl = img.getAttribute('data-original-url');
+            const container = img.closest('.image-container');
+            container.innerHTML = `
+                <div class="media-error">
+                    <p>Unable to load image directly.</p>
+                    <a href="${originalUrl}" target="_blank" class="view-link">
+                        View Image in Google Drive
+                    </a>
+                </div>
+            `;
+        }
+
+        function handleAudioError(ticketNumber, fileId) {
+            const playerDiv = document.getElementById(`audio-player-${ticketNumber}`);
+            const statusDiv = document.getElementById(`audio-status-${ticketNumber}`);
+            playerDiv.style.display = 'none';
+            statusDiv.innerHTML = `
+                <div style="color: #856404; background-color: #fff3cd; padding: 10px; border-radius: 4px; margin-top: 10px;">
+                    Unable to play audio directly. Please use the alternative options above.
+                </div>
+            `;
+        }
+
         function closeModal() {
             document.getElementById('ticketModal').style.display = 'none';
         }
@@ -346,7 +307,6 @@
             }
         }
 
-        // Sign out function (unchanged)
         function signOut() {
             if (confirm('Are you sure you want to sign out?')) {
                 localStorage.removeItem('access_token');
