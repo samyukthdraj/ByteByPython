@@ -47,12 +47,9 @@ undone: dashboard filtering
     DONE: close button while submitting report should lead back to user dashboard
     DONE:signout button
     done: ai implementation in index.html for analysing image 
-undone: voice.{ashwin in index.html}, integrate the speech to text.
+    done: voice.{ashwin in index.html}, integrate the speech to text.
     DONE:50/50 login style , forgot pass, signup css
 <!-- undone: when clicking the link in uvicorn, only login comes without any css. -->
-undone: project structure. optimise code.
-undone: forgot pass fixes.
-
 
     done: i want the dropdown to be consisting all police stations in alphabetical order
     done: pincode give nearest 3 stations with distances give.
@@ -68,6 +65,8 @@ DONE: find password for each station ( default_password )
 undone: police dash audio playback.
     done: image description shouldn't overwrite the current description, if any description exists previously it should only append over it.
 undone: image should have fixed height and width if possible.
+undone: project structure. optimise code.
+undone: forgot pass fixes.
 
 
 # python -m http.server 8000

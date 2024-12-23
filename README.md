@@ -43,7 +43,7 @@ Civilians As Police (CAP) is an innovative web application designed to simplify 
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/civilians-as-police.git
+git clone https://github.com/samyukthdraj/civilians-as-police.git
 cd civilians-as-police
 ```
 
@@ -80,7 +80,7 @@ uvicorn main:app --reload
 ```
 
 ### Frontend
-- Open `index.html` in a modern web browser
+- Open `login.html` in a modern web browser (open with live server in vscode)
 - Ensure backend is running simultaneously
 
 ## Features in Detail
@@ -114,8 +114,8 @@ uvicorn main:app --reload
 
 - User authentication
 - More sophisticated AI crime detection
-- Multi-language support
 - Advanced geolocation services
+- Image analysis alongside Speech-to-text features to append descriptions 
 
 ## Contributions
 
