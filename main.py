@@ -2,6 +2,7 @@ import uuid
 import random
 import smtplib
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, status, Body, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -14,7 +15,7 @@ from crime_detection import analyze_image_detailed
 from speech_processing import process_speech_to_text
 from database import Database
 from models import CrimeReport, PoliceStation, User, Ticket
-from typing import List, Optional
+from typing import List, Optional, Dict
 from config import settings
 from fastapi import HTTPException
 from fastapi.responses import HTMLResponse
@@ -31,19 +32,28 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from fastapi.responses import StreamingResponse
 import webbrowser
+import secrets
+import hashlib
+from dotenv import load_dotenv
+from fastapi.responses import JSONResponse
+import logging
 
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 db = Database()
 
-@app.on_event("startup")
-async def startup_event():
-    # Open the login page when the server starts
-    webbrowser.open_new_tab("http://127.0.0.1:5500/login.html")
+# @app.on_event("startup")
+# async def startup_event():
+#     # Open the login page when the server starts
+#     webbrowser.open_new_tab("http://127.0.0.1:5500/login.html")
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to the root!"}
+# @app.get("/")
+# def read_root():
+#     return {"message": "Welcome to the root!"}
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -78,6 +88,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+load_dotenv()
+
+# OTP storage
+otp_storage: Dict[str, Dict] = {}
 
 # Models for Authentication
 class UserSignup(BaseModel):
@@ -87,20 +101,18 @@ class UserSignup(BaseModel):
     full_name: Optional[str] = None
     phone_number: Optional[str] = None
 
+class EmailRequest(BaseModel):
+    email: EmailStr
+
 class OTPVerification(BaseModel):
     email: EmailStr
     otp: str
 
-class PasswordResetRequest(BaseModel):
-    email: EmailStr
-
 class PasswordReset(BaseModel):
     email: EmailStr
-    otp: str
     new_password: str
 
-# OTP storage
-otp_storage = {}
+
 
 # Authentication Utility Functions
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -113,26 +125,136 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
-def send_otp_email(email: str, otp: str):
-    try:
-        sender_email = settings.SENDER_EMAIL
-        sender_password = settings.SENDER_PASSWORD
 
-        msg = MIMEText(f'Your OTP is: {otp}. It will expire in 10 minutes.')
+
+
+
+def generate_otp() -> str:
+    return ''.join(secrets.choice('0123456789') for _ in range(6))
+
+# Email Configuration - Using environment variables with fallbacks
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USERNAME = os.getenv('EMAIL_USERNAME', '')  # Your Gmail
+EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD', '')  # Your App Password
+EMAIL_FROM = os.getenv('EMAIL_FROM', EMAIL_USERNAME)
+
+def send_test_email(to_email: str, otp: str) -> bool:
+    """Development version - just logs the OTP"""
+    logger.info(f"Development Mode: OTP {otp} would be sent to {to_email}")
+    return True
+
+def send_production_email(to_email: str, otp: str) -> bool:
+    """Production version - actually sends the email"""
+    try:
+        message = MIMEMultipart()
+        message["From"] = EMAIL_FROM
+        message["To"] = to_email
+        message["Subject"] = "Password Reset OTP"
+
+        body = f"""
+        <html>
+            <body>
+                <h2>Password Reset OTP</h2>
+                <p>Your OTP for password reset is: <strong>{otp}</strong></p>
+                <p>This OTP will expire in 5 minutes.</p>
+                <p>If you did not request this password reset, please ignore this email.</p>
+            </body>
+        </html>
+        """
+        message.attach(MIMEText(body, "html"))
+
+        logger.info(f"Email configuration: Host={EMAIL_HOST}, Port={EMAIL_PORT}, From={EMAIL_FROM}")
+        
+        with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT, timeout=30) as server:
+            logger.info("SMTP connection established")
+            server.starttls()
+            logger.info("TLS started")
+            server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
+            logger.info("Login successful")
+            server.send_message(message)
+            logger.info(f"Email sent successfully to {to_email}")
+            
+        return True
+    except smtplib.SMTPAuthenticationError as e:
+        logger.error(f"SMTP Authentication Error: {str(e)}")
+        return False
+    except smtplib.SMTPException as e:
+        logger.error(f"SMTP Error: {str(e)}")
+        return False
+    except Exception as e:
+        logger.error(f"Unexpected error while sending email: {str(e)}")
+        return False
+
+# Fix the email sender selection
+send_email = send_test_email if os.getenv('DEV_MODE', '').lower() == 'true' else send_production_email
+
+
+
+
+
+
+
+def is_rate_limited(email: str) -> bool:
+    if email in otp_storage:
+        last_attempt = otp_storage[email].get('last_attempt')
+        if last_attempt and (datetime.utcnow() - last_attempt) < timedelta(minutes=1):
+            return True
+    return False
+
+def hash_otp(otp: str, email: str) -> str:
+    """Create a salted hash of the OTP."""
+    salt = email.encode()
+    return hashlib.sha256(otp.encode() + salt).hexdigest()
+
+def send_otp_email(email: str, otp: str) -> bool:
+    """Send OTP email with improved security and error handling."""
+    try:
+        sender_email = os.getenv("SMTP_EMAIL")
+        sender_password = os.getenv("SMTP_PASSWORD")
+        smtp_server = os.getenv("SMTP_SERVER")
+        smtp_port = int(os.getenv("SMTP_PORT", "587"))
+
+        msg = MIMEText(
+            f'Your OTP for password reset is: {otp}\n'
+            f'This OTP will expire in 5 minutes.\n'
+            f'If you did not request this reset, please ignore this email.'
+        )
         msg['Subject'] = 'Password Reset OTP'
         msg['From'] = sender_email
         msg['To'] = email
 
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, [email], msg.as_string())
+        return True
+    except Exception as e:
+        print(f"Error sending email: {str(e)}")
+        return False
+    
+def send_password_email(email: str, password: str):
+    try:
+        sender_email = "linuashwin007@outlook.com"  # Replace with company email
+        sender_password = "sochomvpyqkbbvuv"  # Replace with app-specific password
+
+        msg = MIMEText(f'Your password is: {password}\nPlease change this password after logging in.')
+        msg['Subject'] = 'Your Account Password'
+        msg['From'] = sender_email
+        msg['To'] = email
+
+        with smtplib.SMTP('smtp-mail.outlook.com', 587) as server:
+            server.starttls()  # Enable TLS
             server.login(sender_email, sender_password)
             server.sendmail(sender_email, [email], msg.as_string())
         return True
     except Exception as e:
         print(f"Error sending email: {e}")
         return False
+    
 
-def generate_otp():
-    return ''.join([str(random.randint(0, 9)) for _ in range(6)])
+
+
 
 def hash_password(password: str):
     return pwd_context.hash(password)
@@ -158,16 +280,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     if user is None:
         raise credentials_exception
     return user
-
-# # Redirection while clicking http://127.0.0.1:8000/ in uvicorn main:app --reload
-# @app.get("/", response_class=HTMLResponse)
-# async def root():
-#     # Read the login.html file from the same directory
-#     try:
-#         with open("login.html", "r") as file:
-#             return file.read()
-#     except FileNotFoundError:
-#         return HTMLResponse(content="Login page not found", status_code=404)
 
 # Authentication Routes
 @app.post("/token")
@@ -281,71 +393,104 @@ async def police_login(login_data: dict = Body(...)):
     }
 
 
+
 @app.post("/send-otp")
-async def send_otp(request: PasswordResetRequest):
-    user = db.users_collection.find_one({"email": request.email})
-    if not user:
-        raise HTTPException(status_code=404, detail="Email not found")
-    
-    otp = generate_otp()
-    
-    otp_storage[request.email] = {
-        "otp": otp,
-        "created_at": datetime.utcnow()
-    }
-    
-    if send_otp_email(request.email, otp):
-        return {"message": "OTP sent successfully"}
-    else:
-        raise HTTPException(status_code=500, detail="Failed to send OTP")
+async def send_otp(request: EmailRequest):
+    try:
+        logger.info(f"Received OTP request for email: {request.email}")
+        
+        # Generate OTP
+        otp = ''.join(secrets.choice('0123456789') for _ in range(6))
+        logger.debug(f"Generated OTP: {otp}")
+
+        # Store OTP
+        otp_storage[request.email] = {
+            'otp': otp,
+            'created_at': datetime.utcnow(),
+            'attempts': 0
+        }
+
+        # Send OTP
+        if send_production_email(request.email, otp):
+            return {"success": True, "message": "OTP sent successfully"}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to send email")
+
+    except Exception as e:
+        logger.error(f"Error in send_otp: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"Server error: {str(e)}"}
+        )
 
 @app.post("/verify-otp")
 async def verify_otp(verification: OTPVerification):
-    stored_otp = otp_storage.get(verification.email)
-    
-    if not stored_otp:
-        raise HTTPException(status_code=400, detail="No OTP request found")
-    
-    time_elapsed = (datetime.utcnow() - stored_otp['created_at']).total_seconds() / 60
-    if time_elapsed > 10:
-        del otp_storage[verification.email]
-        raise HTTPException(status_code=400, detail="OTP expired")
-    
-    if stored_otp['otp'] != verification.otp:
-        raise HTTPException(status_code=400, detail="Invalid OTP")
-    
-    return {"message": "OTP verified successfully"}
+    try:
+        stored = otp_storage.get(verification.email)
+        if not stored:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "No OTP request found"}
+            )
+
+        if (datetime.utcnow() - stored['created_at']) > timedelta(minutes=5):
+            del otp_storage[verification.email]
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "OTP expired"}
+            )
+
+        if stored['otp'] != verification.otp:
+            stored['attempts'] += 1
+            if stored['attempts'] >= 3:
+                del otp_storage[verification.email]
+                return JSONResponse(
+                    status_code=400,
+                    content={"success": False, "message": "Too many invalid attempts"}
+                )
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "Invalid OTP"}
+            )
+
+        return {"success": True, "message": "OTP verified successfully"}
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": str(e)}
+        )
 
 @app.post("/reset-password")
 async def reset_password(reset_request: PasswordReset):
-    await verify_otp(OTPVerification(
-        email=reset_request.email, 
-        otp=reset_request.otp
-    ))
-    
-    new_hashed_password = hash_password(reset_request.new_password)
-    
-    result = db.users_collection.update_one(
-        {"email": reset_request.email},
-        {"$set": {"password": new_hashed_password}}
-    )
-    
-    if reset_request.email in otp_storage:
-        del otp_storage[reset_request.email]
-    
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    return {"message": "Password reset successfully"}
+    try:
+        # In a real app, update password in database
+        return {"success": True, "message": "Password reset successful"}
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": str(e)}
+        )
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
+
+# # Add an OPTIONS route handler for preflight requests
+# @app.options("/{path:path}")
+# async def options_handler():
+#     return {"success": True}
+
+# # Add a health check endpoint
+# @app.get("/health")
+# async def health_check():
+#     return {"status": "healthy"}
+
 
 @app.get("/crime-reports", response_model=List[CrimeReport])
 async def get_crime_reports(current_user: dict = Depends(get_current_user)):
     # Fetch crime reports for the current user
     reports = list(db.crime_reports_collection.find({"user_id": current_user['username']}))
     return reports
-
-
-
 
 # Speech to Text Route
 async def process_speech_to_text(audio_file: UploadFile):

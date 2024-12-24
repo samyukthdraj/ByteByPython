@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const BACKEND_URL = 'http://127.0.0.1:8000';
+    
     const forgotPasswordForm = document.getElementById('forgot-password-form');
     const emailSection = document.getElementById('email-section');
     const otpSection = document.getElementById('otp-section');
@@ -6,147 +8,108 @@ document.addEventListener('DOMContentLoaded', () => {
     const message = document.getElementById('forgot-password-message');
     const otpTimer = document.getElementById('otp-timer');
 
-    let otpCountdown;
+    function showSection(section) {
+        emailSection.classList.add('hidden');
+        otpSection.classList.add('hidden');
+        resetPasswordSection.classList.add('hidden');
+        section.classList.remove('hidden');
+    }
 
-    // Send OTP
-    forgotPasswordForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        message.textContent = '';
-        message.className = 'message';
+    showSection(emailSection);
 
-        const submitBtn = e.submitter;
+    async function fetchApi(endpoint, data) {
+        const response = await fetch(`${BACKEND_URL}${endpoint}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(data)
+        });
 
-        if (submitBtn.id === 'send-otp-btn') {
-            const email = document.getElementById('forgot-email').value;
-
-            try {
-                const response = await fetch('/send-otp', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    message.textContent = 'OTP sent to your email';
-                    message.classList.add('success');
-                    
-                    // Hide email section, show OTP section
-                    emailSection.style.display = 'none';
-                    otpSection.style.display = 'block';
-
-                    // Start OTP countdown
-                    startOTPCountdown(300); // 5 minutes
-                } else {
-                    message.textContent = data.message || 'Failed to send OTP';
-                    message.classList.add('error');
-                }
-            } catch (error) {
-                console.error('Send OTP error:', error);
-                message.textContent = 'An error occurred. Please try again.';
-                message.classList.add('error');
-            }
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-        // Verify OTP
-        else if (submitBtn.id === 'verify-otp-btn') {
-            const email = document.getElementById('forgot-email').value;
-            const otp = document.getElementById('otp-input').value;
+        return await response.json();
+    }
 
-            try {
-                const response = await fetch('/verify-otp', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email, otp })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    message.textContent = 'OTP Verified';
-                    message.classList.add('success');
-                    
-                    // Hide OTP section, show reset password section
-                    otpSection.style.display = 'none';
-                    resetPasswordSection.style.display = 'block';
-                    
-                    // Stop countdown
-                    clearInterval(otpCountdown);
-                } else {
-                    message.textContent = data.message || 'Invalid OTP';
-                    message.classList.add('error');
-                }
-            } catch (error) {
-                console.error('Verify OTP error:', error);
-                message.textContent = 'An error occurred. Please try again.';
-                message.classList.add('error');
-            }
-        }
-        // Reset Password
-        else if (submitBtn.id === 'reset-password-btn') {
-            const email = document.getElementById('forgot-email').value;
-            const newPassword = document.getElementById('new-password').value;
-            const confirmNewPassword = document.getElementById('confirm-new-password').value;
-
-            if (newPassword !== confirmNewPassword) {
-                message.textContent = 'Passwords do not match';
-                message.classList.add('error');
-                return;
-            }
-
-            try {
-                const response = await fetch('/reset-password', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email, new_password: newPassword })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    message.textContent = 'Password reset successful';
-                    message.classList.add('success');
-                    
-                    // Redirect to login after a short delay
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 2000);
-                } else {
-                    message.textContent = data.message || 'Failed to reset password';
-                    message.classList.add('error');
-                }
-            } catch (error) {
-                console.error('Reset password error:', error);
-                message.textContent = 'An error occurred. Please try again.';
-                message.classList.add('error');
-            }
-        }
-    });
-
-    function startOTPCountdown(seconds) {
-        let remainingTime = seconds;
-        otpCountdown = setInterval(() => {
-            const minutes = Math.floor(remainingTime / 60);
-            const secs = remainingTime % 60;
+    function startOTPTimer(duration) {
+        let timeLeft = duration;
+        const timer = setInterval(() => {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            otpTimer.textContent = `Time remaining: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
             
-            otpTimer.textContent = `OTP expires in ${minutes}:${secs < 10 ? '0' : ''}${secs}`;
-            
-            if (remainingTime <= 0) {
-                clearInterval(otpCountdown);
+            if (--timeLeft < 0) {
+                clearInterval(timer);
                 otpTimer.textContent = 'OTP Expired';
-                
-                // Optional: Reset to email section
-                emailSection.style.display = 'block';
-                otpSection.style.display = 'none';
+                showSection(emailSection);
             }
-            
-            remainingTime--;
         }, 1000);
     }
+
+    forgotPasswordForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitButton = e.submitter;
+        
+        try {
+            switch(submitButton.id) {
+                case 'send-otp-btn': {
+                    const email = document.getElementById('forgot-email').value;
+                    const result = await fetchApi('/send-otp', { email });
+                    
+                    if (result.success) {
+                        showSection(otpSection);
+                        startOTPTimer(300);
+                        message.textContent = 'OTP sent successfully';
+                        message.className = 'message success';
+                    }
+                    break;
+                }
+                
+                case 'verify-otp-btn': {
+                    const email = document.getElementById('forgot-email').value;
+                    const otp = document.getElementById('otp-input').value;
+                    const result = await fetchApi('/verify-otp', { email, otp });
+                    
+                    if (result.success) {
+                        showSection(resetPasswordSection);
+                        message.textContent = 'OTP verified successfully';
+                        message.className = 'message success';
+                    }
+                    break;
+                }
+                
+                case 'reset-password-btn': {
+                    const email = document.getElementById('forgot-email').value;
+                    const newPassword = document.getElementById('new-password').value;
+                    const confirmPassword = document.getElementById('confirm-new-password').value;
+                    
+                    if (newPassword !== confirmPassword) {
+                        message.textContent = 'Passwords do not match';
+                        message.className = 'message error';
+                        return;
+                    }
+                    
+                    const result = await fetchApi('/reset-password', { 
+                        email, 
+                        new_password: newPassword 
+                    });
+                    
+                    if (result.success) {
+                        message.textContent = 'Password reset successful';
+                        message.className = 'message success';
+                        setTimeout(() => {
+                            window.location.href = 'login.html';
+                        }, 2000);
+                    }
+                    break;
+                }
+            }
+        } catch (error) {
+            message.textContent = 'An error occurred. Please try again.';
+            message.className = 'message error';
+        }
+    });
 });
+

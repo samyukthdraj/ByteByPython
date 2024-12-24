@@ -1,42 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Civilians As Police (CAP) - Forgot Password</title>
-  <link rel="stylesheet" href="stylessignup.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgot Password</title>
+    <link rel="stylesheet" href="stylesfpass.css">
 </head>
 <body>
-  <div class="login-container forgot-password-container">
-    <div class="forgot-password-form">
-      <h2>Forgot Password</h2>
-      <form id="forgot-password-form">
+    <form id="forgot-password-form">
         <div id="email-section">
-          <input type="email" id="forgot-email" placeholder="Enter your email" required>
-          <button type="submit" id="send-otp-btn">Send OTP</button>
+            <label for="forgot-email">Email:</label>
+            <input type="email" id="forgot-email" placeholder="Enter email" required>
+            <button type="submit" id="send-otp-btn">Send OTP</button>
         </div>
-        
-        <div id="otp-section" style="display: none;">
-          <input type="text" id="otp-input" placeholder="Enter OTP" required>
-          <button type="submit" id="verify-otp-btn">Verify OTP</button>
-          <p id="otp-timer"></p>
+
+        <div id="otp-section" class="hidden">
+            <label for="otp-input">Enter OTP:</label>
+            <input type="text" placeholder="Enter OTP" id="otp-input">
+            <div id="otp-timer"></div>
+            <button type="submit" id="verify-otp-btn">Verify OTP</button>
         </div>
-        
-        <div id="reset-password-section" style="display: none;">
-          <input type="password" id="new-password" placeholder="New Password" required>
-          <input type="password" id="confirm-new-password" placeholder="Confirm New Password" required>
-          <button type="submit" id="reset-password-btn">Reset Password</button>
+
+        <div id="reset-password-section" class="hidden">
+            <label for="new-password">New Password:</label>
+            <input type="password" placeholder="Enter New Password" id="new-password">
+            <label for="confirm-new-password">Confirm Password:</label>
+            <input type="password" placeholder="Re-enter New Password" id="confirm-new-password">
+            <button type="submit" id="reset-password-btn">Reset Password</button>
         </div>
-        
-        <p id="forgot-password-message" class="message"></p>
-        
+
+        <div id="forgot-password-message" class="message"></div>
         <div class="form-footer">
           <a href="login.html">Back to Login</a>
         </div>
-      </form>
-    </div>
-  </div>
-
-  <script src="forgotpass.js"></script>
+    </form>
+    <script src="forgotpass.js"></script>
 </body>
 </html>
