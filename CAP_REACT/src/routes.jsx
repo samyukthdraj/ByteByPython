@@ -2,16 +2,17 @@ import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import SignIn from './components/pages/SignIn';
 import SignUp from './components/pages/SignUp';
 import ForgotPassword from './components/pages/ForgotPassword';
-import Navbar from './components/pages/Navbar';
-import NewIncident from './components/Civilian/newIncident';
-import CivilianDashboard from './components/Civilian/CivilianDashboard';
-import PoliceDashboard from './components/Police/PoliceDashboard';
-
+import Navbar from './components/pages/navbar';
+import NewIncident from './components/civilian/newIncident';
+import CivilianDashboard from './components/civilian/CivilianDashboard';
+import PoliceDashboard from './components/police/policeDashboard';
 const Layout = () => {
   return (
     <>
       <Navbar />
-      <Outlet />
+      <div style={{ paddingTop: '64px'}}> {/* Add padding equal to Navbar's height */}
+        <Outlet />
+      </div>
     </>
   );
 };

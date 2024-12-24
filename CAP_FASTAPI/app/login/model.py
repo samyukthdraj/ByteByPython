@@ -9,4 +9,5 @@ class LoginResponse(BaseModel):
     id: str = Field(..., alias="_id")
     name: str
     userType: str
+    access_token: str
     

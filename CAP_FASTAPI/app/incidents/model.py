@@ -14,6 +14,13 @@ class DescriptionResponse(BaseModel):
 class ImageRequest(BaseModel):
     image: str
 
+class AudioRequest(BaseModel):
+    audio: str
+
+class UpdateIncidentStatus(BaseModel):
+    id: str
+    status: StatusEnum
+
 class Incident(BaseModel):
     id: str = Field(..., alias="_id") 
     image: str
@@ -49,15 +56,8 @@ class GetIncident(BaseModel):
     policeStationlongitude: str
 
     @validator("status", pre=True)
-    def validate_status(cls, value: str) -> str:
-        # Convert friendly string to numeric equivalent if needed
-        mapping = {
-            "Awaiting Action": "1",
-            "Resolved": "2",
-            "Dismissed": "3"
-        }
-        if value in mapping:
-            return mapping[value]
-        if value in mapping.values():
-            return value  # Already in numeric form
-        raise ValueError("Invalid status value. Must be one of: 'completed', 'rejected', 'pending'.")
+    def validate_status(cls, value: str) -> StatusEnum:
+        try:
+            return StatusEnum(value)  # Enum will handle validation
+        except ValueError:
+            raise ValueError("Invalid status value. Must be one of: 'Awaiting Action', 'Resolved', 'Dismissed'.")

@@ -1,7 +1,8 @@
 import base64
+import os
 from typing import List, Optional
 from bson.objectid import ObjectId
-from .model import Incident, DescriptionResponse, GetIncident
+from .model import Incident, DescriptionResponse, GetIncident, UpdateIncidentStatus
 from datetime import datetime
 from ..database import incident_collection, civilian_collection, police_collection
 import google.generativeai as genai
@@ -9,10 +10,55 @@ from fastapi import FastAPI, HTTPException, status, Depends
 from pymongo.errors import DuplicateKeyError, PyMongoError
 from PIL import Image
 from io import BytesIO
+import traceback
 import uuid
 from uuid import uuid4 
-
 import os
+from google.cloud import speech
+
+async def post_getAudioDescription(audio_file_path: str) -> str:
+    try:
+        print(audio_file_path)
+
+        # Set API key directly
+        os.environ["GOOGLE_API_KEY"] = "AIzaSyCxDkmeh9i9av4ZA_qJ42FxyQgm-6X4rOY"  # Replace with your actual API key
+
+        # Configure API with the key
+        genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+
+        # Debug: Verify API key is set
+        api_key = os.environ.get("GOOGLE_API_KEY")
+        if not api_key:
+            print("Error: API key not set. Please set the GOOGLE_API_KEY environment variable.")
+            exit(1)
+        else:
+            print("API key set successfully.")
+        
+        client = speech.SpeechClient()
+        with open(audio_file_path, "rb") as audio_file:
+            content = audio_file.read()
+        audio = speech.RecognitionAudio(content=content)
+        config = speech.RecognitionConfig(
+            encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+            sample_rate_hertz=16000,  # Adjust if needed
+            language_code="en-US",  # Adjust language code
+        )
+        response = client.recognize(config=config, audio=audio)
+        transcription = " ".join([result.alternatives[0].transcript for result in response.results])
+
+        prompt = f"In this audio transcription, what was the civilian trying to say?\nTranscription: {transcription}"
+
+        # Example placeholder method for Generative AI (update based on the actual API docs)
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        response = model.generate_content(["Describe this audio clip", transcription])
+        print("respose",response.text)
+        # Return the response text
+        return response.text
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return f"An error occurred: {e}"
+
 async def post_getImageDescription(base64_image: str) -> str:
     try:
         # Set API key directly
@@ -48,6 +94,37 @@ async def post_getImageDescription(base64_image: str) -> str:
     except Exception as e:
         print(f"An error occurred: {e}")
         return f"An error occurred: {e}"
+        
+def put_updateIncidentStatus(updateIncidentStatus: UpdateIncidentStatus) -> dict:
+    try:
+        # Perform the update operation
+        result = incident_collection.update_one(
+            { "_id": updateIncidentStatus.id },  # Match by id
+            { "$set": { "status": updateIncidentStatus.status } }  # Update the status
+        )
+
+        # Check if the update was successful
+        if result.matched_count == 0:
+            # No document matched the query
+            raise HTTPException(status_code=404, detail="Incident not found.")
+        
+        if result.modified_count == 0:
+            # Document was found, but the status was not updated
+            return {
+                "success": False,
+                "message": "Status update was not applied. It might already have the same value."
+            }
+
+        # Successful update
+        return {
+            "success": True,
+            "message": "Incident status updated successfully."
+        }
+
+    except Exception as e:
+        # Handle any unexpected errors
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
 
 def post_incident(new_incident: Incident) -> None:
     # Generate a new UUID v4 for the _id field

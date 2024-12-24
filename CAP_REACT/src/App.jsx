@@ -1,5 +1,5 @@
 import router from './routes';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './context/authContext';
 import { BrowserRouter as Router, RouterProvider } from 'react-router-dom';
 
 function App() {

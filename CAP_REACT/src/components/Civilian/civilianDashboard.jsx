@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useEffect, useState, useContext } from 'react';
-import { getData } from '../../services/API';
-import { AuthContext } from '../../context/AuthContext';
+import { getData } from '../../services/apiService';
+import { AuthContext } from '../../context/authContext';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -15,7 +15,8 @@ import DialogContent from '@mui/material/DialogContent';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import Button from '@mui/material/Button';
-import API_URLS from '../../services/ApiUrl';
+import API_URLS from '../../services/apiUrlService';
+import Tooltip from '@mui/material/Tooltip';
 
 export default function CivilianDashboard() {
   const { user } = useContext(AuthContext);
@@ -48,17 +49,17 @@ export default function CivilianDashboard() {
     try {
       const response = await getData(API_URLS.INCIDENTS.getIncidentByUserId(user._id));
       if (Array.isArray(response)) {
-          setIncidents(response);
+        setIncidents(response);
       } else if (Array.isArray(response?.data)) {
-          setIncidents(response.data);
+        setIncidents(response.data);
       } else {
-          console.error('Unexpected response format:', response);
-          setIncidents([]);
+        console.error('Unexpected response format:', response);
+        setIncidents([]);
       }
-  } catch (error) {
+    } catch (error) {
       console.error('Error fetching incidents:', error);
       setIncidents([]);
-  }
+    }
   };
 
   const handleCloseDialog = () => {
@@ -95,20 +96,20 @@ export default function CivilianDashboard() {
 
   return (
     <>
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{ maxHeight: 600, overflow: 'auto' }}>
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead>
             <TableRow>
-              <TableCell>Image</TableCell>
-              <TableCell>Audio</TableCell>
-              <TableCell>Crime Type</TableCell>
-              <TableCell>Image Description</TableCell>
-              <TableCell>Audio Description</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>Police Station Name</TableCell>
-              <TableCell>Police Station Location</TableCell>
-              <TableCell>Start Date</TableCell>
-              <TableCell>Status</TableCell>
+              <TableCell sx={{ width: 100 }}>Image</TableCell>
+              <TableCell sx={{ width: 100 }}>Audio</TableCell>
+              <TableCell sx={{ width: 100 }}>Crime Type</TableCell>
+              <TableCell sx={{ width: 200, maxWidth: '200px', overflow: 'auto' }}>Image Description</TableCell>
+              <TableCell sx={{ width: 200, maxWidth: '200px', overflow: 'auto' }}>Audio Description</TableCell>
+              <TableCell sx={{ width: 200, maxWidth: '200px', overflow: 'auto' }}>Description</TableCell>
+              <TableCell sx={{ width: 100 }}>Police Station Name</TableCell>
+              <TableCell sx={{ width: 100 }}>Police Station Location</TableCell>
+              <TableCell sx={{ width: 100 }}>Start Date</TableCell>
+              <TableCell sx={{ width: 100 }}>Status</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -125,9 +126,21 @@ export default function CivilianDashboard() {
                   </Button>
                 </TableCell>
                 <TableCell>{incident.crimeType}</TableCell>
-                <TableCell>{incident.imageDescription}</TableCell>
-                <TableCell>{incident.audioDescription}</TableCell>
-                <TableCell>{incident.userDescription}</TableCell>
+                <TableCell>
+                  <Tooltip title={incident.imageDescription} placement="right">
+                    <span>{incident.imageDescription.substring(0, 20) + (incident.imageDescription.length > 20 ? "..." : "")}</span>
+                  </Tooltip>
+                </TableCell>
+                <TableCell>
+                  <Tooltip title={incident.audioDescription} placement="right">
+                    <span>{incident.audioDescription.substring(0, 20) + (incident.audioDescription.length > 20 ? "..." : "")}</span>
+                  </Tooltip>
+                </TableCell>
+                <TableCell>
+                  <Tooltip title={incident.userDescription} placement="right">
+                    <span>{incident.userDescription.substring(0, 20) + (incident.userDescription.length > 20 ? "..." : "")}</span>
+                  </Tooltip>
+                </TableCell>
                 <TableCell>{incident.policeStationName}</TableCell>
                 <TableCell>{incident.policeStationLocation}</TableCell>
                 <TableCell>{new Date(incident.startDate).toLocaleString()}</TableCell>

@@ -12,8 +12,8 @@ import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { FormControl, FormGroup } from '@mui/material';
 import Snackbar from '@mui/material/Snackbar';
-import { getData, postData } from '../../services/API';
-import API_URLS from '../../services/ApiUrl';
+import { getData, postData } from '../../services/apiService';
+import API_URLS from '../../services/apiUrlService';
 const theme = createTheme();
 
 export default function SignUp() {

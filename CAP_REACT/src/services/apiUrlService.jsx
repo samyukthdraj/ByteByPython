@@ -11,6 +11,7 @@ const API_URLS = {
   INCIDENTS: {
     getImageDescription: `${BASE_URL}/post/getImageDescription`,
     postIncident: `${BASE_URL}/post/incident`,
+    updateIncidentStatus: `${BASE_URL}/update/incidentStatus`,
     getAllIncident: `${BASE_URL}/get/AllIncident`,
     getIncidentByUserId: (id) => `${BASE_URL}/get/incidentByUserId/${id}`,
   },

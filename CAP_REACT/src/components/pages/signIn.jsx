@@ -13,9 +13,9 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { FormControl, FormGroup } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { getData, postData } from '../../services/API';
-import { AuthContext } from '../../context/AuthContext';
-import API_URLS from '../../services/ApiUrl';
+import { getData, postData } from '../../services/apiService';
+import { AuthContext } from '../../context/authContext';
+import API_URLS from '../../services/apiUrlService';
 
 const theme = createTheme();
 

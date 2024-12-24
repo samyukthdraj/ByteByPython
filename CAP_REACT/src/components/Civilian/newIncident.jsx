@@ -9,9 +9,9 @@ import InputLabel from '@mui/material/InputLabel';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Button, FormControl, FormGroup, FormHelperText, Input, Snackbar, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import API_URLS from '../../services/ApiUrl';
-import { getData, postData } from '../../services/API';
-import { AuthContext } from '../../context/AuthContext';
+import API_URLS from '../../services/apiUrlService';
+import { getData, postData } from '../../services/apiService';
+import { AuthContext } from '../../context/authContext';
 import crimeTypesData from '../../utils/crimeTypes.json';
 
 export default function NewIncident() {
