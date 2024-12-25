@@ -1,9 +1,9 @@
 from pymongo import MongoClient
-from config import settings
+from backend.config import settings
 from bson.objectid import ObjectId
 from passlib.context import CryptContext
 from datetime import datetime
-from models import PoliceStation
+from backend.models import PoliceStation
 import random
 import csv
 import os

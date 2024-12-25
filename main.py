@@ -11,19 +11,19 @@ from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 from fastapi import Form
-from crime_detection import analyze_image_detailed
-from speech_processing import process_speech_to_text
-from database import Database
-from models import CrimeReport, PoliceStation, User, Ticket
+from backend.crime_detection import analyze_image_detailed
+from backend.speech_processing import process_speech_to_text
+from backend.database import Database
+from backend.models import CrimeReport, PoliceStation, User, Ticket
 from typing import List, Optional, Dict
-from config import settings
+from backend.config import settings
 from fastapi import HTTPException
 from fastapi.responses import HTMLResponse
 from bson import ObjectId
 from fastapi.encoders import jsonable_encoder
 from fastapi.staticfiles import StaticFiles
 import os
-from database import Database
+from backend.database import Database
 import aiohttp
 import asyncio
 from googleapiclient.http import MediaIoBaseUpload,MediaIoBaseDownload
@@ -124,9 +124,6 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
-
-
-
 
 
 def generate_otp() -> str:
@@ -282,6 +279,110 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     return user
 
 # Authentication Routes
+@app.post("/send-otp")
+async def send_otp(request: EmailRequest):
+    try:
+        # logger.info(f"Received OTP request for email: {request.email}")
+        
+        # Generate OTP
+        otp = ''.join(secrets.choice('0123456789') for _ in range(6))
+        # logger.debug(f"Generated OTP: {otp}")
+
+        # Store OTP
+        otp_storage[request.email] = {
+            'otp': otp,
+            'created_at': datetime.utcnow(),
+            'attempts': 0
+        }
+
+        # Send OTP
+        if send_production_email(request.email, otp):
+            return {"success": True, "message": "OTP sent successfully"}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to send email")
+
+    except Exception as e:
+        # logger.error(f"Error in send_otp: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"Server error: {str(e)}"}
+        )
+
+@app.post("/verify-otp")
+async def verify_otp(verification: OTPVerification):
+    try:
+        stored = otp_storage.get(verification.email)
+        if not stored:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "No OTP request found"}
+            )
+
+        if (datetime.utcnow() - stored['created_at']) > timedelta(minutes=5):
+            del otp_storage[verification.email]
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "OTP expired"}
+            )
+
+        if stored['otp'] != verification.otp:
+            stored['attempts'] += 1
+            if stored['attempts'] >= 3:
+                del otp_storage[verification.email]
+                return JSONResponse(
+                    status_code=400,
+                    content={"success": False, "message": "Too many invalid attempts"}
+                )
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "Invalid OTP"}
+            )
+
+        return {"success": True, "message": "OTP verified successfully"}
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": str(e)}
+        )
+
+@app.post("/reset-password")
+async def reset_password(reset_request: PasswordReset):
+    try:
+        # Verify OTP was validated
+        if reset_request.email not in otp_storage:
+            raise HTTPException(
+                status_code=400, 
+                detail="Password reset not authorized. Please verify OTP first."
+            )
+
+        # Initialize database connection
+        db = Database()
+        
+        # Update password
+        success = db.reset_password(reset_request.email, reset_request.new_password)
+        
+        if not success:
+            raise HTTPException(
+                status_code=404,
+                detail="User not found or password update failed"
+            )
+
+        # Clean up OTP storage
+        del otp_storage[reset_request.email]
+
+        return {"success": True, "message": "Password reset successful"}
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"An error occurred: {str(e)}"
+        )
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
+
+
 @app.post("/token")
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = db.authenticate_user(form_data.username, form_data.password)
@@ -394,86 +495,7 @@ async def police_login(login_data: dict = Body(...)):
 
 
 
-@app.post("/send-otp")
-async def send_otp(request: EmailRequest):
-    try:
-        # logger.info(f"Received OTP request for email: {request.email}")
-        
-        # Generate OTP
-        otp = ''.join(secrets.choice('0123456789') for _ in range(6))
-        # logger.debug(f"Generated OTP: {otp}")
 
-        # Store OTP
-        otp_storage[request.email] = {
-            'otp': otp,
-            'created_at': datetime.utcnow(),
-            'attempts': 0
-        }
-
-        # Send OTP
-        if send_production_email(request.email, otp):
-            return {"success": True, "message": "OTP sent successfully"}
-        else:
-            raise HTTPException(status_code=500, detail="Failed to send email")
-
-    except Exception as e:
-        # logger.error(f"Error in send_otp: {str(e)}")
-        return JSONResponse(
-            status_code=500,
-            content={"success": False, "message": f"Server error: {str(e)}"}
-        )
-
-@app.post("/verify-otp")
-async def verify_otp(verification: OTPVerification):
-    try:
-        stored = otp_storage.get(verification.email)
-        if not stored:
-            return JSONResponse(
-                status_code=400,
-                content={"success": False, "message": "No OTP request found"}
-            )
-
-        if (datetime.utcnow() - stored['created_at']) > timedelta(minutes=5):
-            del otp_storage[verification.email]
-            return JSONResponse(
-                status_code=400,
-                content={"success": False, "message": "OTP expired"}
-            )
-
-        if stored['otp'] != verification.otp:
-            stored['attempts'] += 1
-            if stored['attempts'] >= 3:
-                del otp_storage[verification.email]
-                return JSONResponse(
-                    status_code=400,
-                    content={"success": False, "message": "Too many invalid attempts"}
-                )
-            return JSONResponse(
-                status_code=400,
-                content={"success": False, "message": "Invalid OTP"}
-            )
-
-        return {"success": True, "message": "OTP verified successfully"}
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"success": False, "message": str(e)}
-        )
-
-@app.post("/reset-password")
-async def reset_password(reset_request: PasswordReset):
-    try:
-        # In a real app, update password in database
-        return {"success": True, "message": "Password reset successful"}
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"success": False, "message": str(e)}
-        )
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
 
 # # Add an OPTIONS route handler for preflight requests
 # @app.options("/{path:path}")

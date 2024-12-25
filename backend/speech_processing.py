@@ -1,5 +1,5 @@
 import requests
-from config import settings
+from backend.config import settings
 
 def process_speech_to_text(file):
     headers = {"authorization": settings.ASSEMBLYAI_API_KEY}
