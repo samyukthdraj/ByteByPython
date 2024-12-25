@@ -40,8 +40,8 @@ import logging
 
 
 # Set up logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.DEBUG)
+# logger = logging.getLogger(__name__)
 
 app = FastAPI()
 db = Database()
@@ -141,7 +141,7 @@ EMAIL_FROM = os.getenv('EMAIL_FROM', EMAIL_USERNAME)
 
 def send_test_email(to_email: str, otp: str) -> bool:
     """Development version - just logs the OTP"""
-    logger.info(f"Development Mode: OTP {otp} would be sent to {to_email}")
+    # logger.info(f"Development Mode: OTP {otp} would be sent to {to_email}")
     return True
 
 def send_production_email(to_email: str, otp: str) -> bool:
@@ -164,26 +164,26 @@ def send_production_email(to_email: str, otp: str) -> bool:
         """
         message.attach(MIMEText(body, "html"))
 
-        logger.info(f"Email configuration: Host={EMAIL_HOST}, Port={EMAIL_PORT}, From={EMAIL_FROM}")
+        # logger.info(f"Email configuration: Host={EMAIL_HOST}, Port={EMAIL_PORT}, From={EMAIL_FROM}")
         
         with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT, timeout=30) as server:
-            logger.info("SMTP connection established")
+            # logger.info("SMTP connection established")
             server.starttls()
-            logger.info("TLS started")
+            # logger.info("TLS started")
             server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
-            logger.info("Login successful")
+            # logger.info("Login successful")
             server.send_message(message)
-            logger.info(f"Email sent successfully to {to_email}")
+            # logger.info(f"Email sent successfully to {to_email}")
             
         return True
     except smtplib.SMTPAuthenticationError as e:
-        logger.error(f"SMTP Authentication Error: {str(e)}")
+        # logger.error(f"SMTP Authentication Error: {str(e)}")
         return False
     except smtplib.SMTPException as e:
-        logger.error(f"SMTP Error: {str(e)}")
+        # logger.error(f"SMTP Error: {str(e)}")
         return False
     except Exception as e:
-        logger.error(f"Unexpected error while sending email: {str(e)}")
+        # logger.error(f"Unexpected error while sending email: {str(e)}")
         return False
 
 # Fix the email sender selection
@@ -397,11 +397,11 @@ async def police_login(login_data: dict = Body(...)):
 @app.post("/send-otp")
 async def send_otp(request: EmailRequest):
     try:
-        logger.info(f"Received OTP request for email: {request.email}")
+        # logger.info(f"Received OTP request for email: {request.email}")
         
         # Generate OTP
         otp = ''.join(secrets.choice('0123456789') for _ in range(6))
-        logger.debug(f"Generated OTP: {otp}")
+        # logger.debug(f"Generated OTP: {otp}")
 
         # Store OTP
         otp_storage[request.email] = {
@@ -417,7 +417,7 @@ async def send_otp(request: EmailRequest):
             raise HTTPException(status_code=500, detail="Failed to send email")
 
     except Exception as e:
-        logger.error(f"Error in send_otp: {str(e)}")
+        # logger.error(f"Error in send_otp: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={"success": False, "message": f"Server error: {str(e)}"}
