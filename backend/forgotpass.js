@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetPasswordSection = document.getElementById('reset-password-section');
     const message = document.getElementById('forgot-password-message');
     const otpTimer = document.getElementById('otp-timer');
+    const progressSteps = document.querySelectorAll('.step'); // Add progress steps reference
 
     function showSection(section) {
         emailSection.classList.add('hidden');
@@ -44,8 +45,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearInterval(timer);
                 otpTimer.textContent = 'OTP Expired';
                 showSection(emailSection);
+                updateProgress(1); // Reset progress step to 1
             }
         }, 1000);
+    }
+
+    // Function to update the progress steps
+    function updateProgress(stepNumber) {
+        progressSteps.forEach((step, index) => {
+            if (index < stepNumber) {
+                step.classList.add('active');
+            } else {
+                step.classList.remove('active');
+            }
+        });
     }
 
     forgotPasswordForm.addEventListener('submit', async (e) => {
@@ -63,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         startOTPTimer(300);
                         message.textContent = 'OTP sent successfully';
                         message.className = 'message success';
+                        updateProgress(2); // Move to step 2
                     }
                     break;
                 }
@@ -76,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         showSection(resetPasswordSection);
                         message.textContent = 'OTP verified successfully';
                         message.className = 'message success';
+                        updateProgress(3); // Move to step 3
                     }
                     break;
                 }
@@ -112,4 +127,3 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-

@@ -5,33 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Forgot Password</title>
     <link rel="stylesheet" href="css/stylesfpass.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <form id="forgot-password-form">
+        <div class="form-header">
+            <h1>Password Recovery</h1>
+            <p>Follow the steps to reset your password</p>
+        </div>
+
+        <div class="progress-steps">
+            <div class="step active">1</div>
+            <div class="step">2</div>
+            <div class="step">3</div>
+            <div class="progress-line"></div>
+        </div>
+
         <div id="email-section">
-            <label for="forgot-email">Email:</label>
-            <input type="email" id="forgot-email" placeholder="Enter email" required>
-            <button type="submit" id="send-otp-btn">Send OTP</button>
+            <div class="input-group">
+                <label for="forgot-email">
+                    <i class="fas fa-envelope"></i> Email Address
+                </label>
+                <input type="email" id="forgot-email" placeholder="Enter your email" required>
+            </div>
+            <button type="submit" id="send-otp-btn">
+                Send OTP <i class="fas fa-arrow-right"></i>
+            </button>
         </div>
 
         <div id="otp-section" class="hidden">
-            <label for="otp-input">Enter OTP:</label>
-            <input type="text" placeholder="Enter OTP" id="otp-input">
+            <div class="input-group">
+                <label for="otp-input">
+                    <i class="fas fa-key"></i> Verification Code
+                </label>
+                <input type="text" placeholder="Enter 6-digit OTP" id="otp-input">
+            </div>
             <div id="otp-timer"></div>
-            <button type="submit" id="verify-otp-btn">Verify OTP</button>
+            <button type="submit" id="verify-otp-btn">
+                Verify OTP <i class="fas fa-check"></i>
+            </button>
         </div>
 
         <div id="reset-password-section" class="hidden">
-            <label for="new-password">New Password:</label>
-            <input type="password" placeholder="Enter New Password" id="new-password">
-            <label for="confirm-new-password">Confirm Password:</label>
-            <input type="password" placeholder="Re-enter New Password" id="confirm-new-password">
-            <button type="submit" id="reset-password-btn">Reset Password</button>
+            <div class="input-group">
+                <label for="new-password">
+                    <i class="fas fa-lock"></i> New Password
+                </label>
+                <input type="password" placeholder="Enter New Password" id="new-password">
+            </div>
+            <div class="input-group">
+                <label for="confirm-new-password">
+                    <i class="fas fa-lock"></i> Confirm Password
+                </label>
+                <input type="password" placeholder="Re-enter New Password" id="confirm-new-password">
+            </div>
+            <button type="submit" id="reset-password-btn">
+                Reset Password <i class="fas fa-save"></i>
+            </button>
         </div>
 
         <div id="forgot-password-message" class="message"></div>
         <div class="form-footer">
-          <a href="login.html">Back to Login</a>
+            <a href="login.html"><i class="fas fa-arrow-left"></i> Back to Login</a>
         </div>
     </form>
     <script src="../backend/forgotpass.js"></script>

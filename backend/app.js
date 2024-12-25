@@ -167,7 +167,7 @@ async function loadPoliceStationsFromCSV() {
     try {
         console.log('Attempting to load police stations CSV');
         
-        const response = await fetch('/police_stations/policestations.csv');
+        const response = await fetch('../police_stations/policestations.csv');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }

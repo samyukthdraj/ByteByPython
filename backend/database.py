@@ -34,7 +34,7 @@ class Database:
 
     def pre_configure_police_stations(self):
         """Pre-configure police stations from CSV if they don't already exist in the database."""
-        csv_file_path = os.path.join(os.path.dirname(__file__), 'police_stations', 'policestations.csv')
+        csv_file_path = os.path.join(os.path.dirname(__file__),'..', 'police_stations', 'policestations.csv')
 
         try:
             with open(csv_file_path, mode='r') as file:
