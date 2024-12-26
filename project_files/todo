@@ -78,6 +78,7 @@ undone: police can delete in dashboard and it should reflect on the database and
 undone: fix time of the ticket creation.
 undone: fix readme.
 undone: convert to react if possible.
+undone: remove everything from database and add only a few things or create a new user and do from a new station.
     
 
 # python -m http.server 8000

@@ -121,7 +121,26 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    
+    user = db.users_collection.find_one({"username": username})
+    if user is None:
+        raise credentials_exception
+    return user
 
+# Forgot Pass functionalities.
 def generate_otp() -> str:
     return ''.join(secrets.choice('0123456789') for _ in range(6))
 
@@ -172,12 +191,6 @@ def send_production_email(to_email: str, otp: str) -> bool:
 # Fix the email sender selection
 send_email = send_test_email if os.getenv('DEV_MODE', '').lower() == 'true' else send_production_email
 
-
-
-
-
-
-
 def is_rate_limited(email: str) -> bool:
     if email in otp_storage:
         last_attempt = otp_storage[email].get('last_attempt')
@@ -215,54 +228,12 @@ def send_otp_email(email: str, otp: str) -> bool:
     except Exception as e:
         print(f"Error sending email: {str(e)}")
         return False
-    
-def send_password_email(email: str, password: str):
-    try:
-        sender_email = "linuashwin007@outlook.com"  # Replace with company email
-        sender_password = "sochomvpyqkbbvuv"  # Replace with app-specific password
-
-        msg = MIMEText(f'Your password is: {password}\nPlease change this password after logging in.')
-        msg['Subject'] = 'Your Account Password'
-        msg['From'] = sender_email
-        msg['To'] = email
-
-        with smtplib.SMTP('smtp-mail.outlook.com', 587) as server:
-            server.starttls()  # Enable TLS
-            server.login(sender_email, sender_password)
-            server.sendmail(sender_email, [email], msg.as_string())
-        return True
-    except Exception as e:
-        print(f"Error sending email: {e}")
-        return False
-    
-
-
-
 
 def hash_password(password: str):
     return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str):
     return pwd_context.verify(plain_password, hashed_password)
-
-async def get_current_user(token: str = Depends(oauth2_scheme)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    
-    user = db.users_collection.find_one({"username": username})
-    if user is None:
-        raise credentials_exception
-    return user
 
 # Authentication Routes
 @app.post("/send-otp")
