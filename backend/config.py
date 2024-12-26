@@ -1,11 +1,14 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field
 from typing import Optional
 
 class Settings(BaseSettings):
     # MongoDB settings
     MONGO_URI: str
     MONGO_DB_NAME: str = "cap_database"
-    ASSEMBLYAI_API_KEY: Optional[str] = None
+    ASSEMBLY_API_KEY: str = Field(..., env="ASSEMBLY_API_KEY")
+    GEMINI_API_KEY: str = Field(..., env="GEMINI_API_KEY")
+    FOLDER_ID: str = Field(..., env="FOLDER_ID")
 
     # Authentication settings
     SECRET_KEY: str
@@ -35,6 +38,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
+        extra="allow"
     )
 
 # Initialize settings

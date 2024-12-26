@@ -454,7 +454,9 @@ async def get_crime_reports(current_user: dict = Depends(get_current_user)):
 
 # Speech to Text Route
 async def process_speech_to_text(audio_file: UploadFile):
-    ASSEMBLY_API_KEY = '9e493625da8c4a9aa8ea4125507e4d4a'  # Replace with your API key
+    ASSEMBLY_API_KEY = os.getenv('ASSEMBLY_API_KEY')
+    if not ASSEMBLY_API_KEY:
+        raise ValueError("API key not found. Please check your .env file.")
     headers = {
         'authorization': ASSEMBLY_API_KEY
     }
@@ -695,7 +697,10 @@ async def options_user_tickets():
 
 # ------------------------------------------------------------------------------------------
 # Google Drive folder ID for the `cap` folder
-FOLDER_ID = "1dxymA4Lejnbuv2_y3dXjgBUNRh9ZtO3x"
+FOLDER_ID = os.getenv('FOLDER_ID')
+
+if not FOLDER_ID:
+    raise ValueError("Folder ID not found. Please check your .env file.")
 
 def get_drive_service():
     SCOPES = ['https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/drive']

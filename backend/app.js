@@ -429,8 +429,9 @@ function updateDropdownWithStations(dropdown, stations) {
     });
 }
 
+
 async function analyzeImage(file) {
-    const API_KEY = 'AIzaSyBXr_EYbwC-JA4tJ_F37fctbzgKDcxTzZo';
+    const GEMINI_API_KEY = 'AIzaSyBXr_EYbwC-JA4tJ_F37fctbzgKDcxTzZo';
 
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -440,7 +441,7 @@ async function analyzeImage(file) {
             const base64Image = reader.result.split(',')[1];
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`, {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

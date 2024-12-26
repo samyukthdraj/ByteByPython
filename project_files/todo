@@ -68,7 +68,7 @@ DONE: find password for each station ( default_password )
     done: project structure. 
 undone: optimise code.
     done: forgot pass fixes.
-undone: assemblyapi key and google drive folder id and gemini api key is visible in code, remove all those and keep it in env.
+    done: assemblyapi key and google drive folder id and gemini api key is visible in code, remove all those and keep it in env.
     done: stuttering when login card flips.
     done: when uvicorn is run i want to automatically open login.html or landing page.
     done: remove phone number from index, instead during signup a user can enter a mobile number and that number will be the one sent alongside ticket in the database.
