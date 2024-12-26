@@ -542,7 +542,6 @@ async function submitReport() {
         const userName = document.getElementById("userName").value;
         const pincode = document.getElementById("pincode").value;
         const policeStation = document.getElementById("policeStation").value;
-        const phoneNumber = document.getElementById("phoneNumber").value;
         const crimeType = document.getElementById("crimeType").value === 'others' 
             ? document.getElementById('customCrimeTypeInput').value 
             : document.getElementById("crimeType").value;
@@ -556,7 +555,6 @@ async function submitReport() {
         formData.append("user_name", userName);
         formData.append("pincode", pincode);
         formData.append("police_station", policeStation);
-        formData.append("phone_number", phoneNumber);
         formData.append("crime_type", crimeType);
         formData.append("description", description);
 

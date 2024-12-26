@@ -25,7 +25,7 @@ class User(BaseModel):
     hashed_password: Optional[str] = None  # Stored in database
     is_active: bool = True
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    phone_number: Optional[str] = None
+    phone_number: str = None
 
     @validator('phone_number', pre=True, always=False, allow_reuse=True)
     def validate_phone_number(cls, v):

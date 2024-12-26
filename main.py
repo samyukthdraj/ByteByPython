@@ -39,10 +39,6 @@ from fastapi.responses import JSONResponse
 import logging
 
 
-# Set up logging
-# logging.basicConfig(level=logging.DEBUG)
-# logger = logging.getLogger(__name__)
-
 app = FastAPI()
 db = Database()
 
@@ -99,7 +95,7 @@ class UserSignup(BaseModel):
     email: EmailStr
     password: str
     full_name: Optional[str] = None
-    phone_number: Optional[str] = None
+    phone_number: str = None
 
 class EmailRequest(BaseModel):
     email: EmailStr
@@ -802,16 +798,13 @@ async def upload_crime_report(
     user_name: str = Form(...),
     pincode: str = Form(...),
     police_station: str = Form(...),
-    phone_number: str = Form(...),
     crime_type: str = Form(...),
     description: str = Form(None),
     current_user: dict = Depends(get_current_user)
 ):
-     # Log the incoming data for debugging
-    print(f"Received data: user_name={user_name}, pincode={pincode}, police_station={police_station}, phone_number={phone_number}, crime_type={crime_type}, description={description}")
 
     # Ensure all required fields are present
-    if not all([user_name, pincode, police_station, phone_number, crime_type]):
+    if not all([user_name, pincode, police_station, crime_type]):
         raise HTTPException(status_code=400, detail="Missing required fields")
 
     # Generate a unique ticket number
@@ -839,7 +832,6 @@ async def upload_crime_report(
         ticket = db.create_ticket(
             user_name=current_user['username'],
             pincode=pincode,
-            phone_number=phone_number,
             crime_type=crime_type,
             police_station=police_station,
             description=description,

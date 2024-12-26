@@ -129,7 +129,7 @@ class Database:
             }
         )
         return result.modified_count > 0
-    def create_ticket(self, user_name, pincode, phone_number, crime_type, 
+    def create_ticket(self, user_name, pincode, crime_type, 
                     police_station=None, description=None, ticket_number=None, 
                     image_url=None, audio_url=None):
         """Create a new ticket in the database."""
@@ -160,7 +160,7 @@ class Database:
             "ticket_number": ticket_number,
             "user_name": user_name,
             "pincode": pincode,
-            "phone_number": phone_number,
+            "phone_number": user["phone_number"],
             "crime_type": crime_type,
             "police_station": police_station,
             "description": description,
