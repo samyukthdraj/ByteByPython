@@ -156,27 +156,17 @@ def send_production_email(to_email: str, otp: str) -> bool:
         </html>
         """
         message.attach(MIMEText(body, "html"))
-
-        # logger.info(f"Email configuration: Host={EMAIL_HOST}, Port={EMAIL_PORT}, From={EMAIL_FROM}")
         
         with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT, timeout=30) as server:
-            # logger.info("SMTP connection established")
             server.starttls()
-            # logger.info("TLS started")
             server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
-            # logger.info("Login successful")
             server.send_message(message)
-            # logger.info(f"Email sent successfully to {to_email}")
-            
         return True
     except smtplib.SMTPAuthenticationError as e:
-        # logger.error(f"SMTP Authentication Error: {str(e)}")
         return False
     except smtplib.SMTPException as e:
-        # logger.error(f"SMTP Error: {str(e)}")
         return False
     except Exception as e:
-        # logger.error(f"Unexpected error while sending email: {str(e)}")
         return False
 
 # Fix the email sender selection
@@ -278,12 +268,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 @app.post("/send-otp")
 async def send_otp(request: EmailRequest):
     try:
-        # logger.info(f"Received OTP request for email: {request.email}")
-        
         # Generate OTP
         otp = ''.join(secrets.choice('0123456789') for _ in range(6))
-        # logger.debug(f"Generated OTP: {otp}")
-
         # Store OTP
         otp_storage[request.email] = {
             'otp': otp,
@@ -298,7 +284,6 @@ async def send_otp(request: EmailRequest):
             raise HTTPException(status_code=500, detail="Failed to send email")
 
     except Exception as e:
-        # logger.error(f"Error in send_otp: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={"success": False, "message": f"Server error: {str(e)}"}
@@ -490,20 +475,6 @@ async def police_login(login_data: dict = Body(...)):
     }
 
 
-
-
-
-# # Add an OPTIONS route handler for preflight requests
-# @app.options("/{path:path}")
-# async def options_handler():
-#     return {"success": True}
-
-# # Add a health check endpoint
-# @app.get("/health")
-# async def health_check():
-#     return {"status": "healthy"}
-
-
 @app.get("/crime-reports", response_model=List[CrimeReport])
 async def get_crime_reports(current_user: dict = Depends(get_current_user)):
     # Fetch crime reports for the current user
@@ -685,6 +656,19 @@ async def get_ticket_details(
         return ticket
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/users/me")
+async def read_users_me(current_user: dict = Depends(get_current_user)):
+    # Convert ObjectId to string before returning
+    user_data = {
+        "id": str(current_user.get('_id')),
+        "username": current_user.get('username'),
+        "email": current_user.get('email'),
+        "full_name": current_user.get('full_name'),
+        "phone_number": current_user.get('phone_number'),
+        "created_at": current_user.get('created_at')
+    }
+    return user_data
 
 @app.post("/create-ticket")
 async def create_ticket(

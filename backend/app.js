@@ -1,3 +1,49 @@
+async function loadUserData() {
+    try {
+        const accessToken = localStorage.getItem('access_token');
+        if (!accessToken) {
+            console.log('No access token found, redirecting to login');
+            window.location.href = 'login.html';
+            return;
+        }
+
+        const response = await fetch('http://localhost:8000/users/me', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const userData = await response.json();
+        console.log('User data received:', userData);
+
+        // Get the username input field
+        const userNameInput = document.getElementById('userName');
+        
+        if (userNameInput && userData.username) {
+            userNameInput.value = userData.username;
+            userNameInput.setAttribute('readonly', true);
+        } else {
+            console.error('Either username input not found or username data missing', {
+                inputFound: !!userNameInput,
+                usernameReceived: userData.username
+            });
+        }
+    } catch (error) {
+        console.error('Error loading user data:', error);
+        if (error.message.includes('401')) {
+            window.location.href = 'login.html';
+        }
+    }
+}
+
+// Make sure the function runs when the page loads
+document.addEventListener('DOMContentLoaded', loadUserData);
+
 let mediaRecorder;
 let audioChunks = [];
 
