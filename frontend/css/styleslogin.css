@@ -142,3 +142,18 @@ button:hover {
   background-color: #0078d4;
   color: white;
 }
+
+.back-button {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  text-decoration: none;
+  color: #0078d4;
+  font-weight: bold;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+}
+.back-button:hover {
+  color: #0056b3;
+}

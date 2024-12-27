@@ -4,6 +4,7 @@ from bson import ObjectId
 from datetime import datetime
 import random
 import re
+import pytz
 
 class PyObjectId(ObjectId):
     @classmethod
@@ -15,6 +16,9 @@ class PyObjectId(ObjectId):
         if not ObjectId.is_valid(v):
             raise ValueError("Invalid ObjectId")
         return ObjectId(v)
+    
+def get_ist_time():
+    return datetime.now(pytz.timezone('Asia/Kolkata'))
 
 class User(BaseModel):
     id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
@@ -24,7 +28,7 @@ class User(BaseModel):
     password: Optional[str] = None  # For signup
     hashed_password: Optional[str] = None  # Stored in database
     is_active: bool = True
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=get_ist_time)
     phone_number: str = None
 
     @validator('phone_number', pre=True, always=False, allow_reuse=True)
@@ -47,6 +51,9 @@ class User(BaseModel):
             }
         }
 
+def get_ist_time():
+    return datetime.now(pytz.timezone('Asia/Kolkata'))
+
 class Ticket(BaseModel):
     id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
     ticket_number: str = Field(default_factory=lambda: f"{random.randint(100000, 999999)}")
@@ -59,7 +66,7 @@ class Ticket(BaseModel):
     police_station: Optional[str] = None
     police_station_id: Optional[str] = None
     status: str = "New"  # Default status
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=get_ist_time)
     updated_at: Optional[datetime] = None
     image_url: Optional[str] = None
     audio_url: Optional[str] = None
@@ -121,6 +128,9 @@ class PoliceStation(BaseModel):
             }
         }
 
+def get_ist_time():
+    return datetime.now(pytz.timezone('Asia/Kolkata'))
+
 class CrimeReport(BaseModel):
     id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
     user_id: str
@@ -131,7 +141,7 @@ class CrimeReport(BaseModel):
     description: Optional[str] = None
     image_url: Optional[str] = None
     audio_url: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=get_ist_time)
 
     @validator('pincode')
     def validate_pincode(cls, v):

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="css/hero.css">
+</head>
+<body>
+    <header>
+        <nav class="nav">
+          <ul class="nav__list">
+            <div>
+                <li class="logo">
+                    <img src="logo/caplogoreddotedited.png"  class="logo-img">
+                    <!-- CAP -->
+                  </li>
+            </div>
+            <div>
+              <li class="nav__item"><a href="#" class="navbtn">Team</a></li></li>
+              <li class="nav__item"><a href="#" class="navbtn">About</a></li>
+              <li class="nav__item"><a href="#" class="navbtn">Contact</a></li>
+              <li class="nav__item nav__item--main"> <a href="login.html" class="loginbtn">Login</a></li>
+            </div>
+          </ul>
+        </nav>
+      </header>
+      
+      
+      <section class="hero">
+        
+        <div class="wrapper">
+            <div class="content">
+                <h2 class="hero__title">CIVILANS AS</h2>
+                
+                <h2 class="hero__title">POLICE </h2>
+                <p class="hero__text">Step into the role of a community hero. Join hands with the police to create a safer, stronger society.</p>
+                <a class="hero__btn content__btn--primary" target="_blank" href="">Learn more</a>
+            </div>
+            <div class="hero__img-container">
+              <div class="hero__img-slider">
+                  <img class="hero__img" src="pictures/user1.png" alt="Slider image">
+                  <img class="hero__img" src="pictures/user2.png" alt="Slider image">
+                  <img class="hero__img" src="pictures/user3.png" alt="Slider image">
+                  <img class="hero__img" src="pictures/user4.png" alt="Slider image">
+                  <img class="hero__img" src="pictures/user5.png" alt="Slider image">
+                  <img class="hero__img" src="pictures/police1.png" alt="Slider image">
+                  <img class="hero__img" src="pictures/police2.png" alt="Slider image">
+                  <img class="hero__img" src="pictures/police3.png" alt="Slider image">
+                  <img class="hero__img" src="pictures/police4.png" alt="Slider image">
+                  <!-- Add more images as needed -->
+              </div>
+          </div>
+        </div>
+        
+      </section>
+      
+      
+      <section class="services">
+        
+        <div class="wrapper">
+          <div class="services__main">
+            <h2>What's CAP</h2>
+            <p>CAP (Civilans As Police) is a comprehensive platform designed to streamline the reporting and management of incidents, ensuring timely action and enhanced community safety. Whether it’s reporting a crime, tracking case status, or uploading vital evidence like images and audio recordings, CAP makes it simple and accessible for everyone.</p>
+            <p><ul>Core Features:
+
+                <li>Report Incidents Effortlessly: File incident reports with relevant details like location, descriptions, and media attachments in just a few clicks.</li>
+                <li>Real-Time Updates: Stay informed about the progress of your case with live updations.</li>
+                <li>Seamless Multimedia Integration: Upload images, audio, or videos to provide additional context for incidents.</li>
+                <li>Secure Communication: Collaborate with law enforcement through a safe and user-friendly interface.</li>
+                <li>AI-Assisted Insights: Leverage advanced AI for generating insights, such as automated description generation and incident categorization.</li></p>
+            </ul></div>
+          
+          <div class="services__aside">
+            
+              <h2>About</h2>
+              <p>
+                
+                "CAP: Bridging Communities and Authorities through AI."
+                
+                CAP leverages cutting-edge AI technology to revolutionize crime detection and prevention. By enabling civilians to actively contribute to public safety. CAP transforms traditional methods of law enforcement into a collaborative effort between the public and authorities.</p>
+                
+                <p> With the power of artificial intelligence, CAP processes images, videos, and voice inputs uploaded by users, automatically analyzing and detecting potential criminal activities. This not only speeds up investigations but also ensures that no valuable information is overlooked.</p>
+           
+
+          
+          </div>
+        </div>
+      </section>
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const slider = document.querySelector('.hero__img-slider');
+            const images = document.querySelectorAll('.hero__img');
+            let currentIndex = 0;
+        
+            function nextImage() {
+                currentIndex = (currentIndex + 1) % images.length;
+                slider.style.transform = `translateX(-${currentIndex * 100}%)`;
+            }
+        
+            // Change image every 3 seconds (3000 milliseconds)
+            setInterval(nextImage, 3000);
+        });
+        </script>
+</body>
+</html>

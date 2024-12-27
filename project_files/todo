@@ -68,7 +68,7 @@ DONE: find password for each station ( default_password )
     done: project structure. 
 undone: optimise code.
     done: forgot pass fixes.
-    done: assemblyapi key and google drive folder id and gemini api key is visible in code, remove all those and keep it in env.
+undone: gemini api key is visible in code, remove all those and keep it in env.
     done: stuttering when login card flips.
     done: when uvicorn is run i want to automatically open login.html or landing page.
     done: remove phone number from index, instead during signup a user can enter a mobile number and that number will be the one sent alongside ticket in the database.
@@ -78,7 +78,14 @@ undone: police can delete in dashboard and it should reflect on the database and
 undone: fix time of the ticket creation.
 undone: fix readme.
 undone: convert to react if possible.
+undone: waiting for a long time for resetting new password.
 undone: remove everything from database and add only a few things or create a new user and do from a new station.
+undone: in hero page, 
+when clicking the team and about and contact it shouldnt take us to different pages, 
+instead it should take us down to the section where each are there, 
+also fill the teams section.(ashwin)
+do some modifications in the navbar buttons after clicking it looks odd.
+undone: add go back to home page on login.html
     
 
 # python -m http.server 8000

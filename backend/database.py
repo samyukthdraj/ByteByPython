@@ -7,6 +7,7 @@ from backend.models import PoliceStation
 import random
 import csv
 import os
+import pytz
 
 class Database:
     def __init__(self):
@@ -64,6 +65,9 @@ class Database:
     # Other methods remain unchanged
 
     def create_user(self, username, email, password, full_name=None):
+        # Get current time in IST
+        ist = pytz.timezone('Asia/Kolkata')
+        current_time = datetime.now(ist)
         """Create a new user in the database."""
         existing_user = self.users_collection.find_one({
             "$or": [
@@ -81,7 +85,7 @@ class Database:
             "email": email,
             "full_name": full_name,
             "hashed_password": hashed_password,
-            "created_at": datetime.utcnow(),
+            "created_at": current_time,
             "is_active": True
         }
 
@@ -117,7 +121,9 @@ class Database:
         Returns:
             bool: True if update was successful, False otherwise
         """
-        current_time = datetime.utcnow()
+        # Get current time in IST
+        ist = pytz.timezone('Asia/Kolkata')
+        current_time = datetime.now(ist)
         
         result = self.tickets_collection.update_one(
             {"ticket_number": ticket_number},
@@ -132,6 +138,9 @@ class Database:
     def create_ticket(self, user_name, pincode, crime_type, 
                     police_station=None, description=None, ticket_number=None, 
                     image_url=None, audio_url=None):
+        # Get current time in IST
+        ist = pytz.timezone('Asia/Kolkata')
+        current_time = datetime.now(ist)
         """Create a new ticket in the database."""
         # If no ticket number is provided, generate a random 6-digit number
         if not ticket_number:
@@ -167,7 +176,7 @@ class Database:
             "image_url": image_url,
             "audio_url": audio_url,
             "status": "New",  # Initial status
-            "created_at": datetime.utcnow(),  # Creation timestamp
+            "created_at": current_time,  # Creation timestamp
             "updated_at": None   # Initial update timestamp is null.
         }
 

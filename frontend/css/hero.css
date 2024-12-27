@@ -1,0 +1,277 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+ 
+  html, body {
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background-attachment: fixed; /* This prevents gradient from repeating */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh; /* Ensures the gradient covers the full viewport height */
+    margin: 0;
+  }
+  
+  header {
+    width: 100%;
+    background-color: #0078d4;
+    position: fixed;
+    z-index: 1000; /* This ensures the header stays on top of other content */
+    backdrop-filter: blur(5px); 
+  }
+  
+  .nav {
+    width: 80%;
+    margin: 0 auto;
+    color: white;
+    font-family: 'Segoe UI', Arial, sans-serif;
+  }
+  
+  .nav__list {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    list-style: none;
+    padding: 1em 0;
+    text-transform: uppercase;
+    font-size: .875em;
+    height: 70px;
+  }
+  
+  .nav__item {
+    margin-right: 40px;
+    display: inline-block;
+  }
+  
+  .nav__item--main {
+    padding: 1em 2em;
+    background-color: whitesmoke;
+    color: #23424A;
+    font-weight: bold;
+    border-radius: 5em;
+    margin-right: 0px;
+  }
+  
+  .hero {
+    width: 100%;
+    height: 100vh;
+    /* background-color: #f0f2f4; */
+    color: #0078d4;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    padding: 125px 0;
+  }
+  
+  .wrapper {
+    width: 80%;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: transparent;
+  }
+  
+  .content {
+    width: 50%;
+    max-width: 1200px;
+  }
+  
+  .hero__title {
+    line-height: 1.1;
+    font-size: 3rem;
+  }
+  
+  .hero__text {
+    margin-block: 2em;
+    line-height: 165%;
+    font-size: 1.125rem;
+  }
+  
+  .hero__btn {
+    display: inline-block;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-size: 1em;
+    font-weight: bold;
+    padding: 0.75em 2em;
+    border-radius: 4em;
+    margin-bottom: 3rem;
+    background-color: #0078d4;
+    color: white;
+    outline: none;
+  }
+  
+  .hero__btn:hover {
+    opacity: 0.75;
+  }
+  
+.hero__img-container {
+    width: 40%;
+    overflow: hidden;
+    position: relative;
+    border-radius: 1em;
+}
+
+.hero__img-slider {
+    display: flex;
+    transition: transform 0.3s ease;
+}
+
+.hero__img {
+    width: 100%;
+    min-width: 100%; /* Ensures each image takes full width */
+    height: auto;
+    object-fit: contain;
+    border-radius: 1em;
+}
+  
+  .services {
+    min-height: 100vh; /* Change from fixed height to minimum height */
+    padding-top: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    background: white;
+  }
+  
+  .services__main {
+    width: 50%;;
+  } */
+
+
+
+  .services {
+    height: 100vh;
+    padding-top: 100px;
+    display: flex;
+    justify-content: center; /* Centers the div horizontally */
+    align-items: flex-start; /* Keeps the placement intact */
+  }
+  
+  .services__main {
+    width: 50%;
+    background-color: rgba(249, 249, 249, 0.8); /* Made semi-transparent */
+    padding: 20px 30px; /* Adds inner spacing */
+    border-radius: 10px; /* Smooth corners for a modern look */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    font-family: 'Segoe UI', Arial, sans-serif; /* Clean font for readability */
+    color: #0078d4; /* Darker text for contrast */
+    line-height: 1.8; /* Improved line spacing for readability */
+  }
+  
+  .services__main h2 {
+    font-size: 2rem; /* Slightly larger heading */
+    color: #1a73e8; /* Accent color for the heading */
+    margin-bottom: 20px; /* Space below heading */
+    text-align: center; /* Center the heading text */
+    font-weight: bold; /* Bold for emphasis */
+  }
+  
+  .services__main p {
+    font-size: 1rem; /* Standard readable text size */
+    margin-bottom: 15px; /* Space between paragraphs */
+    text-align: justify; /* Align text for clean edges */
+  }
+  
+  .services__main ul {
+    list-style-type: disc; /* Bullet style for list */
+    margin-left: 20px; /* Indent for bullets */
+  }
+  
+  .services__main li {
+    font-size: 1rem;
+    margin-bottom: 10px; /* Space between list items */
+    color: #0078d4; /* Slightly lighter color for distinction */
+  }
+  
+  .services__main li strong {
+    color: #1a73e8; /* Highlight keywords in features */
+  }
+  
+  .services__aside {
+    width: 40%;
+    background-color: #0078d4;
+    padding: 2em;
+    text-align: center;
+    color: white;
+    border-radius: 1em;
+    font-size: 1rem; /* Standard readable text size */
+    margin-bottom: 15px; /* Space between paragraphs */
+    text-align: justify; /* Align text for clean edges */
+  }
+  
+  .services__aside > p, .services__main > p {
+    margin-bottom: 2em;
+  }
+  
+  .services__aside > h2, .services__main > h2 {
+    margin-bottom: .5em;
+  }
+  
+  @media (max-width: 764px) {
+    .wrapper {
+    display: block;
+   
+    }
+    
+    .hero {
+      height: auto;
+    }
+    
+    .content, 
+    .hero__img,
+    .services__main,
+    .services__aside {
+      width: 100%;
+    }
+    
+  }
+
+.logo {
+  position: relative;
+  list-style: none; /* Remove default list style */
+  font-family: 'Segoe UI', Arial, sans-serif;/* Apply a good font */
+  font-size: 24px; /* Font size for the logo text */
+  font-weight: 600; /* Bold text */
+  color: #f9f9f9; /* Text color */
+  display: flex; /* Align logo and text horizontally */
+  align-items: center; /* Vertically center logo and text */
+  height: 100%; /* Ensures logo container takes full height of navbar */
+  padding: 8px 0; /* Space around the element */
+}
+
+.logo-img {
+  width: 100px;  /* Increased from 30px */
+  height: 70px; /* Added fixed height to maintain aspect ratio */
+  vertical-align: middle; /* Helps with alignment */
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%); /* Centers it vertically */
+  margin-right: 10px;
+  object-fit: contain;
+}
+
+.loginbtn{
+  text-decoration: none;
+  color: #0078d4;
+}
+.loginbtn:hover {
+  opacity: 0.75;
+}
+.navbtn{
+  text-decoration: none;
+  color: white;
+}
+.navbtn:hover {
+  opacity: 0.95;
+}
+
+

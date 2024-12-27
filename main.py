@@ -36,7 +36,7 @@ import secrets
 import hashlib
 from dotenv import load_dotenv
 from fastapi.responses import JSONResponse
-import logging
+import pytz
 
 
 app = FastAPI()
@@ -112,11 +112,14 @@ class PasswordReset(BaseModel):
 
 # Authentication Utility Functions
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    # Get current time in IST
+    ist = pytz.timezone('Asia/Kolkata')
+    current_time = datetime.now(ist)
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = current_time + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+        expire = current_time + timedelta(minutes=15)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
@@ -192,9 +195,12 @@ def send_production_email(to_email: str, otp: str) -> bool:
 send_email = send_test_email if os.getenv('DEV_MODE', '').lower() == 'true' else send_production_email
 
 def is_rate_limited(email: str) -> bool:
+# Get current time in IST
+    ist = pytz.timezone('Asia/Kolkata')
+    current_time = datetime.now(ist)
     if email in otp_storage:
         last_attempt = otp_storage[email].get('last_attempt')
-        if last_attempt and (datetime.utcnow() - last_attempt) < timedelta(minutes=1):
+        if last_attempt and (current_time - last_attempt) < timedelta(minutes=1):
             return True
     return False
 
@@ -239,12 +245,15 @@ def verify_password(plain_password: str, hashed_password: str):
 @app.post("/send-otp")
 async def send_otp(request: EmailRequest):
     try:
+        # Get current time in IST
+        ist = pytz.timezone('Asia/Kolkata')
+        current_time = datetime.now(ist)
         # Generate OTP
         otp = ''.join(secrets.choice('0123456789') for _ in range(6))
         # Store OTP
         otp_storage[request.email] = {
             'otp': otp,
-            'created_at': datetime.utcnow(),
+            'created_at': current_time,
             'attempts': 0
         }
 
@@ -269,8 +278,11 @@ async def verify_otp(verification: OTPVerification):
                 status_code=400,
                 content={"success": False, "message": "No OTP request found"}
             )
+        # Get current time in IST
+        ist = pytz.timezone('Asia/Kolkata')
+        current_time = datetime.now(ist)
 
-        if (datetime.utcnow() - stored['created_at']) > timedelta(minutes=5):
+        if (current_time - stored['created_at']) > timedelta(minutes=5):
             del otp_storage[verification.email]
             return JSONResponse(
                 status_code=400,
@@ -362,6 +374,10 @@ async def signup(user: UserSignup):
         if existing_email:
             raise HTTPException(status_code=400, detail="Email already registered.")
         
+        # Get current time in IST
+        ist = pytz.timezone('Asia/Kolkata')
+        current_time = datetime.now(ist)
+        
         hashed_password = hash_password(user.password)
         user_doc = {
             "username": user.username,
@@ -369,7 +385,7 @@ async def signup(user: UserSignup):
             "full_name": user.full_name,
             "phone_number": user.phone_number,
             "hashed_password": hashed_password,
-            "created_at": datetime.utcnow(),
+            "created_at": current_time,
         }
         
         result = db.users_collection.insert_one(user_doc)
@@ -648,10 +664,13 @@ async def create_ticket(
     ticket: Ticket, 
     current_user: dict = Depends(get_current_user)
 ):
+    # Get current time in IST
+    ist = pytz.timezone('Asia/Kolkata')
+    current_time = datetime.now(ist)
     # Add user_id as the ObjectId string to ticket
     ticket_data = ticket.dict()
     ticket_data['user_id'] = str(current_user['_id'])
-    ticket_data['timestamp'] = datetime.utcnow()
+    ticket_data['timestamp'] = current_time
     
     # Insert ticket
     result = db.tickets_collection.insert_one(ticket_data)
