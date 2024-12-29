@@ -12,14 +12,14 @@
           <ul class="nav__list">
             <div>
                 <li class="logo">
-                    <img src="logo/caplogoreddotedited.png"  class="logo-img">
+                    <img src="logo/caplogo croped.png"  class="logo-img">
                     <!-- CAP -->
                   </li>
             </div>
             <div>
-              <li class="nav__item"><a href="#" class="navbtn">Team</a></li></li>
-              <li class="nav__item"><a href="#" class="navbtn">About</a></li>
-              <li class="nav__item"><a href="#" class="navbtn">Contact</a></li>
+              <li class="nav__item"><a href="#teamView" class="navbtn">Team</a></li>
+              <li class="nav__item"><a href="#aboutscroll" class="navbtn">About</a></li>
+              <li class="nav__item"><a href="#contactView" class="navbtn">Contact</a></li>
               <li class="nav__item nav__item--main"> <a href="login.html" class="loginbtn">Login</a></li>
             </div>
           </ul>
@@ -35,7 +35,7 @@
                 
                 <h2 class="hero__title">POLICE </h2>
                 <p class="hero__text">Step into the role of a community hero. Join hands with the police to create a safer, stronger society.</p>
-                <a class="hero__btn content__btn--primary" target="_blank" href="">Learn more</a>
+                <a class="hero__btn content__btn--primary" href="#learnMore">Learn more</a>
             </div>
             <div class="hero__img-container">
               <div class="hero__img-slider">
@@ -52,41 +52,78 @@
               </div>
           </div>
         </div>
+
         
-      </section>
-      
-      
+      </section >
+
+
+      <div class="invisible" id="learnMore">invisible</div>
+      <!--the invisible is give here so the learmore can be seen fully or its blocked the heading by nav bar/ -->
+
+
       <section class="services">
-        
         <div class="wrapper">
-          <div class="services__main">
+          <div  id="aboutscroll" class="services__main"> 
+            <!-- //the aboutScroll is give here so the about can be seen fully or its blocked the heading by nav bar/ -->
             <h2>What's CAP</h2>
-            <p>CAP (Civilans As Police) is a comprehensive platform designed to streamline the reporting and management of incidents, ensuring timely action and enhanced community safety. Whether it’s reporting a crime, tracking case status, or uploading vital evidence like images and audio recordings, CAP makes it simple and accessible for everyone.</p>
-            <p><ul>Core Features:
-
-                <li>Report Incidents Effortlessly: File incident reports with relevant details like location, descriptions, and media attachments in just a few clicks.</li>
-                <li>Real-Time Updates: Stay informed about the progress of your case with live updations.</li>
-                <li>Seamless Multimedia Integration: Upload images, audio, or videos to provide additional context for incidents.</li>
-                <li>Secure Communication: Collaborate with law enforcement through a safe and user-friendly interface.</li>
-                <li>AI-Assisted Insights: Leverage advanced AI for generating insights, such as automated description generation and incident categorization.</li></p>
-            </ul></div>
-          
-          <div class="services__aside">
-            
-              <h2>About</h2>
-              <p>
-                
-                "CAP: Bridging Communities and Authorities through AI."
-                
-                CAP leverages cutting-edge AI technology to revolutionize crime detection and prevention. By enabling civilians to actively contribute to public safety. CAP transforms traditional methods of law enforcement into a collaborative effort between the public and authorities.</p>
-                
-                <p> With the power of artificial intelligence, CAP processes images, videos, and voice inputs uploaded by users, automatically analyzing and detecting potential criminal activities. This not only speeds up investigations but also ensures that no valuable information is overlooked.</p>
-           
-
-          
+            <p>
+              CAP (Civilians As Police) is a comprehensive platform designed to streamline the reporting and management of incidents, ensuring timely action and enhanced community safety. Whether it’s reporting a crime, tracking case status, or uploading vital evidence like images and audio recordings, CAP makes it simple and accessible for everyone.
+            </p>
+            <ul>
+              <li>Report Incidents Effortlessly: File incident reports with relevant details.</li>
+              <li>Real-Time Updates: Stay informed about the progress of your case.</li>
+              <li>Seamless Multimedia Integration: Upload images, audio, or videos.</li>
+              <li>Secure Communication: Collaborate with law enforcement safely.</li>
+              <li>AI-Assisted Insights: Leverage AI for generating insights and analysis.</li>
+            </ul>
+          </div>
+          <div  class="services__aside">
+            <h2>About</h2>
+            <p>
+              "CAP: Bridging Communities and Authorities through AI." CAP leverages cutting-edge AI technology to revolutionize crime detection and prevention. By enabling civilians to actively contribute to public safety, CAP transforms traditional methods of law enforcement into a collaborative effort.
+            </p>
+            <p>
+              With the power of artificial intelligence, CAP processes images, videos, and voice inputs uploaded by users, automatically analyzing and detecting potential criminal activities. This ensures faster investigations and prevents valuable information from being overlooked.
+            </p>
           </div>
         </div>
       </section>
+
+      <div class="invisible" id="teamView">second</div>
+      <!--the invisible is give here so the team can be seen fully or its blocked the heading by nav bar/ -->
+    
+      <div class="team-section">
+        <h2>Team</h2>
+        <h3>Byte By Python</h3>
+        <p>Team Members</p>
+        <div class="team-members">
+          <div class="member">
+            <img src="pictures/ashwin.jpg" alt="Ashwin Linu">
+            <p>Ashwin Linu</p>
+          </div>
+          <div class="member">
+            <img src="pictures/ashwin.jpg" alt="Samyukth Darmarajan">
+            <p>Samyukth Darmarajan</p>
+          </div>
+          <div class="member">
+            <img src="pictures/ashwin.jpg" alt="Surya D">
+            <p>Surya D</p>
+          </div>
+        </div>
+        <div class="invisible" id="contactView">second</div>
+        <!--the invisible is give here so the contact can be seen fully or its blocked the heading by nav bar/ -->
+        
+       <h4 class="contact"> Contact : </br>
+        bybtebypython@gmail.com
+       </h4>
+     
+      </div>
+      <div class="footer">
+        <p>&copy; 2024 CAP. All rights reserved.</p>
+        <p>Designed by Byte By Python</p>
+        <button class="scroll-to-top">Scroll to Top</button>
+      </div>
+      
       <script>
         document.addEventListener('DOMContentLoaded', function() {
             const slider = document.querySelector('.hero__img-slider');
@@ -100,6 +137,10 @@
         
             // Change image every 3 seconds (3000 milliseconds)
             setInterval(nextImage, 3000);
+        });
+
+        document.querySelector('.scroll-to-top').addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         });
         </script>
 </body>

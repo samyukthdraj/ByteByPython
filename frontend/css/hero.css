@@ -3,12 +3,16 @@
     padding: 0;
     box-sizing: border-box;
   }
+  html {
+    scroll-behavior: smooth;
+  }
+  
  
   html, body {
     min-height: 100vh;
     margin: 0;
     padding: 0;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+
     background-attachment: fixed; /* This prevents gradient from repeating */
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
@@ -44,6 +48,7 @@
     text-transform: uppercase;
     font-size: .875em;
     height: 70px;
+    
   }
   
   .nav__item {
@@ -67,6 +72,7 @@
     color: #0078d4;
     font-family: 'Segoe UI', Arial, sans-serif;
     padding: 125px 0;
+
   }
   
   .wrapper {
@@ -76,6 +82,7 @@
     justify-content: space-between;
     align-items: center;
     background: transparent;
+    
   }
   
   .content {
@@ -131,14 +138,20 @@
     object-fit: contain;
     border-radius: 1em;
 }
+  .invisible{
+    /* color:violet ; */
+    visibility: hidden;
+
+  }
   
   .services {
     min-height: 100vh; /* Change from fixed height to minimum height */
-    padding-top: 100px;
+    padding-top: 70px;
     display: flex;
     justify-content: center;
     align-items: flex-start;
     background: white;
+    padding-bottom: 30px;
   }
   
   .services__main {
@@ -153,6 +166,7 @@
     display: flex;
     justify-content: center; /* Centers the div horizontally */
     align-items: flex-start; /* Keeps the placement intact */
+
   }
   
   .services__main {
@@ -164,6 +178,7 @@
     font-family: 'Segoe UI', Arial, sans-serif; /* Clean font for readability */
     color: #0078d4; /* Darker text for contrast */
     line-height: 1.8; /* Improved line spacing for readability */
+    
   }
   
   .services__main h2 {
@@ -237,27 +252,30 @@
 .logo {
   position: relative;
   list-style: none; /* Remove default list style */
-  font-family: 'Segoe UI', Arial, sans-serif;/* Apply a good font */
-  font-size: 24px; /* Font size for the logo text */
-  font-weight: 600; /* Bold text */
-  color: #f9f9f9; /* Text color */
   display: flex; /* Align logo and text horizontally */
   align-items: center; /* Vertically center logo and text */
-  height: 100%; /* Ensures logo container takes full height of navbar */
+  /* height: 100%; 
   padding: 8px 0; /* Space around the element */
+  
+  
 }
 
 .logo-img {
-  width: 100px;  /* Increased from 30px */
-  height: 70px; /* Added fixed height to maintain aspect ratio */
-  vertical-align: middle; /* Helps with alignment */
+  width: 60px; /* Adjusted width for balance */
+  height: 60px; /* Matching height for a square aspect ratio */
+  vertical-align: middle;
   position: absolute;
   left: 0;
   top: 50%;
-  transform: translateY(-50%); /* Centers it vertically */
+  transform: translateY(-50%);
   margin-right: 10px;
-  object-fit: contain;
+  object-fit: cover; /* Ensures the image fully covers the container */
+  border-radius: 10px; /* Fully circular edges */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Adds a soft shadow for aesthetics */
+  border: 2px solid white; /* Clean white border for separation */
 }
+
+
 
 .loginbtn{
   text-decoration: none;
@@ -274,4 +292,101 @@
   opacity: 0.95;
 }
 
+.team-section {
+  background-color: #0078d4;
+  color: white;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  padding: 40px;
+  text-align: center;
+  border-radius: 10px;
+  max-width: 800px; /* Constrain the width */
+  margin: 40px auto; /* Center the box horizontally and add vertical spacing */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a subtle shadow for depth */
+}
+
+
+.team-section h2 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+}
+
+.team-section h3 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: #cce6ff; /* Slightly lighter color for contrast */
+}
+
+.team-section p {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+}
+
+.team-members {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap; /* Ensures members wrap to the next line on smaller screens */
+  gap: 20px;
+}
+
+.member {
+  background-color: rgba(255, 255, 255, 0.1); /* Subtle transparent effect */
+  padding: 20px;
+  border-radius: 8px;
+  width: 150px; /* Set consistent width */
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+
+}
+
+.member img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 10px;
+  border: 2px solid #cce6ff; /* Outline around the image */
+}
+
+.member p {
+  font-size: 1rem;
+  color: #ffffff;
+}
+.contact{
+  padding: 40px;
+  font-size: 1.3rem;
+}
+
+
+/* the CSS code for styling your footer, including the "Scroll to Top" button: */
+
+.footer {
+  background-color:#0078d4 ; /* Dark blue background */
+  color: #ffffff; /* White text color */
+  text-align: center; /* Center-align text */
+  padding: 20px 0; /* Add vertical padding for spacing */
+  font-size: 14px; /* Font size for text */
+  position: relative; /* Ensures button positioning works */
+}
+
+.footer p {
+  margin: 5px 0; /* Add margin between text lines */
+}
+
+.footer .scroll-to-top {
+  margin-top: 10px; /* Add space above the button */
+  background-color: #ffffff; /* White button background */
+  color: #003366; /* Dark blue text color */
+  border: none; /* Remove border */
+  border-radius: 5px; /* Slightly rounded corners */
+  padding: 10px 20px; /* Add padding inside the button */
+  font-size: 14px; /* Font size for the button */
+  cursor: pointer; /* Change cursor to pointer on hover */
+  transition: background-color 0.3s, color 0.3s; /* Smooth hover effect */
+  font-weight: bold;
+}
+
+.footer .scroll-to-top:hover {
+  background-color: #003366; /* Change background color on hover */
+  color: #ffffff; /* Change text color on hover */
+}
 
