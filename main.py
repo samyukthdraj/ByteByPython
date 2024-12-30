@@ -42,14 +42,14 @@ import pytz
 app = FastAPI()
 db = Database()
 
-# @app.on_event("startup")
-# async def startup_event():
-#     # Open the login page when the server starts
-#     webbrowser.open_new_tab("http://127.0.0.1:5500/login.html")
+@app.on_event("startup")
+async def startup_event():
+    # Open the login page when the server starts
+    webbrowser.open_new_tab("http://127.0.0.1:5500/frontend/hero.html")
 
-# @app.get("/")
-# def read_root():
-#     return {"message": "Welcome to the root!"}
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the root!"}
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
