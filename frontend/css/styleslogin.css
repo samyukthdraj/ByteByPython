@@ -149,6 +149,7 @@ button:hover {
   left: 15px;
   text-decoration: none;
   color: #0078d4;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   font-weight: bold;
   font-size: 14px;
   display: flex;
@@ -156,4 +157,11 @@ button:hover {
 }
 .back-button:hover {
   color: #0056b3;
+}
+
+.back-button i {
+  margin-right: 4px; /* Adds spacing between the icon and text */
+  vertical-align: middle; /* Aligns the icon with the text */
+  font-size: 1.2em; /* Ensures the icon matches the text size */
+  margin-top: 0.8px;
 }
