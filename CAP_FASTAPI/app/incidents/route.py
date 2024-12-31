@@ -3,7 +3,7 @@ from fastapi import APIRouter, Request, UploadFile, File, Depends, Security
 from fastapi.exceptions import HTTPException #Corrected import
 from .model import Incident, DescriptionResponse, ImageRequest, GetIncident, AudioRequest, UpdateIncidentStatus
 from pydantic import BaseModel 
-from .service import post_incident, get_allIncident, post_getImageDescription, post_getAudioDescription, get_incidentByUserId, put_updateIncidentStatus 
+from .service import post_incident, get_allIncident, post_getImageDescription, post_getAudioDescription, get_incidentByUserId, put_updateIncidentStatus, uploadFileToDrive 
 from datetime import datetime
 from pathlib import Path
 import base64
@@ -13,16 +13,22 @@ from ..auth import get_current_user
 from fastapi.security import OAuth2PasswordBearer
 
 incident_router = APIRouter()
-        
-@incident_router.post("/post/getAudioDescription", response_model=dict) # simplified response model
-async def post_getAudioDescription_route(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+
+@incident_router.post("/uploadFileToDrive", summary="Upload a file to Google Drive", tags=["File Upload"])
+async def post_uploadFileToDrive_route(file: UploadFile = File(...)):
+    """
+    Endpoint for uploading a file to Google Drive.
+    """
     try:
-        os.makedirs("uploaded_files", exist_ok=True)
-        file_path = f"uploaded_files/{file.filename}"
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
- 
-        description = await post_getAudioDescription(file_path)
+        response = await uploadFileToDrive(file)
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error uploading files: {str(e)}")
+
+@incident_router.post("/post/getAudioDescription", response_model=dict) # simplified response model
+async def post_getAudioDescription_route():
+    try:
+        description = await post_getAudioDescription()
         return {"description": description}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing audio: {str(e)}")

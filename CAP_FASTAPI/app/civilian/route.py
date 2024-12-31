@@ -9,7 +9,7 @@ from ..auth import get_current_user
 civilian_router = APIRouter()
 
 @civilian_router.post("/post/civilian", response_model=Civilian, status_code=status.HTTP_201_CREATED)
-def post_civilian_route(civilian: Civilian, current_user: dict = Depends(get_current_user)):
+def post_civilian_route(civilian: Civilian):
     return post_civilian(civilian)
 
 @civilian_router.get("/get/civilianDetailById/{id}", response_model=GetCivilianDetailsById)

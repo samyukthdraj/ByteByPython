@@ -49,7 +49,7 @@ export default function PoliceDashboard() {
 
     const userIncidents = async () => {
         try {
-            const response = await getData(API_URLS.INCIDENTS.getAllIncident);
+            const response = await getData(API_URLS.INCIDENTS.getAllIncident,user.access_token);
             if (Array.isArray(response)) {
                 setIncidents(response);
             } else if (Array.isArray(response?.data)) {
@@ -70,9 +70,10 @@ export default function PoliceDashboard() {
             status
         };
         try {
-            const response = await putData(updateIncidentStatus, API_URLS.INCIDENTS.updateIncidentStatus);
+            const response = await putData(updateIncidentStatus, API_URLS.INCIDENTS.updateIncidentStatus,user.access_token);
             setSnackbar({ open: true, message: 'Incident status updated successfully!', severity: 'success' });
-            userIncidents(); // Reload incidents
+            if(response.message === 'Incident status updated successfully.')
+                userIncidents(); // Reload incidents
         } catch (error) {
             console.error('Error updating incident status:', error);
             setSnackbar({ open: true, message: 'Failed to update incident status.', severity: 'error' });

@@ -17,6 +17,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import Button from '@mui/material/Button';
 import API_URLS from '../../services/apiUrlService';
 import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';  // Import Typography component for the message
+import Box from '@mui/material/Box';  // For styling the container of the message
 
 export default function CivilianDashboard() {
   const { user } = useContext(AuthContext);
@@ -47,7 +49,7 @@ export default function CivilianDashboard() {
 
   const userIncidents = async () => {
     try {
-      const response = await getData(API_URLS.INCIDENTS.getIncidentByUserId(user._id));
+      const response = await getData(API_URLS.INCIDENTS.getIncidentByUserId(user._id), user.access_token);
       if (Array.isArray(response)) {
         setIncidents(response);
       } else if (Array.isArray(response?.data)) {
@@ -96,60 +98,81 @@ export default function CivilianDashboard() {
 
   return (
     <>
-      <TableContainer component={Paper} sx={{ maxHeight: 600, overflow: 'auto' }}>
-        <Table sx={{ minWidth: 650 }} aria-label="simple table">
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ width: 100 }}>Image</TableCell>
-              <TableCell sx={{ width: 100 }}>Audio</TableCell>
-              <TableCell sx={{ width: 100 }}>Crime Type</TableCell>
-              <TableCell sx={{ width: 200, maxWidth: '200px', overflow: 'auto' }}>Image Description</TableCell>
-              <TableCell sx={{ width: 200, maxWidth: '200px', overflow: 'auto' }}>Audio Description</TableCell>
-              <TableCell sx={{ width: 200, maxWidth: '200px', overflow: 'auto' }}>Description</TableCell>
-              <TableCell sx={{ width: 100 }}>Police Station Name</TableCell>
-              <TableCell sx={{ width: 100 }}>Police Station Location</TableCell>
-              <TableCell sx={{ width: 100 }}>Start Date</TableCell>
-              <TableCell sx={{ width: 100 }}>Status</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {incidents.map((incident) => (
-              <TableRow key={incident.id}>
-                <TableCell>
-                  <Button onClick={() => handleOpenImageDialog(incident)}>
-                    {incident.image ? 'View Image' : 'No Image'}
-                  </Button>
-                </TableCell>
-                <TableCell>
-                  <Button onClick={() => handleOpenAudioDialog(incident)}>
-                    {incident.audio ? 'Play Audio' : 'No Audio'}
-                  </Button>
-                </TableCell>
-                <TableCell>{incident.crimeType}</TableCell>
-                <TableCell>
-                  <Tooltip title={incident.imageDescription} placement="right">
-                    <span>{incident.imageDescription.substring(0, 20) + (incident.imageDescription.length > 20 ? "..." : "")}</span>
-                  </Tooltip>
-                </TableCell>
-                <TableCell>
-                  <Tooltip title={incident.audioDescription} placement="right">
-                    <span>{incident.audioDescription.substring(0, 20) + (incident.audioDescription.length > 20 ? "..." : "")}</span>
-                  </Tooltip>
-                </TableCell>
-                <TableCell>
-                  <Tooltip title={incident.userDescription} placement="right">
-                    <span>{incident.userDescription.substring(0, 20) + (incident.userDescription.length > 20 ? "..." : "")}</span>
-                  </Tooltip>
-                </TableCell>
-                <TableCell>{incident.policeStationName}</TableCell>
-                <TableCell>{incident.policeStationLocation}</TableCell>
-                <TableCell>{new Date(incident.startDate).toLocaleString()}</TableCell>
-                <TableCell>{getStatus(incident.status)}</TableCell>
+      {/* Check if there are incidents */}
+      {incidents.length === 0 ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', padding: 2 }}>
+          <Typography variant="h6" color="textSecondary" align="center">
+            No incidents found. Please check back later.
+          </Typography>
+        </Box>
+      ) : (
+        <TableContainer
+          component={Paper}
+          sx={{
+            overflowY: 'auto',
+          maxHeight: 'calc(100vh - 20vh)',
+          scrollbarWidth: 'none',  /* Firefox */
+          '-ms-overflow-style': 'none',  /* IE and Edge */
+          '&::-webkit-scrollbar': {
+            display: 'none'  /* Chrome, Safari, Opera */
+          }
+          }}
+        >
+          <Table stickyHeader sx={{ minWidth: 650 }} aria-label="sticky table">
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ width: '20vh' }}>Image</TableCell>
+                <TableCell sx={{ width: 100 }}>Audio</TableCell>
+                <TableCell sx={{ width: 100 }}>Crime Type</TableCell>
+                <TableCell sx={{ width: 200, maxWidth: '200px', overflow: 'auto' }}>Image Description</TableCell>
+                <TableCell sx={{ width: 200, maxWidth: '200px', overflow: 'auto' }}>Audio Description</TableCell>
+                <TableCell sx={{ width: 200, maxWidth: '200px', overflow: 'auto' }}>Description</TableCell>
+                <TableCell sx={{ width: 100 }}>Police Station Name</TableCell>
+                <TableCell sx={{ width: 100 }}>Police Station Location</TableCell>
+                <TableCell sx={{ width: 100 }}>Start Date</TableCell>
+                <TableCell sx={{ width: 100 }}>Status</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {incidents.map((incident) => (
+                <TableRow key={incident.id}>
+                  <TableCell>
+                    <Button onClick={() => handleOpenImageDialog(incident)}>
+                      {incident.image ? 'View Image' : 'No Image'}
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Button onClick={() => handleOpenAudioDialog(incident)}>
+                      {incident.audio ? 'Play Audio' : 'No Audio'}
+                    </Button>
+                  </TableCell>
+                  <TableCell>{incident.crimeType}</TableCell>
+                  <TableCell>
+                    <Tooltip title={incident.imageDescription} placement="right">
+                      <span>{incident.imageDescription.substring(0, 20) + (incident.imageDescription.length > 20 ? '...' : '')}</span>
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell>
+                    <Tooltip title={incident.audioDescription} placement="right">
+                      <span>{incident.audioDescription.substring(0, 20) + (incident.audioDescription.length > 20 ? '...' : '')}</span>
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell>
+                    <Tooltip title={incident.userDescription} placement="right">
+                      <span>{incident.userDescription.substring(0, 20) + (incident.userDescription.length > 20 ? '...' : '')}</span>
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell>{incident.policeStationName}</TableCell>
+                  <TableCell>{incident.policeStationLocation}</TableCell>
+                  <TableCell>{new Date(incident.startDate).toLocaleString()}</TableCell>
+                  <TableCell>{getStatus(incident.status)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+      )}
 
       {/* Image Dialog */}
       <Dialog open={openImageDialog} onClose={handleCloseDialog}>

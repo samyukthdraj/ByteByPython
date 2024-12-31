@@ -6,6 +6,13 @@ from ..database import civilian_collection, police_collection
 
 # Function to authenticate the user and generate token
 def post_login(loginUserDetails: Login):
+    # Check if username and password are provided
+    if not loginUserDetails.username or not loginUserDetails.password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username and password are required."
+        )
+    
     # Check civilian collection
     user = civilian_collection.find_one({"username": loginUserDetails.username})
     if user:

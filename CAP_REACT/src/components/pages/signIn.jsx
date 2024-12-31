@@ -1,11 +1,9 @@
-// SignIn.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
-import Snackbar from '@mui/material/Snackbar';
 import Container from '@mui/material/Container';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
@@ -13,20 +11,40 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { FormControl, FormGroup } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { getData, postData } from '../../services/apiService';
+import { postData } from '../../services/apiService';
 import { AuthContext } from '../../context/authContext';
 import API_URLS from '../../services/apiUrlService';
+import './signIn.css';
+import { useSnackbar } from '../../context/snackbarContext';
 
-const theme = createTheme();
+const theme = createTheme({
+  palette: {
+    background: {
+      default: '#FFFFFF',
+    },
+    primary: {
+      main: '#272343',
+    },
+    secondary: {
+      main: '#E3F6F5',
+    },
+    tertiary: {
+      main: '#FFFFFF',
+    },
+    quaternary: {
+      main: '#BAE8E8',
+    },
+  },
+});
 
 export default function SignIn() {
+  const { showSnackbar } = useSnackbar();
   const { login } = useContext(AuthContext); // Use the AuthContext
   const [formData, setFormData] = useState({
     username: '',
     password: '',
   });
 
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,42 +65,46 @@ export default function SignIn() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+  
+    if (!formData.username) {
+      showSnackbar('Username is required.', 'error');
+      return;
+    }else if (!formData.password) {
+      showSnackbar('Password is required.', 'error');
+      return;
+    }
+  
     try {
-      const response = await postData(formData, API_URLS.AUTH.signIn);
-      console.log(formData)
+      const response = await postData(formData, API_URLS.AUTH.signIn, null);
       if (response) {
-        // Check for userType to avoid errors if the server response changes
-        const userType = response.userType || response.user_type; // Handle potential variations in response
-        if (userType === 'civilian') {
-          login(response); // Call the login function from AuthContext
-          navigate('/civilian/dashboard');
-        } else if (userType === 'police') {
-          login(response); // Call the login function from AuthContext
-          navigate('/police/dashboard');
+        // Check if the response contains an invalid username or password error
+        if (response.detail === 'Invalid username or password.') {
+          showSnackbar('Invalid username or password.', 'error');
+        } else {
+          const userType = response.userType || response.user_type;
+  
+          // Handle different user types
+          if (userType === 'civilian') {
+            login(response); // Call the login function from AuthContext
+            navigate('/civilian/dashboard');
+          } else if (userType === 'police') {
+            login(response); // Call the login function from AuthContext
+            navigate('/police/dashboard');
+          }
         }
-      } else {
-        setSnackbarOpen(true);
       }
     } catch (error) {
       // Handle specific error responses
       if (error.response && error.response.data && error.response.data.detail) {
-        setSnackbarOpen(true);
-        //Set a more specific error message based on the response.
-        // This example assumes the server sends 'detail' in the response.
         const errorMessage = error.response.data.detail;
-        // Update the Snackbar message to reflect the specific error.
-        // you will likely want to use a more sophisticated approach to display errors.
+        showSnackbar(errorMessage, 'error');
       } else {
         console.error('Error:', error);
-        setSnackbarOpen(true); //Generic error message.
+        showSnackbar('An unexpected error occurred.', 'error');
       }
     }
   };
   
-
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
-  };
 
   const handleSignUp = () => {
     navigate('/signUp');
@@ -100,11 +122,11 @@ export default function SignIn() {
             alignItems: 'center',
           }}
         >
-          <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
+          <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}>
             <LockOutlinedIcon />
           </Avatar>
-          <Typography component="h1" variant="h5">
-            Sign In
+          <Typography component="h1" variant="h5" color="primary">
+            Welcome back
           </Typography>
           <Box
             component="form"
@@ -122,10 +144,34 @@ export default function SignIn() {
                   id="username"
                   label="Username"
                   name="username"
-                  autoComplete="off"
+                  autoComplete="new-password"
                   autoFocus
                   value={formData.username}
                   onChange={handleChange}
+                  color="primary"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'secondary.main',
+                      '& input': {
+                        color: 'primary.main',
+                      },
+                      '& fieldset': {
+                        borderColor: 'quaternary.main',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'primary.main',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: 'primary.main',
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      color: 'primary.main',
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': {
+                      color: 'primary.main',
+                    },
+                  }}
                 />
                 <TextField
                   margin="normal"
@@ -135,9 +181,33 @@ export default function SignIn() {
                   label="Password"
                   type="password"
                   id="password"
-                  autoComplete="off"
+                  autoComplete="new-password"
                   value={formData.password}
                   onChange={handleChange}
+                  color="primary"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'secondary.main',
+                      '& input': {
+                        color: 'primary.main',
+                      },
+                      '& fieldset': {
+                        borderColor: 'quaternary.main',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'primary.main',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: 'primary.main',
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      color: 'primary.main',
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': {
+                      color: 'primary.main',
+                    },
+                  }}
                 />
               </FormGroup>
             </FormControl>
@@ -152,25 +222,16 @@ export default function SignIn() {
             <Box
               sx={{
                 display: 'flex',
-                justifyContent: 'space-between',
+                justifyContent: 'flex-end',
                 mt: 2,
               }}
             >
-              <Link href="#" variant="body2">
-                Forgot password?
-              </Link>
-              <Link variant="body2" onClick={handleSignUp} sx={{ cursor: 'pointer' }}>
-                {"Don't have an account? Sign Up"}
+              <Link variant="body2" onClick={handleSignUp} sx={{ cursor: 'pointer' }} color="primary">
+                {"Sign Up"}
               </Link>
             </Box>
           </Box>
         </Box>
-        <Snackbar
-          open={snackbarOpen}
-          onClose={handleSnackbarClose}
-          message="Username or password is incorrect."
-          autoHideDuration={6000}
-        />
       </Container>
     </ThemeProvider>
   );

@@ -6,18 +6,24 @@ import Navbar from './components/pages/navbar';
 import NewIncident from './components/civilian/newIncident';
 import CivilianDashboard from './components/civilian/CivilianDashboard';
 import PoliceDashboard from './components/police/policeDashboard';
+
 const Layout = () => {
   return (
     <>
       <Navbar />
-      <div style={{ paddingTop: '64px'}}> {/* Add padding equal to Navbar's height */}
+      <div 
+        style={{ 
+          padding: '18vh', /* Add padding equal to Navbar's height */
+        }}
+      >
         <Outlet />
       </div>
     </>
   );
 };
 
-const router = createBrowserRouter([
+
+const routes = createBrowserRouter([
   { path: '/', element: <SignIn /> },
   { path: '/signUp', element: <SignUp /> },
   { path: '/forgotPassword', element: <ForgotPassword /> },
@@ -48,4 +54,4 @@ const router = createBrowserRouter([
   }
 });
 
-export default router;
+export default routes;

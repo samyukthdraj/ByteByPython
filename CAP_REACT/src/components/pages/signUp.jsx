@@ -11,12 +11,33 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { FormControl, FormGroup } from '@mui/material';
-import Snackbar from '@mui/material/Snackbar';
-import { getData, postData } from '../../services/apiService';
+import { postData } from '../../services/apiService';
 import API_URLS from '../../services/apiUrlService';
-const theme = createTheme();
+import { useSnackbar } from '../../context/snackbarContext';
+
+const theme = createTheme({
+  palette: {
+    background: {
+      default: '#FFFFFF',
+    },
+    primary: {
+      main: '#272343',
+    },
+    secondary: {
+      main: '#E3F6F5',
+    },
+    tertiary: {
+      main: '#FFFFFF',
+    },
+    quaternary: {
+      main: '#BAE8E8',
+    },
+  },
+});
+
 
 export default function SignUp() {
+  const { showSnackbar} = useSnackbar();
   const [formData, setFormData] = useState({
     _id: '',
     name: '',
@@ -25,7 +46,6 @@ export default function SignUp() {
     password: '',
   });
 
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
   const navigate = useNavigate(); // Initialize useNavigate
 
   const handleChange = (event) => {
@@ -39,23 +59,32 @@ export default function SignUp() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    if(!formData.name){
+      showSnackbar('Name is required.', 'error');
+      return;
+    }else if(!formData.mobileNumber){
+      showSnackbar('MobileNumber is required.', 'error');
+      return;
+    }else if(!formData.username){
+      showSnackbar('Username is required.', 'error');
+      return;
+    }else if(!formData.password){
+      showSnackbar('Password is required.', 'error');
+      return;
+    }
+
     try {
       // Call the API to create the new civilian
-      const postResponse = await postData(formData, API_URLS.CIVILIAN.signUp);
+      const postResponse = await postData(formData, API_URLS.CIVILIAN.signUp, null);
 
       if (postResponse.detail === 'User created successfully') {
         navigate('/'); // Navigate to the Sign In page after successful signup
       } else if (postResponse.detail = 'Username already exists') {
-        setSnackbarOpen(true);
+        showSnackbar('Username already exists.', 'info')
       }
     } catch (error) {
       console.error('An unexpected error occurred:', error.message);
     }
-  };
-
-
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
   };
 
   return (
@@ -70,16 +99,17 @@ export default function SignUp() {
             alignItems: 'center',
           }}
         >
-          <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
+          <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}>
             <LockOutlinedIcon />
           </Avatar>
-          <Typography component="h1" variant="h5">
+          <Typography component="h1" variant="h5" color="primary">
             Sign up
           </Typography>
-          <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3 }}>
+          <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 1 }}>
             <FormControl fullWidth>
               <FormGroup>
                 <TextField
+                  margin="normal"
                   name="name"
                   required
                   fullWidth
@@ -89,9 +119,35 @@ export default function SignUp() {
                   autoFocus
                   value={formData.name}
                   onChange={handleChange}
-                  sx={{ mb: 2 }}
+                  color="primary" // Use theme's primary color
+                  sx={{
+                    // Change background color of the input box
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'secondary.main', // Theme-aware background color
+                      '& input': {
+                        color: 'primary.main', // Text color inside the input box
+                      },
+                      '& fieldset': {
+                        borderColor: 'quaternary.main', // Border color
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'primary.main', // Hover border color
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: 'primary.main', // Focused border color
+                      },
+                    },
+                    // Change label color
+                    '& .MuiInputLabel-root': {
+                      color: 'primary.main', // Default label color
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': {
+                      color: 'primary.main', // Focused label color
+                    },
+                  }}
                 />
                 <TextField
+                  margin="normal"
                   name="mobileNumber"
                   required
                   fullWidth
@@ -100,7 +156,32 @@ export default function SignUp() {
                   autoComplete="tel"
                   value={formData.mobileNumber}
                   onChange={handleChange}
-                  sx={{ mb: 2 }}
+                  color="primary" // Use theme's primary color
+                  sx={{
+                    // Change background color of the input box
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'secondary.main', // Theme-aware background color
+                      '& input': {
+                        color: 'primary.main', // Text color inside the input box
+                      },
+                      '& fieldset': {
+                        borderColor: 'quaternary.main', // Border color
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'primary.main', // Hover border color
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: 'primary.main', // Focused border color
+                      },
+                    },
+                    // Change label color
+                    '& .MuiInputLabel-root': {
+                      color: 'primary.main', // Default label color
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': {
+                      color: 'primary.main', // Focused label color
+                    },
+                  }}
                 />
                 <TextField
                   name="username"
@@ -111,7 +192,33 @@ export default function SignUp() {
                   autoComplete="username"
                   value={formData.username}
                   onChange={handleChange}
-                  sx={{ mb: 2 }}
+                  margin="normal"
+                  color="primary" // Use theme's primary color
+                  sx={{
+                    // Change background color of the input box
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'secondary.main', // Theme-aware background color
+                      '& input': {
+                        color: 'primary.main', // Text color inside the input box
+                      },
+                      '& fieldset': {
+                        borderColor: 'quaternary.main', // Border color
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'primary.main', // Hover border color
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: 'primary.main', // Focused border color
+                      },
+                    },
+                    // Change label color
+                    '& .MuiInputLabel-root': {
+                      color: 'primary.main', // Default label color
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': {
+                      color: 'primary.main', // Focused label color
+                    },
+                  }}
                 />
                 <TextField
                   name="password"
@@ -123,7 +230,33 @@ export default function SignUp() {
                   autoComplete="off"
                   value={formData.password}
                   onChange={handleChange}
-                  sx={{ mb: 2 }}
+                  margin="normal"
+                  color="primary" // Use theme's primary color
+                  sx={{
+                    // Change background color of the input box
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'secondary.main', // Theme-aware background color
+                      '& input': {
+                        color: 'primary.main', // Text color inside the input box
+                      },
+                      '& fieldset': {
+                        borderColor: 'quaternary.main', // Border color
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'primary.main', // Hover border color
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: 'primary.main', // Focused border color
+                      },
+                    },
+                    // Change label color
+                    '& .MuiInputLabel-root': {
+                      color: 'primary.main', // Default label color
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': {
+                      color: 'primary.main', // Focused label color
+                    },
+                  }}
                 />
               </FormGroup>
             </FormControl>
@@ -137,12 +270,6 @@ export default function SignUp() {
             </Box>
           </Box>
         </Box>
-        <Snackbar
-          open={snackbarOpen}
-          onClose={handleSnackbarClose}
-          message="User already exists"
-          autoHideDuration={6000}
-        />
       </Container>
     </ThemeProvider>
   );
