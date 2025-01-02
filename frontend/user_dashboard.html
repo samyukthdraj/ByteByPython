@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Civilians As Police (CAP) - User Dashboard</title>
+  <link rel="stylesheet" href="css/stylesudash.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <h1>User Dashboard</h1>
+    <div id="loading-message">Loading tickets...</div>
+    <div class="ticket-list" id="ticket-list">
+      <!-- Dynamically generate ticket cards here -->
+    </div>
+    <button class="new-ticket-button" onclick="window.location.href = 'index.html'">
+      Submit New Ticket
+    </button>
+
+    <!-- Sign Out Button -->
+    <button class="signout-button" onclick="confirmSignOut()">
+      Sign Out
+    </button>
+  </div>
+
+  <script>
+    // Function to check authentication
+    function checkAuthentication() {
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) {
+        window.location.href = 'login.html';
+        return false;
+      }
+      return true;
+    }
+
+    // Fetch user's submitted tickets and populate the dashboard
+    async function fetchUserTickets() {
+      const loadingMessage = document.getElementById('loading-message');
+      const ticketList = document.getElementById('ticket-list');
+      
+      try {
+        if (!checkAuthentication()) return;
+
+        const response = await fetch('http://localhost:8000/user-tickets', {
+          method: 'GET',
+          // credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+
+        console.log('Response status:', response.status);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Error response:', {
+            status: response.status, 
+            statusText: response.statusText, 
+            errorText
+          });
+          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        }
+
+        const tickets = await response.json();
+        console.log('Tickets:', tickets);
+
+        // Clear loading message
+        loadingMessage.style.display = 'none';
+
+        // Clear previous tickets
+        ticketList.innerHTML = '';
+
+        if (tickets.length === 0) {
+          ticketList.innerHTML = '<p>No tickets submitted yet.</p>';
+          return;
+        }
+
+        // Populate tickets
+        tickets.forEach(ticket => {
+          const ticketCard = document.createElement('div');
+          ticketCard.classList.add('ticket-card');
+          ticketCard.innerHTML = ` 
+            <h3>Ticket #${ticket.ticket_number || 'N/A'}</h3>
+            <p>Crime Type: ${ticket.crime_type || 'Not specified'}</p>
+            <p>Pincode: ${ticket.pincode || 'N/A'}</p>
+            <p>Phone Number: ${ticket.phone_number || 'N/A'}</p>
+            <p>Status: ${ticket.status || 'Pending'}</p>
+            <p>Police Station: ${ticket.police_station || 'Not assigned'}</p>
+            ${ticket.description ? `<p>Description: ${ticket.description}</p>` : ''}
+          `;
+          ticketList.appendChild(ticketCard);
+        });
+      } catch (error) {
+        console.error('Comprehensive error:', error);
+        loadingMessage.textContent = `An error occurred: ${error.message}`;
+        loadingMessage.style.color = 'red';
+        
+        // Additional error handling
+        if (error.message.includes('401')) {
+          alert('Authentication failed. Please log in again.');
+          localStorage.removeItem('access_token');
+          window.location.href = 'login.html';
+        }
+      }
+    }
+
+    // Function to handle sign-out confirmation
+    function confirmSignOut() {
+      const confirmation = confirm("Are you sure you want to sign out?");
+      if (confirmation) {
+        // Clear the access token (sign out)
+        localStorage.removeItem('access_token');
+        // Redirect to login page
+        window.location.href = 'login.html';
+      }
+    }
+
+    // Call authentication and fetch tickets when the page loads
+    document.addEventListener('DOMContentLoaded', fetchUserTickets);  // Updated to call fetchUserTickets when the page loads
+  </script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+- Context: Instead of using Google cloud to convert the voice to text we are using these two alternatives:
+-   Done: AssemblyAI (for speech-to-text): Offers a free tier for speech-to-text.
+-Undone: DeepL (for translation): Provides a free version with some limitations. {considering alternatives}
+<!-- not doing any translations since getting a translation service for indian regional languages for free is a difficulty. -->
+
+-   Done: Used HuggingFace instead of OpenAI. 
+
+- ToDo: 
+
+    - done: After clicking the submit button a popup should come which says, your report has been submitted/ ticket generated. 
+    There should be a random ticket number which should come after you press the submit button and raise the ticket, 
+    the status of the ticket can be tracked by entering the ticket number.
+    Police can take action based on the ticket number as well.
+    This ticket number will be stored in the database which the police can then use as reference to track.
+    - done: Types of crime and the keywords received are not accurate to the crime, ie. crime detection is not accurate and is slow.
+    - done: Create a login page for a user and a signup page for a user and then another section in the login for police
+    Police should have a dashboard when they login and for the users the dashboard is the current page ie tthe main index.html
+-   done : Check if backend is working.
+-   done: Create user database, change names of police stations to match the ones in the front end, 
+Create user login, police login, police dashboard and then connections.
+-   done: Link frontend and backend.
+
+-   done: signup page; username password(hash if possible) email, forgot password (email), store both in the database.
+-   done: main.py (rest of the code)
+
+    - done: signup.html error while creating account fix, 
+    forgot password otp fix (add a text field for otp which will later be cross checked with the otp sent in mail).
+    police login issue.
+    dashboard should get the details from the database.
+
+    - done: Your Ticket Number is: undefined when submit is clicked.
+    When i click close i want to be re-routed to the user dashboard.
+    Add a signout button which will get us back to login page.
+    make login.html look 50/50 on the left and right    
+
+- testing: signup works: username samyukth, samyukthterawe@outlook.com, 12345678
+Username: central_ps
+Password: centralps
+
+
+
+    done: tickets not submitting successfully, ticket number(random 6 digit number) alongside with the form details should be in the schema sent to the backend. random id should be created which the police can access. foreign key and primary key should be submitted alongside the schema in the tickets, ie with the 
+    done: police dashboard fetch 
+    done: user dashboard fetch
+undone: dashboard filtering 
+    DONE: when submitting new ticket, failed to fetch popup is coming instead of redirecting to dashboard. also add a back button which redirects it to their database.
+    DONE: close button while submitting report should lead back to user dashboard
+    DONE:signout button
+    done: ai implementation in index.html for analysing image 
+    done: voice.{ashwin in index.html}, integrate the speech to text.
+    DONE:50/50 login style , forgot pass, signup css
+<!-- undone: when clicking the link in uvicorn, only login comes without any css. -->
+
+    done: i want the dropdown to be consisting all police stations in alphabetical order
+    done: pincode give nearest 3 stations with distances give.
+    done: update the database with the pincode field,
+    done: view details on user dashboard put, 
+    done: police dashboard view details must access image and audio in the drive.
+    done: add a back button in index.html which takes us to dashboard.
+    done: login update, a button which on clicking will be like a card with a backside with police login.
+DONE: find password for each station ( default_password )
+    done: 2 tickets being created when creating ticket
+    done: status is undefined, timestamp also undefined for the ticket.
+    done: speech to text using assemblyapi
+    done: police dash audio playback.
+    done: image description shouldn't overwrite the current description, if any description exists previously it should only append over it.
+    done: image should have fixed height and width if possible.
+    done: project structure. 
+undone: optimise code.
+    done: forgot pass fixes.
+undone: gemini api key is visible in code, remove all those and keep it in env.
+    done: stuttering when login card flips.
+    done: when uvicorn is run i want to automatically open login.html or landing page.
+    done: remove phone number from index, instead during signup a user can enter a mobile number and that number will be the one sent alongside ticket in the database.
+    done: back button in index.html
+    done: removed loggers from console
+undone: police can delete in dashboard and it should reflect on the database and the user dashboard.
+undone: fix time of the ticket creation.
+undone: fix readme.
+undone: convert to react if possible.
+undone: waiting for a long time for resetting new password.
+undone: remove everything from database and add only a few things or create a new user and do from a new station.
+undone: in hero page, 
+when clicking the team and about and contact it shouldnt take us to different pages, 
+instead it should take us down to the section where each are there, 
+also fill the teams section.(ashwin)
+do some modifications in the navbar buttons after clicking it looks odd.
+undone: add go back to home page on login.html
+    
+
+# python -m http.server 8000
+
+
+
+# # Startup
+
+# - Install VsCode
+# - Install Python 3.8+
+# - Install dependencies: pip install -r requirements.txt
+# - uvicorn main:app --reload (backend folder)
+#  
+# 

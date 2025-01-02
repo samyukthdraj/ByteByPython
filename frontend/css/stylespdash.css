@@ -1,0 +1,337 @@
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.dashboard-container {
+  width: 80%;
+  max-width: 900px;
+  height: 90vh;
+  background: #fff;
+  border: 2px solid #0078d4;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+h1 {
+  text-align: center;
+  color: #0078d4;
+  margin-bottom: 20px;
+}
+
+.ticket-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+.ticket-card {
+  background-color: #f9f9fc;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ticket-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.ticket-card h3 {
+  color: #0078d4;
+  margin: 0 0 10px;
+}
+
+.ticket-card p {
+  margin: 5px 0;
+  color: #333;
+}
+
+.ticket-card button {
+  background: #0078d4;
+  color: #fff;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+  transition: background-color 0.2s ease;
+}
+
+.ticket-card button:hover {
+  background-color: #005bb5;
+}
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(3px);
+}
+
+.modal-content {
+  position: relative;
+  background-color: #fff;
+  margin: 3% auto;
+  padding: 25px;
+  width: 70%;
+  max-width: 800px;
+  max-height: 85vh;
+  border-radius: 12px;
+  border: 2px solid #0078d4;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  overflow-y: auto;
+}
+
+/* Modal Sections */
+#modalContent {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+}
+
+#modalContent h2 {
+  color: #0078d4;
+  margin: 0 0 20px;
+  padding-right: 30px;
+}
+
+#modalContent p {
+  margin: 12px 0;
+  line-height: 1.6;
+}
+
+#modalContent strong {
+  color: #333;
+  font-weight: 600;
+}
+
+/* Media Section */
+#mediaContent {
+  padding: 20px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.media-section {
+  display: grid;
+  gap: 25px;
+}
+
+.image-container {
+  background: #f9f9fc;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.image-container h4 {
+  color: #0078d4;
+  margin: 0 0 15px;
+}
+
+.image-container img {
+  width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.audio-container {
+  background: #f9f9fc;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.audio-container h4 {
+  color: #0078d4;
+  margin: 0 0 15px;
+}
+
+.audio-controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+}
+
+.audio-button {
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.audio-button:hover {
+  background-color: #45a049;
+  transform: translateY(-1px);
+}
+
+/* Status Actions Section */
+#statusActions {
+  padding-top: 20px;
+}
+
+.status-buttons {
+  background: #f9f9fc;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.status-buttons h4 {
+  color: #0078d4;
+  margin: 0 0 15px;
+}
+
+.status-buttons button {
+  padding: 10px 20px;
+  margin: 5px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.status-buttons button:not(:disabled) {
+  background: #0078d4;
+  color: white;
+}
+
+.status-buttons button:not(:disabled):hover {
+  background: #005bb5;
+  transform: translateY(-1px);
+}
+
+.status-buttons button:disabled {
+  background: #e0e0e0;
+  color: #666;
+  cursor: not-allowed;
+}
+
+/* Close Button */
+.close-button {
+  position: absolute;
+  right: 20px;
+  top: 15px;
+  color: #666;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.2s;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.close-button:hover {
+  color: #0078d4;
+  background: #f0f0f0;
+}
+
+/* Sign Out Button */
+.signout-button {
+  background-color: #f44336;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
+  align-self: center;
+  transition: background-color 0.2s ease;
+}
+
+.signout-button:hover {
+  background-color: #d32f2f;
+}
+
+/* Utility Classes */
+.media-error {
+  color: #d32f2f;
+  background: #ffebee;
+  padding: 12px;
+  border-radius: 6px;
+  margin: 10px 0;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard-container {
+    width: 95%;
+    height: 95vh;
+    padding: 15px;
+  }
+  
+  .modal-content {
+    width: 90%;
+    margin: 5% auto;
+    padding: 15px;
+  }
+  
+  .status-buttons button {
+    width: 100%;
+    margin: 5px 0;
+  }
+  
+  .audio-controls {
+    flex-direction: column;
+  }
+  
+  .audio-button {
+    width: 100%;
+  }
+}

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Civilians As Police (CAP)</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="window">
+     <!-- Back Button -->
+     <a href="user_dashboard.html" class="back-button">
+        &#8592; Back
+      </a>
+    <h1 class="title">Report Submission</h1>
+
+    <!-- User Name Input -->
+    <div class="form-group">
+      <label for="userName">Your Name:</label>
+      <input type="text" class="form-control" id="userName" name="userName" required>
+    </div>
+
+    <!-- Image Upload -->
+    <div class="form-group">
+      <label for="uploadImage">Upload Image:</label>
+      <input type="file" id="uploadImage" accept="image/*">
+    </div>
+
+
+    <!-- Voice Recorder -->
+    <div class="form-group">
+      <label>Record Voice Note:</label>
+      <div id="voiceRecorder">
+        <button id="startRecording" onclick="startRecording()" class="record-button">
+          <i class="fas fa-microphone"></i>
+        </button>
+        <button id="stopRecording" onclick="stopRecording()" class="record-button" style="display: none;">
+          <i class="fas fa-stop-circle"></i>
+        </button>
+        <button id="removeRecording" onclick="removeRecording()" class="remove-button" style="display: none;">
+          <i class="fas fa-times"></i>
+        </button>
+        <audio id="recordedAudio" controls style="display: none;"></audio>
+        </div>
+    </div>
+    <!-- Hidden Audio File Input -->
+    <input type="file" id="uploadVoice" style="display: none;">
+
+    <!-- Pincode Input -->
+    <div class="form-group">
+      <label for="pincode">Enter Pincode:</label>
+      <input type="text" id="pincode" placeholder="e.g., 123456">
+    </div>
+
+    <!-- Police Station Dropdown -->
+    <div class="form-group">
+      <label for="policeStation">Nearest Police Station:</label>
+      <select id="policeStation">
+        <option value="">Select a station</option>
+      </select>
+    </div>
+
+    <!-- Type of Crime Dropdown -->
+    <div class="form-group">
+      <label for="crimeType">Type of Crime:</label>
+      <select id="crimeType">
+        <option value="">Select a crime type</option>
+        <option value="theft">Theft</option>
+        <option value="vandalism">Vandalism</option>
+        <option value="assault">Assault</option>
+        <option value="fraud">Fraud</option>
+        <option value="others">Others</option>
+      </select>
+      <div id="customCrimeType" style="display: none; margin-top: 10px;">
+        <input type="text" id="customCrimeTypeInput" placeholder="Enter custom crime type">
+      </div>
+    </div>
+
+    <!-- Description Box -->
+    <div class="form-group">
+      <label for="description">Description:</label>
+      <textarea id="description" placeholder="Enter crime description here..."></textarea>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="form-group">
+      <button class="submit-button" onclick="submitReport()">Submit Report</button>
+    </div>
+  </div>
+  <script src="../backend/app.js">
+  </script>
+</body>
+</html>

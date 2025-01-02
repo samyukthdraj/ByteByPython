@@ -1,0 +1,392 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  
+ 
+  html, body {
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+
+    background-attachment: fixed; /* This prevents gradient from repeating */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh; /* Ensures the gradient covers the full viewport height */
+    margin: 0;
+  }
+  
+  header {
+    width: 100%;
+    background-color: #0078d4;
+    position: fixed;
+    z-index: 1000; /* This ensures the header stays on top of other content */
+    backdrop-filter: blur(5px); 
+  }
+  
+  .nav {
+    width: 80%;
+    margin: 0 auto;
+    color: white;
+    font-family: 'Segoe UI', Arial, sans-serif;
+  }
+  
+  .nav__list {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    list-style: none;
+    padding: 1em 0;
+    text-transform: uppercase;
+    font-size: .875em;
+    height: 70px;
+    
+  }
+  
+  .nav__item {
+    margin-right: 40px;
+    display: inline-block;
+  }
+  
+  .nav__item--main {
+    padding: 1em 2em;
+    background-color: whitesmoke;
+    color: #23424A;
+    font-weight: bold;
+    border-radius: 5em;
+    margin-right: 0px;
+  }
+  
+  .hero {
+    width: 100%;
+    height: 100vh;
+    /* background-color: #f0f2f4; */
+    color: #0078d4;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    padding: 125px 0;
+
+  }
+  
+  .wrapper {
+    width: 80%;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: transparent;
+    
+  }
+  
+  .content {
+    width: 50%;
+    max-width: 1200px;
+  }
+  
+  .hero__title {
+    line-height: 1.1;
+    font-size: 3rem;
+  }
+  
+  .hero__text {
+    margin-block: 2em;
+    line-height: 165%;
+    font-size: 1.125rem;
+  }
+  
+  .hero__btn {
+    display: inline-block;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-size: 1em;
+    font-weight: bold;
+    padding: 0.75em 2em;
+    border-radius: 4em;
+    margin-bottom: 3rem;
+    background-color: #0078d4;
+    color: white;
+    outline: none;
+  }
+  
+  .hero__btn:hover {
+    opacity: 0.75;
+  }
+  
+.hero__img-container {
+    width: 40%;
+    overflow: hidden;
+    position: relative;
+    border-radius: 1em;
+}
+
+.hero__img-slider {
+    display: flex;
+    transition: transform 0.3s ease;
+}
+
+.hero__img {
+    width: 100%;
+    min-width: 100%; /* Ensures each image takes full width */
+    height: auto;
+    object-fit: contain;
+    border-radius: 1em;
+}
+  .invisible{
+    /* color:violet ; */
+    visibility: hidden;
+
+  }
+  
+  .services {
+    min-height: 100vh; /* Change from fixed height to minimum height */
+    padding-top: 70px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    background: white;
+    padding-bottom: 30px;
+  }
+  
+  .services__main {
+    width: 50%;;
+  } */
+
+
+
+  .services {
+    height: 100vh;
+    padding-top: 100px;
+    display: flex;
+    justify-content: center; /* Centers the div horizontally */
+    align-items: flex-start; /* Keeps the placement intact */
+
+  }
+  
+  .services__main {
+    width: 50%;
+    background-color: rgba(249, 249, 249, 0.8); /* Made semi-transparent */
+    padding: 20px 30px; /* Adds inner spacing */
+    border-radius: 10px; /* Smooth corners for a modern look */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    font-family: 'Segoe UI', Arial, sans-serif; /* Clean font for readability */
+    color: #0078d4; /* Darker text for contrast */
+    line-height: 1.8; /* Improved line spacing for readability */
+    
+  }
+  
+  .services__main h2 {
+    font-size: 2rem; /* Slightly larger heading */
+    color: #1a73e8; /* Accent color for the heading */
+    margin-bottom: 20px; /* Space below heading */
+    text-align: center; /* Center the heading text */
+    font-weight: bold; /* Bold for emphasis */
+  }
+  
+  .services__main p {
+    font-size: 1rem; /* Standard readable text size */
+    margin-bottom: 15px; /* Space between paragraphs */
+    text-align: justify; /* Align text for clean edges */
+  }
+  
+  .services__main ul {
+    list-style-type: disc; /* Bullet style for list */
+    margin-left: 20px; /* Indent for bullets */
+  }
+  
+  .services__main li {
+    font-size: 1rem;
+    margin-bottom: 10px; /* Space between list items */
+    color: #0078d4; /* Slightly lighter color for distinction */
+  }
+  
+  .services__main li strong {
+    color: #1a73e8; /* Highlight keywords in features */
+  }
+  
+  .services__aside {
+    width: 40%;
+    background-color: #0078d4;
+    padding: 2em;
+    text-align: center;
+    color: white;
+    border-radius: 1em;
+    font-size: 1rem; /* Standard readable text size */
+    margin-bottom: 15px; /* Space between paragraphs */
+    text-align: justify; /* Align text for clean edges */
+  }
+  
+  .services__aside > p, .services__main > p {
+    margin-bottom: 2em;
+  }
+  
+  .services__aside > h2, .services__main > h2 {
+    margin-bottom: .5em;
+  }
+  
+  @media (max-width: 764px) {
+    .wrapper {
+    display: block;
+   
+    }
+    
+    .hero {
+      height: auto;
+    }
+    
+    .content, 
+    .hero__img,
+    .services__main,
+    .services__aside {
+      width: 100%;
+    }
+    
+  }
+
+.logo {
+  position: relative;
+  list-style: none; /* Remove default list style */
+  display: flex; /* Align logo and text horizontally */
+  align-items: center; /* Vertically center logo and text */
+  /* height: 100%; 
+  padding: 8px 0; /* Space around the element */
+  
+  
+}
+
+.logo-img {
+  width: 60px; /* Adjusted width for balance */
+  height: 60px; /* Matching height for a square aspect ratio */
+  vertical-align: middle;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-right: 10px;
+  object-fit: cover; /* Ensures the image fully covers the container */
+  border-radius: 10px; /* Fully circular edges */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Adds a soft shadow for aesthetics */
+  border: 2px solid white; /* Clean white border for separation */
+}
+
+
+
+.loginbtn{
+  text-decoration: none;
+  color: #0078d4;
+}
+.loginbtn:hover {
+  opacity: 0.75;
+}
+.navbtn{
+  text-decoration: none;
+  color: white;
+}
+.navbtn:hover {
+  opacity: 0.95;
+}
+
+.team-section {
+  background-color: #0078d4;
+  color: white;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  padding: 40px;
+  text-align: center;
+  border-radius: 10px;
+  max-width: 800px; /* Constrain the width */
+  margin: 40px auto; /* Center the box horizontally and add vertical spacing */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a subtle shadow for depth */
+}
+
+
+.team-section h2 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+}
+
+.team-section h3 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: #cce6ff; /* Slightly lighter color for contrast */
+}
+
+.team-section p {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+}
+
+.team-members {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap; /* Ensures members wrap to the next line on smaller screens */
+  gap: 20px;
+}
+
+.member {
+  background-color: rgba(255, 255, 255, 0.1); /* Subtle transparent effect */
+  padding: 20px;
+  border-radius: 8px;
+  width: 150px; /* Set consistent width */
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+
+}
+
+.member img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 10px;
+  border: 2px solid #cce6ff; /* Outline around the image */
+}
+
+.member p {
+  font-size: 1rem;
+  color: #ffffff;
+}
+.contact{
+  padding: 40px;
+  font-size: 1.3rem;
+}
+
+
+/* the CSS code for styling your footer, including the "Scroll to Top" button: */
+
+.footer {
+  background-color:#0078d4 ; /* Dark blue background */
+  color: #ffffff; /* White text color */
+  text-align: center; /* Center-align text */
+  padding: 20px 0; /* Add vertical padding for spacing */
+  font-size: 14px; /* Font size for text */
+  position: relative; /* Ensures button positioning works */
+}
+
+.footer p {
+  margin: 5px 0; /* Add margin between text lines */
+}
+
+.footer .scroll-to-top {
+  margin-top: 10px; /* Add space above the button */
+  background-color: #ffffff; /* White button background */
+  color: #003366; /* Dark blue text color */
+  border: none; /* Remove border */
+  border-radius: 5px; /* Slightly rounded corners */
+  padding: 10px 20px; /* Add padding inside the button */
+  font-size: 14px; /* Font size for the button */
+  cursor: pointer; /* Change cursor to pointer on hover */
+  transition: background-color 0.3s, color 0.3s; /* Smooth hover effect */
+  font-weight: bold;
+}
+
+.footer .scroll-to-top:hover {
+  background-color: #003366; /* Change background color on hover */
+  color: #ffffff; /* Change text color on hover */
+}
+

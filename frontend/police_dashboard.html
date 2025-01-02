@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civilians As Police (CAP) - Police Dashboard</title>
+    <link rel="stylesheet" href="css/stylespdash.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <h1>Police Dashboard</h1>
+        <div id="loading-message">Loading tickets...</div>
+        <div class="ticket-list" id="ticket-list">
+            <!-- Tickets will be loaded here -->
+        </div>
+        <button class="signout-button" onclick="signOut()">Sign Out</button>
+    </div>
+
+    <!-- Modal for ticket details -->
+    <div id="ticketModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <div id="modalContent"></div>
+            <div id="mediaContent"></div>
+            <div id="statusActions"></div>
+        </div>
+    </div>
+
+    <script>
+        // Authentication check function (unchanged)
+        async function checkAuthentication() {
+            const accessToken = localStorage.getItem('access_token');
+            if (!accessToken) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Fetch tickets function
+        async function fetchPoliceTickets() {
+            const loadingMessage = document.getElementById('loading-message');
+            const ticketList = document.getElementById('ticket-list');
+            
+            try {
+                if (!await checkAuthentication()) return;
+
+                const response = await fetch('http://localhost:8000/police-tickets', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const tickets = await response.json();
+                loadingMessage.style.display = 'none';
+                ticketList.innerHTML = '';
+
+                if (tickets.length === 0) {
+                    ticketList.innerHTML = '<p>No tickets assigned.</p>';
+                    return;
+                }
+
+                tickets.forEach(ticket => {
+                    const ticketCard = createTicketCard(ticket);
+                    ticketList.appendChild(ticketCard);
+                });
+            } catch (error) {
+                console.error('Error fetching tickets:', error);
+                loadingMessage.innerHTML = 'Error loading tickets. Please try again.';
+            }
+        }
+
+        // Create simplified ticket card function
+        function createTicketCard(ticket) {
+            const ticketCard = document.createElement('div');
+            ticketCard.classList.add('ticket-card');
+            ticketCard.innerHTML = `
+                <h3>Ticket #${ticket.ticket_number}</h3>
+                <p>Crime Type: ${ticket.crime_type}</p>
+                <p>Pincode: ${ticket.pincode}</p>
+                <p>Status: ${ticket.status}</p>
+                <button onclick="viewTicketDetails('${ticket.ticket_number}')">
+                    View Details
+                </button>
+            `;
+            return ticketCard;
+        }
+
+        // Create image content function
+        function createImageContent(imageUrl) {
+            if (!imageUrl) return '<p>No image uploaded</p>';
+            
+            const processedUrl = processGoogleDriveUrl(imageUrl);
+            return `
+                <div class="image-container">
+                    <h4>Uploaded Image</h4>
+                    <img 
+                        src="${processedUrl}" 
+                        alt="Crime scene image"
+                        style="max-width: 100%; height: auto;"
+                        onerror="handleImageError(this)"
+                        data-original-url="${imageUrl}"
+                    />
+                </div>
+            `;
+        }
+
+        // Create audio content function
+        function createAudioContent(audioUrl, ticketNumber) {
+            if (!audioUrl) return '<p>No audio uploaded</p>';
+            
+            const fileId = extractGoogleDriveFileId(audioUrl);
+            if (!fileId) return '<p>Invalid audio URL</p>';
+
+            return `
+                <div class="audio-container" id="audio-${ticketNumber}">
+                    <h4>Uploaded Audio</h4>
+                    <div id="audio-player-${ticketNumber}" class="audio-player">
+                        <audio controls style="width: 100%;" 
+                               src="http://localhost:8000/proxy-audio/${fileId}"
+                               onerror="handleAudioError('${ticketNumber}', '${fileId}')">
+                            Your browser does not support the audio element.
+                        </audio>
+                    </div>
+                    <div class="audio-controls">
+                        <a href="https://drive.google.com/file/d/${fileId}/view" 
+                           target="_blank" 
+                           class="audio-button">
+                           Open in Drive
+                        </a>
+                        <a href="https://docs.google.com/uc?export=download&id=${fileId}" 
+                           class="audio-button" 
+                           download="audio_${ticketNumber}.mp3">
+                           Download
+                        </a>
+                    </div>
+                    <div id="audio-status-${ticketNumber}" class="audio-status"></div>
+                </div>
+            `;
+        }
+
+        // Create status update buttons
+        function createStatusButtons(ticketNumber, currentStatus) {
+            return `
+                <div class="status-buttons">
+                    <h4>Update Status</h4>
+                    <button onclick="updateTicketStatus('${ticketNumber}', 'In Progress')" 
+                            ${currentStatus === 'In Progress' ? 'disabled' : ''}>
+                        Set to In Progress
+                    </button>
+                    <button onclick="updateTicketStatus('${ticketNumber}', 'Resolved')"
+                            ${currentStatus === 'Resolved' ? 'disabled' : ''}>
+                        Set to Resolved
+                    </button>
+                    <button onclick="updateTicketStatus('${ticketNumber}', 'Closed')"
+                            ${currentStatus === 'Closed' ? 'disabled' : ''}>
+                        Set to Closed
+                    </button>
+                </div>
+            `;
+        }
+
+        // View ticket details function
+        async function viewTicketDetails(ticketNumber) {
+            try {
+                const response = await fetch(`http://localhost:8000/ticket-details/${ticketNumber}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const ticket = await response.json();
+                displayTicketModal(ticket);
+            } catch (error) {
+                console.error('Error fetching ticket details:', error);
+                alert('Error fetching ticket details. Please try again.');
+            }
+        }
+
+        // Display ticket modal function
+        function displayTicketModal(ticket) {
+            const modalContent = document.getElementById('modalContent');
+            const mediaContent = document.getElementById('mediaContent');
+            const statusActions = document.getElementById('statusActions');
+            
+            const createdDate = new Date(ticket.created_at).toLocaleString();
+            const updatedDate = ticket.updated_at ? new Date(ticket.updated_at).toLocaleString() : 'Not updated yet';
+
+            // Display ticket information
+            modalContent.innerHTML = `
+                <h2>Ticket Details #${ticket.ticket_number}</h2>
+                <p><strong>Reported by:</strong> ${ticket.user_name}</p>
+                <p><strong>Crime Type:</strong> ${ticket.crime_type}</p>
+                <p><strong>Pincode:</strong> ${ticket.pincode}</p>
+                <p><strong>Phone Number:</strong> ${ticket.phone_number}</p>
+                <p><strong>Status:</strong> ${ticket.status}</p>
+                <p><strong>Description:</strong> ${ticket.description || 'No description provided'}</p>
+                <p><strong>Created at:</strong> ${createdDate}</p>
+                <p><strong>Last Updated:</strong> ${updatedDate}</p>
+            `;
+
+            // Display media content
+            mediaContent.innerHTML = `
+                <div class="media-section">
+                    ${createImageContent(ticket.image_url)}
+                    ${createAudioContent(ticket.audio_url, ticket.ticket_number)}
+                </div>
+            `;
+
+            // Display status update buttons
+            statusActions.innerHTML = createStatusButtons(ticket.ticket_number, ticket.status);
+            
+            document.getElementById('ticketModal').style.display = 'block';
+        }
+
+        // Update ticket status function
+        async function updateTicketStatus(ticketNumber, newStatus) {
+            try {
+                const response = await fetch(`http://localhost:8000/update-ticket/${ticketNumber}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus, updated_at: new Date().toISOString() })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                await response.json();
+                await fetchPoliceTickets();
+                await viewTicketDetails(ticketNumber); // Refresh the modal content
+                alert(`Ticket #${ticketNumber} status updated to ${newStatus}`);
+            } catch (error) {
+                console.error('Error updating ticket status:', error);
+                alert('Error updating ticket status. Please try again.');
+            }
+        }
+
+        // Utility functions remain unchanged
+        function processGoogleDriveUrl(url) {
+            if (!url) return '';
+            const fileId = extractGoogleDriveFileId(url);
+            if (!fileId) return url;
+            return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+        }
+
+        function extractGoogleDriveFileId(url) {
+            if (!url) return null;
+            let fileId = '';
+            if (url.includes('/file/d/')) {
+                fileId = url.split('/file/d/')[1].split('/')[0];
+            } else if (url.includes('id=')) {
+                fileId = url.split('id=')[1].split('&')[0];
+            } else if (url.match(/^[a-zA-Z0-9_-]{25,}$/)) {
+                fileId = url;
+            }
+            return fileId;
+        }
+
+        function handleImageError(img) {
+            const originalUrl = img.getAttribute('data-original-url');
+            const container = img.closest('.image-container');
+            container.innerHTML = `
+                <div class="media-error">
+                    <p>Unable to load image directly.</p>
+                    <a href="${originalUrl}" target="_blank" class="view-link">
+                        View Image in Google Drive
+                    </a>
+                </div>
+            `;
+        }
+
+        function handleAudioError(ticketNumber, fileId) {
+            const playerDiv = document.getElementById(`audio-player-${ticketNumber}`);
+            const statusDiv = document.getElementById(`audio-status-${ticketNumber}`);
+            playerDiv.style.display = 'none';
+            statusDiv.innerHTML = `
+                <div style="color: #856404; background-color: #fff3cd; padding: 10px; border-radius: 4px; margin-top: 10px;">
+                    Unable to play audio directly. Please use the alternative options above.
+                </div>
+            `;
+        }
+
+        function closeModal() {
+            document.getElementById('ticketModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('ticketModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function signOut() {
+            if (confirm('Are you sure you want to sign out?')) {
+                localStorage.removeItem('access_token');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', fetchPoliceTickets);
+    </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+# Virtual Environment
+.venv/
+venv/
+env/
+ 
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+ 
+# Large binary files
+*.dll
+*.lib
+*.so
+*.a
+ 
+# Torch-specific ignores
+**/torch/**/*.dll
+**/torch/**/*.lib
+**/site-packages/torch/**/*.dll
+**/site-packages/torch/**/*.lib
+ 
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+ 
+# IDE files
+.vscode/
+.idea/
+
+# Environment variables
+.env
+
+uploads/
+
+service_account.json
+credentials.json

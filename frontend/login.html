@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Civilians As Police (CAP) - Login</title>
+  <link rel="stylesheet" href="css/styleslogin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+  <div class="background-shapes">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+    <div class="shape shape-4"></div>
+  </div>
+  <div class="login-container">
+    <div class="flip-card">
+      <div class="flip-card-inner">
+        <!-- Front Card (User Login) -->
+        <div class="flip-card-front">
+          <div class="user-login">
+            <a href="hero.html" class="back-button"><i class="fa fa-home"></i>Back To Home Page</a>
+            <h2>User Login</h2>
+            <form>
+              <input type="text" placeholder="Username" id="user-username">
+              <input type="password" placeholder="Password" id="user-password">
+              <button type="submit">Login</button>
+              <a href="signup.html" id="signup-link">Sign Up</a>
+              <a href="forgotpass.html" id="forgot-password-link">Forgot Password</a>
+            </form>
+            <button class="flip-button">Go to Police Login</button>
+          </div>
+        </div>
+
+        <!-- Back Card (Police Login) -->
+        <div class="flip-card-back">
+          <div class="police-login">
+            <a href="hero.html" class="back-button"><i class="fa fa-home"></i>Back To Home Page</a>
+            <h2>Police Login</h2>
+            <form>
+              <input type="text" placeholder="Police Station ID" id="police-station-id">
+              <input type="password" placeholder="Police Station Password" id="police-station-password">
+              <button type="submit">Login</button>
+            </form>
+            <button class="flip-button">Back to User Login</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../backend/loginapp.js"></script>
+  <script>
+    document.querySelectorAll('.flip-button').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelector('.flip-card-inner').classList.toggle('flipped');
+      });
+    });
+  </script>
+</body>
+</html>
