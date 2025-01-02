@@ -1,0 +1,55 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f9;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Full screen height */
+  overflow: hidden; /* Prevent scrolling */
+}
+
+.window {
+  background: #fff;
+  border: 2px solid #0078d4;
+  border-radius: 10px;
+  padding: 20px;
+  width: 600px;
+  height: 90vh; /* Use most of the screen height */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  overflow-y: auto; /* Allow scrolling inside the window if content overflows */
+}
+
+.title {
+  text-align: center;
+  color: #0078d4;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+input, textarea, select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+textarea {
+  resize: none;
+  height: 60px; /* Reduce height for smaller viewports */
+}
+
+.submit-button {
+  background: #0078d4;
+  color: #fff;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
