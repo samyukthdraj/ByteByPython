@@ -252,14 +252,6 @@ Surya D
 
 ## 📸 Screenshots
 ![image](https://github.com/user-attachments/assets/93242d4d-64bf-4863-91ab-92622b2edadb)
-![My Screenshot](frontend/pictures/user1.png)
-![My Screenshot](frontend/pictures/user2.png)
-![My Screenshot](frontend/pictures/user3.png)
-![My Screenshot](frontend/pictures/user4.png)
-![My Screenshot](frontend/pictures/user5.png)
-![My Screenshot](frontend/pictures/police1.png)
-![My Screenshot](frontend/pictures/police2.png)
-![My Screenshot](frontend/pictures/police3.png)
-![My Screenshot](frontend/pictures/police4.png)
+
 
 
