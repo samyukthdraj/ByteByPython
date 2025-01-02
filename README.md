@@ -176,6 +176,12 @@ project/
 git clone <repository-url>
 ```
 
+2. Create and activate virtual environment:
+```bash
+python -m venv venv_name
+.\venv_name\Scripts\activate
+```
+
 2. Install dependencies:
 ```bash
 pip install -r requirements.txt
@@ -232,11 +238,9 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 ## 👥 Contributors
 
-[Your Name] - Initial work
-
-## 🔖 License
-
-This project is licensed under the [License Name] - see the LICENSE.md file for details
+Samyukth Dharmarajan
+Ashwin Linu
+Surya D
 
 ## 🙏 Acknowledgments
 
