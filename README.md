@@ -250,3 +250,6 @@ Surya D
 - Google Gemini for image analysis
 - Contributors to the MediaRecorder API
 
+## 📸 Screenshots
+![image](https://github.com/user-attachments/assets/93242d4d-64bf-4863-91ab-92622b2edadb)
+
