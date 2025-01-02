@@ -238,9 +238,9 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 ## 👥 Contributors
 
-Samyukth Dharmarajan
-Ashwin Linu
-Surya D
+- Samyukth Dharmarajan
+- Ashwin Linu
+- Surya D
 
 ## 🙏 Acknowledgments
 
