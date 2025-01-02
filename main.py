@@ -42,10 +42,31 @@ import pytz
 app = FastAPI()
 db = Database()
 
+# Serve the frontend directory
+frontend_path = "frontend"
+if not os.path.exists(frontend_path):
+    os.makedirs(frontend_path, exist_ok=True)  # Ensure the directory exists
+app.mount("/frontend", StaticFiles(directory=frontend_path), name="frontend")
+
+# Mount backend directory
+backend_path = "backend"
+os.makedirs(backend_path, exist_ok=True)
+app.mount("/backend", StaticFiles(directory=backend_path), name="backend")
+
+# Mount the police_stations directory
+police_stations_path = "police_stations"
+os.makedirs(police_stations_path, exist_ok=True)  # Ensure the directory exists
+app.mount("/police_stations", StaticFiles(directory=police_stations_path), name="police_stations")
+
+#putting into uploads.
+uploads_path = "uploads"
+os.makedirs(uploads_path, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
+
 @app.on_event("startup")
 async def startup_event():
     # Open the login page when the server starts
-    webbrowser.open_new_tab("http://127.0.0.1:5500/frontend/hero.html")
+    webbrowser.open_new_tab("http://127.0.0.1:8000/frontend/hero.html")
 
 @app.get("/")
 def read_root():
@@ -55,10 +76,6 @@ def read_root():
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-#putting into uploads.
-uploads_path = "uploads"
-os.makedirs(uploads_path, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
 
 # Function to convert ObjectId fields to strings
 def convert_objectid_to_str(data):
