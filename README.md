@@ -182,20 +182,20 @@ python -m venv venv_name
 .\venv_name\Scripts\activate
 ```
 
-2. Install dependencies:
+3. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Install additional dependencies for AI and API functionality:
+4. Install additional dependencies for AI and API functionality:
 ```bash
 pip install google-api-core google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib
 pip install fastapi[all] pytz aiohttp
 ```
 
-4. Set up environment variables as mentioned above
+5. Set up environment variables as mentioned above
 
-5. Prepare the police stations CSV file with the following columns:
+6. Prepare the police stations CSV file with the following columns:
    - slNo
    - cityName
    - name
@@ -204,7 +204,7 @@ pip install fastapi[all] pytz aiohttp
    - latitude
    - pincode
 
-6. Run the application:
+7. Run the application:
 ```bash
 uvicorn main:app --reload
 ```
