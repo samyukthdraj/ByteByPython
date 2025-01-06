@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect, useState, useContext } from 'react';
+import { useEffect, useState, useContext, useMemo } from 'react';
 import { getData } from '../../services/apiService';
 import { AuthContext } from '../../context/authContext';
 import Box from '@mui/material/Box';
@@ -25,8 +25,7 @@ export default function CivilianDashboard() {
   const [loading, setLoading] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState(null);
-  const [fileUrls, setFileUrls] = useState({});
-  const [isFileLoading, setIsFileLoading] = useState(false);
+  const [isFileLoading, setIsFileLoading] = useState(false); //Removed fileUrls state
 
   const getStatus = (statusNumber) => {
     switch (String(statusNumber)) {
@@ -51,10 +50,14 @@ export default function CivilianDashboard() {
     setLoading(true);
     try {
       const response = await getData(API_URLS.INCIDENTS.getIncidentByUserId(user._id), user.access_token);
-      if (Array.isArray(response)) {
-        setIncidents(response);
-      } else if (Array.isArray(response?.data)) {
-        setIncidents(response.data);
+      const incidentsData = Array.isArray(response) ? response : response?.data;
+
+      if (Array.isArray(incidentsData)) {
+        const incidentsWithUrls = await Promise.all(incidentsData.map(async (incident) => ({
+          ...incident,
+          files: await fetchIncidentFiles(incident),
+        })));
+        setIncidents(incidentsWithUrls);
       } else {
         console.error('Unexpected response format:', response);
         setIncidents([]);
@@ -66,6 +69,26 @@ export default function CivilianDashboard() {
     }
   };
 
+  const fetchIncidentFiles = async (incident) => {
+    const files = {};
+    const promises = [];
+    if (incident.image) {
+      promises.push(downloadFileFromDrive(incident.image).then(url => ({ image: url })));
+    }
+    if (incident.audio) {
+      promises.push(downloadFileFromDrive(incident.audio).then(url => ({ audio: url })));
+    }
+    const results = await Promise.allSettled(promises);
+    results.forEach(result => {
+      if (result.status === 'fulfilled') {
+        Object.assign(files, result.value);
+      } else {
+        console.error('Error downloading file for incident', incident.id, result.reason);
+      }
+    });
+    return files;
+  };
+
   const downloadFileFromDrive = async (link) => {
     const id = extractFileId(link);
     setIsFileLoading(true);
@@ -75,7 +98,7 @@ export default function CivilianDashboard() {
         headers: user?.access_token ? { Authorization: `Bearer ${user.access_token}` } : {},
       });
       setIsFileLoading(false);
-      return response.url || response;
+      return response.url || response; //Check if response is a URL or the Response object itself
     } catch (error) {
       console.error('Error downloading file:', error);
       setIsFileLoading(false);
@@ -89,31 +112,6 @@ export default function CivilianDashboard() {
     return match ? match[1] : null;
   };
 
-  useEffect(() => {
-    const fetchFiles = async () => {
-      const newFileUrls = {};
-      const downloadPromises = incidents.map(async (incident) => {
-        const files = {};
-        if (incident.image) {
-          files.image = await downloadFileFromDrive(incident.image);
-        }
-        if (incident.audio) {
-          files.audio = await downloadFileFromDrive(incident.audio);
-        }
-        return { id: incident.id, files };
-      });
-      const results = await Promise.all(downloadPromises);
-      results.forEach((result) => {
-        newFileUrls[result.id] = result.files;
-      });
-      setFileUrls(newFileUrls);
-    };
-
-    if (incidents.length > 0) {
-      fetchFiles();
-    }
-  }, [incidents]);
-
   const handleShowMore = (incident) => {
     setSelectedIncident(incident);
     setShowDialog(true);
@@ -123,6 +121,8 @@ export default function CivilianDashboard() {
     setShowDialog(false);
     setSelectedIncident(null);
   };
+
+  const memoizedIncidents = useMemo(() => incidents, [incidents]);
 
   return (
     <Box
@@ -145,12 +145,12 @@ export default function CivilianDashboard() {
         <Box sx={{ display: 'flex', justifyContent: 'center', height: '100%' }}>
           <CircularProgress />
         </Box>
-      ) : incidents.length === 0 ? (
+      ) : memoizedIncidents.length === 0 ? (
         <Typography variant="h6" color="textSecondary" align="center">
           No incidents found. Please check back later.
         </Typography>
       ) : (
-        incidents.map((incident) => (
+        memoizedIncidents.map((incident) => ( //Use memoizedIncidents
           <Card
             key={incident.id}
             sx={{
@@ -163,13 +163,16 @@ export default function CivilianDashboard() {
               },
             }}
           >
-            {fileUrls[incident.id]?.image && (
+            {incident.files?.image && (
               <CardMedia
                 component="img"
                 alt={incident.imageDescription || 'Incident Image'}
                 height="140"
-                image={fileUrls[incident.id].image}
+                image={incident.files.image}
                 sx={{ objectFit: 'cover' }}
+                onError={(e) => {
+                  e.target.src = '/placeholder.jpg';
+                }}
               />
             )}
             <CardContent>
@@ -196,24 +199,27 @@ export default function CivilianDashboard() {
             <>
               <Typography variant="h6" sx={{ marginBottom: 1 }}>{selectedIncident.crimeType}</Typography>
               <Typography variant="body1" sx={{ marginBottom: 2 }}>{selectedIncident.userDescription}</Typography>
-              {fileUrls[selectedIncident.id]?.image && (
+              {selectedIncident.files?.image && (
                 <Box sx={{ marginBottom: 2 }}>
                   <CardMedia
                     component="img"
                     alt={selectedIncident.imageDescription || 'Incident Image'}
                     height="200"
-                    image={fileUrls[selectedIncident.id].image}
+                    image={selectedIncident.files.image}
                     sx={{ objectFit: 'contain', borderRadius: 2 }}
+                    onError={(e) => {
+                      e.target.src = '/placeholder.jpg'; // Or any default image URL
+                    }}
                   />
                   <Typography variant="body2" color="textSecondary" sx={{ marginTop: 1 }}>
-                  {selectedIncident.imageDescription || 'No description provided for the image.'}
+                    {selectedIncident.imageDescription || 'No description provided for the image.'}
                   </Typography>
                 </Box>
               )}
-              {fileUrls[selectedIncident.id]?.audio && (
+              {selectedIncident.files?.audio && (
                 <Box sx={{ marginBottom: 2 }}>
                   <audio controls>
-                    <source src={fileUrls[selectedIncident.id].audio} type="audio/mpeg" />
+                    <source src={selectedIncident.files.audio} type="audio/mpeg" />
                     Your browser does not support the audio element.
                   </audio>
                 </Box>

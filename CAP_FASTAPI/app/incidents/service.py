@@ -1,32 +1,85 @@
-import base64
 import os
+import io
+from io import BytesIO
+import uuid
+from uuid import uuid4
+import traceback
+import base64
+import time
+import tempfile
+import shutil
+from PIL import Image
+import assemblyai as aai
+from datetime import datetime
 from typing import List, Optional
 from bson.objectid import ObjectId
-from .model import Incident, DescriptionResponse,DescriptionRequest, GetIncident, UpdateIncidentStatus
-from datetime import datetime
 from ..database import incident_collection, civilian_collection, police_collection
-import google.generativeai as genai
-from googleapiclient.errors import HttpError
+from .model import Incident, DescriptionResponse,DescriptionRequest, GetIncident, UpdateIncidentStatus
 from fastapi import FastAPI, HTTPException, status, Depends, File, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 from pymongo.errors import DuplicateKeyError, PyMongoError
-from PIL import Image
-import io
-from io import BytesIO
-import traceback
-import uuid
-from uuid import uuid4 
-import os
+import google.generativeai as genai
+from google.cloud import speech
 from google.cloud import speech
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload, MediaIoBaseUpload, MediaIoBaseDownload
-from google.oauth2.service_account import Credentials
-import time
-import tempfile
-import shutil
-from google.cloud import speech
-import assemblyai as aai
+from googleapiclient.errors import HttpError
+from cachetools import TTLCache
+
+
+cache = TTLCache(maxsize=1024, ttl=3600)
+
+async def get_downloadFileFromDrive(file_id: str):
+    """Downloads a file from Google Drive, using caching and async operations."""
+    if file_id in cache:
+        file_data, mime_type, filename = cache[file_id]
+        return StreamingResponse(iter(file_data), media_type=mime_type, headers={"Content-Disposition": f"attachment; filename={filename}"})
+
+    try:
+        # ... (Your Google Drive API credentials loading remains the same) ...
+        credentials_info = {
+            "type": os.getenv("TYPE"),
+            "project_id": os.getenv("GOOGLE_PROJECT_ID"),
+            "private_key_id": os.getenv("GOOGLE_PRIVATE_KEY_ID"),
+            "private_key": os.getenv("GOOGLE_PRIVATE_KEY").replace("\\n", "\n"),
+            "client_email": os.getenv("GOOGLE_CLIENT_EMAIL"),
+            "client_id": os.getenv("GOOGLE_CLIENT_ID"),
+            "auth_uri": os.getenv("GOOGLE_AUTH_URI"),
+            "token_uri": os.getenv("GOOGLE_TOKEN_URI"),
+            "auth_provider_x509_cert_url": os.getenv("GOOGLE_AUTH_PROVIDER_CERT_URL"),
+            "client_x509_cert_url": os.getenv("GOOGLE_CLIENT_CERT_URL"),
+        }
+
+        DRIVE_FOLDER_ID = os.getenv("DRIVE_FOLDER_ID")
+        SCOPES = ["https://www.googleapis.com/auth/drive"]
+
+        credentials = Credentials.from_service_account_info(credentials_info, scopes=SCOPES)
+
+        drive_service = build("drive", "v3", credentials=credentials)
+
+        file_metadata = drive_service.files().get(fileId=file_id, fields='name,mimeType,webViewLink').execute()
+        file_name = file_metadata['name']
+        mime_type = file_metadata['mimeType']
+
+        request = drive_service.files().get_media(fileId=file_id)
+        fh = BytesIO()
+        downloader = MediaIoBaseDownload(fh, request)
+        done = False
+        while done is False:
+            status, done = downloader.next_chunk()
+
+        fh.seek(0)
+        # **Crucial Change:** Directly yield from the file-like object
+        return StreamingResponse(fh, media_type=mime_type, headers={"Content-Disposition": f"attachment; filename={file_name}"})
+
+    except Exception as e:
+        if hasattr(e, 'resp') and hasattr(e.resp, 'status'): #More robust error handling
+            raise HTTPException(status_code=e.resp.status, detail=f"Google Drive API Error: {e}")
+        else:
+            print(f"Error: {e}")
+            traceback.print_exc()
+            raise HTTPException(status_code=500, detail=f"Internal Server Error: {e}")
 
 async def post_getAudioDescription(file: UploadFile):
     try:
@@ -160,56 +213,6 @@ async def post_uploadFileToDrive(file: UploadFile = File(...)):
             raise HTTPException(status_code=403, detail="Insufficient permissions.")
         else:
             raise HTTPException(status_code=500, detail=error_message)
-
-async def get_downloadFileFromDrive(file_id: str):
-    try:
-        # Load credentials from environment variables
-        credentials_info = {
-            "type": os.getenv("TYPE"),
-            "project_id": os.getenv("GOOGLE_PROJECT_ID"),
-            "private_key_id": os.getenv("GOOGLE_PRIVATE_KEY_ID"),
-            "private_key": os.getenv("GOOGLE_PRIVATE_KEY").replace("\\n", "\n"),
-            "client_email": os.getenv("GOOGLE_CLIENT_EMAIL"),
-            "client_id": os.getenv("GOOGLE_CLIENT_ID"),
-            "auth_uri": os.getenv("GOOGLE_AUTH_URI"),
-            "token_uri": os.getenv("GOOGLE_TOKEN_URI"),
-            "auth_provider_x509_cert_url": os.getenv("GOOGLE_AUTH_PROVIDER_CERT_URL"),
-            "client_x509_cert_url": os.getenv("GOOGLE_CLIENT_CERT_URL"),
-        }
-
-        DRIVE_FOLDER_ID = os.getenv("DRIVE_FOLDER_ID")
-        SCOPES = ["https://www.googleapis.com/auth/drive"]
-
-        credentials = Credentials.from_service_account_info(credentials_info, scopes=SCOPES)
-        drive_service = build("drive", "v3", credentials=credentials)
-
-        file_metadata = drive_service.files().get(fileId=file_id, fields='name,mimeType,webViewLink').execute()
-        file_name = file_metadata['name']
-        mime_type = file_metadata['mimeType']
-
-        request = drive_service.files().get_media(fileId=file_id)
-        fh = BytesIO()
-        downloader = MediaIoBaseDownload(fh, request)
-        done = False
-        while done is False:
-            status, done = downloader.next_chunk()
-
-        fh.seek(0)
-
-        def iterfile():
-            chunk_size = 4096  # Adjust chunk size as needed
-            while True:
-                chunk = fh.read(chunk_size)
-                if not chunk:
-                    break
-                yield chunk
-
-        return StreamingResponse(iterfile(), media_type=mime_type, headers={"Content-Disposition": f"attachment; filename={file_name}"})
-
-    except Exception as e:
-        print(f"Download Error: {e}")
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Error downloading file: {e}")
         
 async def delete_removeFileFromDrive(fileId:str):
     try:
