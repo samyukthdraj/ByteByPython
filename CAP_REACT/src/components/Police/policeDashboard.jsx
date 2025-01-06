@@ -1,296 +1,502 @@
 import * as React from 'react';
-import { useEffect, useState, useContext } from 'react';
+import { useEffect, useState, useContext, useMemo } from 'react';
+import { getData, putData } from '../../services/apiService';
 import { AuthContext } from '../../context/authContext';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import IconButton from '@mui/material/IconButton';
-import CloseIcon from '@mui/icons-material/Close';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardActions from '@mui/material/CardActions';
+import CardContent from '@mui/material/CardContent';
+import CardMedia from '@mui/material/CardMedia';
+import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
-import Select from '@mui/material/Select';
+import CircularProgress from '@mui/material/CircularProgress';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import API_URLS from '../../services/apiUrlService';
+import ShareLocationIcon from '@mui/icons-material/ShareLocation';
+import CallIcon from '@mui/icons-material/Call';
+import HomeIcon from '@mui/icons-material/Home';
+import Slider from '@mui/material/Slider';
+import SwipeableViews from 'react-swipeable-views';
+import IconButton from '@mui/material/IconButton';
+import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import EditIcon from '@mui/icons-material/Edit';
+import DoneIcon from '@mui/icons-material/Done';
+import CloseIcon from '@mui/icons-material/Close';
 import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
-import API_URLS from '../../services/apiUrlService';
-import { getData, putData } from '../../services/apiService';
-import Tooltip from '@mui/material/Tooltip';
-import EditIcon from '@mui/icons-material/Edit';
-
 
 export default function PoliceDashboard() {
-    const { user } = useContext(AuthContext);
-    const [incidents, setIncidents] = useState([]);
-    const [openImageDialog, setOpenImageDialog] = useState(false);
-    const [openAudioDialog, setOpenAudioDialog] = useState(false);
-    const [selectedIncident, setSelectedIncident] = useState(null);
-    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const { user } = useContext(AuthContext);
+  const [incidents, setIncidents] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [selectedIncident, setSelectedIncident] = useState(null);
+  const [isFileLoading, setIsFileLoading] = useState(false);
+  const [sliderValue, setSliderValue] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [editingStatus, setEditingStatus] = useState(null);
 
-    const getStatus = (statusNumber) => {
-        const statusString = String(statusNumber); // Convert to string
+  const getStatus = (statusNumber) => {
+    switch (String(statusNumber)) {
+      case '1':
+        return 'Awaiting Action';
+      case '2':
+        return 'Resolved';
+      case '3':
+        return 'Dismissed';
+      default:
+        return 'Unknown';
+    }
+  };
 
-        switch (statusString) {
-            case '1':
-                return 'Awaiting Action';
-            case '2':
-                return 'Resolved';
-            case '3':
-                return 'Dismissed';
-            default:
-                return 'Unknown';
-        }
-    };
+  const handleEditStatus = (incidentId) => {
+    setEditingStatus(incidentId);
+    const incident = incidents.find(inc => inc.id === incidentId);
+    setSelectedStatus(incident?.status || '');
+  };
 
-    const userIncidents = async () => {
-        try {
-            const response = await getData(API_URLS.INCIDENTS.getAllIncident,user.access_token);
-            if (Array.isArray(response)) {
-                setIncidents(response);
-            } else if (Array.isArray(response?.data)) {
-                setIncidents(response.data);
-            } else {
-                console.error('Unexpected response format:', response);
-                setIncidents([]);
-            }
-        } catch (error) {
-            console.error('Error fetching incidents:', error);
-            setIncidents([]);
-        }
-    };
+  const handleCancelEdit = () => {
+    setEditingStatus(null);
+    setSelectedStatus('');
+  };
 
-    const handleUpdateIncidentStatus = async (id, status) => {
-        const updateIncidentStatus = {
-            id,
-            status
-        };
-        try {
-            const response = await putData(updateIncidentStatus, API_URLS.INCIDENTS.updateIncidentStatus,user.access_token);
-            setSnackbar({ open: true, message: 'Incident status updated successfully!', severity: 'success' });
-            if(response.message === 'Incident status updated successfully.')
-                userIncidents(); // Reload incidents
-        } catch (error) {
-            console.error('Error updating incident status:', error);
-            setSnackbar({ open: true, message: 'Failed to update incident status.', severity: 'error' });
-        }
-    };
+  const handleUpdateStatus = async (incidentId) => {
+    if (!selectedStatus) return;
 
-    useEffect(() => {
-        if (user?._id) {
-            userIncidents();
-        }
-    }, [user]);
+    setIsUpdatingStatus(true);
+    try {
+      await putData(
+        { id: incidentId, status: selectedStatus },
+        API_URLS.INCIDENTS.updateIncidentStatus,
+        user.access_token
+      );
+      setSnackbar({
+        open: true,
+        message: 'Incident status updated successfully!',
+        severity: 'success'
+      });
+      await fetchUserIncidents();
+    } catch (error) {
+      console.error('Error updating incident status:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to update incident status.',
+        severity: 'error'
+      });
+    } finally {
+      setIsUpdatingStatus(false);
+      setEditingStatus(null);
+      setSelectedStatus('');
+    }
+  };
 
-    const convertBase64ToBlobUrl = (base64, mimeType) => {
-        if (!base64) return null;
-        try {
-            const binary = atob(base64.split(',')[1]);
-            const array = [];
-            for (let i = 0; i < binary.length; i++) {
-                array.push(binary.charCodeAt(i));
-            }
-            const blob = new Blob([new Uint8Array(array)], { type: mimeType });
-            return URL.createObjectURL(blob);
-        } catch (error) {
-            console.error("Error converting base64:", error);
-            return null;
-        }
-    };
+  const handleSliderChange = (event, newValue) => {
+    setSliderValue(newValue);
+  };
 
-    const handleCloseDialog = () => {
-        setOpenImageDialog(false);
-        setOpenAudioDialog(false);
-        setSelectedIncident(null);
-    };
+  const handleNext = () => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % memoizedIncidents.length);
+  };
 
-    const handleOpenImageDialog = (incident) => {
-        setOpenImageDialog(true);
-        setSelectedIncident(incident);
-    };
+  const handlePrev = () => {
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + memoizedIncidents.length) % memoizedIncidents.length);
+  };
 
-    const handleOpenAudioDialog = (incident) => {
-        setOpenAudioDialog(true);
-        setSelectedIncident(incident);
-    };
+  const filterIncidentsByDate = (incident) => {
+    const today = new Date();
+    const incidentDate = new Date(incident.startDate);
+    today.setHours(0, 0, 0, 0);
+    incidentDate.setHours(0, 0, 0, 0);
 
-    const handleCloseSnackbar = () => {
-        setSnackbar({ ...snackbar, open: false });
-    };
+    if (sliderValue === 0) {
+      return incidentDate.getTime() === today.getTime();
+    } else if (sliderValue === 1) {
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      return incidentDate.getTime() === yesterday.getTime();
+    } else {
+      return incidentDate.getTime() < today.getTime() - 86400000;
+    }
+  };
+
+  const renderStatusSection = (incident) => {
+    const isEditing = editingStatus === incident.id;
 
     return (
-        <>
-            <TableContainer component={Paper} sx={{ maxHeight: 600, overflow: 'auto' }}>
-                <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                    <TableHead>
-                        <TableRow>
-                            <TableCell sx={{ width: 100 }}>Image</TableCell>
-                            <TableCell sx={{ width: 100 }}>Audio</TableCell>
-                            <TableCell sx={{ width: 150 }}>Crime Type</TableCell>
-                            <TableCell sx={{ width: 200, maxWidth: '200px', overflow: 'auto' }}>Image Description</TableCell>
-                            <TableCell sx={{ width: 200, maxWidth: '200px', overflow: 'auto' }}>Audio Description</TableCell>
-                            <TableCell sx={{ width: 250, maxWidth: '250px', overflow: 'auto' }}>Description</TableCell>
-                            <TableCell sx={{ width: 150 }}>Civilian Name</TableCell>
-                            <TableCell sx={{ width: 150 }}>Civilian Mobile Number</TableCell>
-                            <TableCell sx={{ width: 200 }}>Police Station Name</TableCell>
-                            <TableCell sx={{ width: 200 }}>Police Station Location</TableCell>
-                            <TableCell sx={{ width: 150 }}>Start Date</TableCell>
-                            <TableCell sx={{ width: 100 }}>Status</TableCell>
-                            <TableCell sx={{ width: 150 }}>Update Status</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {incidents.map((incident) => (
-                            <TableRow key={incident.id}>
-                                <TableCell>
-                                    <Button onClick={() => handleOpenImageDialog(incident)}>
-                                        {incident.image ? 'View Image' : 'No Image'}
-                                    </Button>
-                                </TableCell>
-                                <TableCell>
-                                    <Button onClick={() => handleOpenAudioDialog(incident)}>
-                                        {incident.audio ? 'Play Audio' : 'No Audio'}
-                                    </Button>
-                                </TableCell>
-                                <TableCell>{incident.crimeType}</TableCell>
-                                <TableCell>
-                                    <Tooltip title={incident.imageDescription} placement="right">
-                                        <span>{incident.imageDescription.substring(0, 20) + (incident.imageDescription.length > 20 ? "..." : "")}</span>
-                                    </Tooltip>
-                                </TableCell>
-                                <TableCell>
-                                    <Tooltip title={incident.audioDescription} placement="right">
-                                        <span>{incident.audioDescription.substring(0, 20) + (incident.audioDescription.length > 20 ? "..." : "")}</span>
-                                    </Tooltip>
-                                </TableCell>
-                                <TableCell>
-                                    <Tooltip title={incident.userDescription} placement="right">
-                                        <span>{incident.userDescription.substring(0, 20) + (incident.userDescription.length > 20 ? "..." : "")}</span>
-                                    </Tooltip>
-                                </TableCell>
-                                <TableCell>{incident.userName}</TableCell>
-                                <TableCell>{incident.userMobileNumber}</TableCell>
-                                <TableCell>{incident.policeStationName}</TableCell>
-                                <TableCell>{incident.policeStationLocation}</TableCell>
-                                <TableCell>{new Date(incident.startDate).toLocaleString()}</TableCell>
-                                <TableCell>{getStatus(incident.status)}</TableCell>
-                                <TableCell>
-                                    {!incident.editingStatus ? (
-                                        <IconButton
-                                            onClick={() =>
-                                                setIncidents((prev) =>
-                                                    prev.map((item) =>
-                                                        item.id === incident.id
-                                                            ? { ...item, editingStatus: true }
-                                                            : item
-                                                    )
-                                                )
-                                            }
-                                        >
-                                            <EditIcon />
-                                        </IconButton>
-                                    ) : (
-                                        <Select
-                                            value={String(incident.status)}
-                                            onChange={(e) =>
-                                                handleUpdateIncidentStatus(incident.id, e.target.value)
-                                            }
-                                            onBlur={() =>
-                                                setIncidents((prev) =>
-                                                    prev.map((item) =>
-                                                        item.id === incident.id
-                                                            ? { ...item, editingStatus: false }
-                                                            : item
-                                                    )
-                                                )
-                                            }
-                                            displayEmpty
-                                            autoWidth
-                                        >
-                                            <MenuItem value="2">Resolved</MenuItem>
-                                            <MenuItem value="3">Dismissed</MenuItem>
-                                        </Select>
-                                    )}
-                                </TableCell>
-
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-
-            {/* Image Dialog */}
-            <Dialog open={openImageDialog} onClose={handleCloseDialog}>
-                <DialogTitle>
-                    Incident Image
-                    <IconButton
-                        aria-label="close"
-                        onClick={handleCloseDialog}
-                        sx={{
-                            position: 'absolute',
-                            right: 8,
-                            top: 8,
-                            color: (theme) => theme.palette.grey[500],
-                        }}
-                    >
-                        <CloseIcon />
-                    </IconButton>
-                </DialogTitle>
-                <DialogContent>
-                    {selectedIncident?.image && (
-                        <img
-                            src={convertBase64ToBlobUrl(selectedIncident.image, 'image/jpeg')}
-                            alt="Incident Image"
-                            style={{ maxWidth: '100%' }}
-                        />
-                    )}
-                </DialogContent>
-            </Dialog>
-
-            {/* Audio Dialog */}
-            <Dialog open={openAudioDialog} onClose={handleCloseDialog}>
-                <DialogTitle>
-                    Incident Audio
-                    <IconButton
-                        aria-label="close"
-                        onClick={handleCloseDialog}
-                        sx={{
-                            position: 'absolute',
-                            right: 8,
-                            top: 8,
-                            color: (theme) => theme.palette.grey[500],
-                        }}
-                    >
-                        <CloseIcon />
-                    </IconButton>
-                </DialogTitle>
-                <DialogContent>
-                    {selectedIncident?.audio && (
-                        <audio controls style={{ width: '100%' }}>
-                            <source
-                                src={convertBase64ToBlobUrl(selectedIncident.audio, 'audio/mpeg')}
-                                type="audio/mpeg"
-                            />
-                            Your browser does not support the audio element.
-                        </audio>
-                    )}
-                </DialogContent>
-            </Dialog>
-
-            {/* Snackbar */}
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={6000}
-                onClose={handleCloseSnackbar}
+      <Box display="flex" justifyContent="space-between" alignItems="center">
+        {isEditing ? (
+          <Box display="flex" alignItems="center" gap={1}>
+            <FormControl size="small" sx={{ minWidth: 120 }}>
+              <Select
+                value={selectedStatus || incident.status}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                disabled={isUpdatingStatus}
+              >
+                <MenuItem value={1}>Awaiting Action</MenuItem>
+                <MenuItem value={2}>Resolved</MenuItem>
+                <MenuItem value={3}>Dismissed</MenuItem>
+              </Select>
+            </FormControl>
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={() => handleUpdateStatus(incident.id)}
+              disabled={isUpdatingStatus}
             >
-                <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
-        </>
+              <DoneIcon />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="error"
+              onClick={handleCancelEdit}
+              disabled={isUpdatingStatus}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        ) : (
+          <Box display="flex" alignItems="center" gap={1}>
+            <Typography variant="body2" color="textSecondary">
+              {getStatus(incident.status)}
+            </Typography>
+            <IconButton
+              size="small"
+              onClick={() => handleEditStatus(incident.id)}
+              sx={{ ml: 1 }}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        )}
+      </Box>
     );
+  };
+
+  useEffect(() => {
+    if (user?._id) {
+      fetchUserIncidents();
+    }
+  }, [user]);
+
+  const fetchUserIncidents = async () => {
+    setLoading(true);
+    try {
+      const response = await getData(API_URLS.INCIDENTS.getAllIncident, user.access_token);
+      const incidentsData = Array.isArray(response) ? response : response?.data;
+
+      if (Array.isArray(incidentsData)) {
+        const incidentsWithUrls = await Promise.all(incidentsData.map(async (incident) => ({
+          ...incident,
+          files: await fetchIncidentFiles(incident),
+        })));
+        setIncidents(incidentsWithUrls);
+      } else {
+        console.error('Unexpected response format:', response);
+        setIncidents([]);
+      }
+    } catch (error) {
+      console.error('Error fetching incidents:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchIncidentFiles = async (incident) => {
+    const files = {};
+    const promises = [];
+    if (incident.image) {
+      promises.push(downloadFileFromDrive(incident.image).then(url => ({ image: url })));
+    }
+    if (incident.audio) {
+      promises.push(downloadFileFromDrive(incident.audio).then(url => ({ audio: url })));
+    }
+    const results = await Promise.allSettled(promises);
+    results.forEach(result => {
+      if (result.status === 'fulfilled') {
+        Object.assign(files, result.value);
+      } else {
+        console.error('Error downloading file for incident', incident.id, result.reason);
+      }
+    });
+    return files;
+  };
+
+  const downloadFileFromDrive = async (link) => {
+    const id = extractFileId(link);
+    setIsFileLoading(true);
+    try {
+      const response = await fetch(API_URLS.INCIDENTS.downloadFileFromDrive(id), {
+        method: 'GET',
+        headers: user?.access_token ? { Authorization: `Bearer ${user.access_token}` } : {},
+      });
+      setIsFileLoading(false);
+      return response.url || response;
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      setIsFileLoading(false);
+      return null;
+    }
+  };
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  const extractFileId = (url) => {
+    const regex = /\/d\/(.*?)(?=\/|$)/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
+  };
+
+  const handleShowMore = (incident) => {
+    setSelectedIncident(incident);
+    setShowDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setShowDialog(false);
+    setSelectedIncident(null);
+  };
+
+  const memoizedIncidents = useMemo(() => incidents.filter(filterIncidentsByDate), [incidents, sliderValue]);
+
+  return (
+    <Box sx={{ padding: 2 }}>
+      <Slider
+        value={sliderValue}
+        onChange={handleSliderChange}
+        valueLabelDisplay="auto"
+        valueLabelFormat={(value) => (value === 0 ? 'Today' : value === 1 ? 'Yesterday' : 'Other')}
+        step={1}
+        marks={[
+          { value: 0, label: 'Today' },
+          { value: 1, label: 'Yesterday' },
+          { value: 2, label: 'Other' },
+        ]}
+        min={0}
+        max={2}
+        sx={{ marginBottom: 2 }}
+      />
+
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', height: '100%' }}>
+          <CircularProgress />
+        </Box>
+      ) : memoizedIncidents.length === 0 ? (
+        <Typography variant="h6" color="textSecondary" align="center">
+          No incidents found. Please check back later.
+        </Typography>
+      ) : (
+        <Box sx={{ position: 'relative' }}>
+          <IconButton
+            onClick={handlePrev}
+            sx={{ position: 'absolute', top: '50%', left: 0, zIndex: 1 }}
+            disabled={memoizedIncidents.length <= 1}
+          >
+            <ArrowBackIosIcon />
+          </IconButton>
+          <SwipeableViews
+            index={currentIndex}
+            onChangeIndex={(index) => setCurrentIndex(index)}
+            enableMouseEvents
+          >
+            {memoizedIncidents.map((incident) => (
+              <Card key={incident.id} sx={{ maxWidth: 345, margin: '0 auto', marginBottom: 2 }}>
+                {incident.files?.image && (
+                  <CardMedia
+                    component="img"
+                    alt={incident.imageDescription || 'Incident Image'}
+                    height="140"
+                    image={incident.files.image}
+                    sx={{ objectFit: 'cover' }}
+                    onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                  />
+                )}
+                <CardContent>
+                  <Typography gutterBottom variant="h5" component="div">
+                    {incident.crimeType}
+                  </Typography>
+                  {renderStatusSection(incident)}
+                </CardContent>
+                <CardActions>
+                  <Button size="small" onClick={() => handleShowMore(incident)}>Show More</Button>
+                </CardActions>
+              </Card>
+            ))}
+          </SwipeableViews>
+          <IconButton
+            onClick={handleNext}
+            sx={{ position: 'absolute', top: '50%', right: 0, zIndex: 1 }}
+            disabled={memoizedIncidents.length <= 1}
+          >
+            <ArrowForwardIosIcon />
+          </IconButton>
+        </Box>
+      )}
+
+      {/* Dialog for showing more details */}
+      <Dialog open={showDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="h6">{selectedIncident?.crimeType || 'Incident Details'}</Typography>
+            <IconButton onClick={handleCloseDialog} size="small">
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          {selectedIncident ? (
+            <>
+              <Box sx={{ marginBottom: 3 }}>
+                <Typography variant="h6" sx={{ marginBottom: 1 }}>
+                  Description
+                </Typography>
+                <Typography variant="body1" sx={{ marginBottom: 2 }}>
+                  {selectedIncident.userDescription}
+                </Typography>
+                
+                {/* Status Section */}
+                <Box sx={{ marginBottom: 2 }}>
+                  <Typography variant="subtitle1" sx={{ marginBottom: 1 }}>
+                    Current Status
+                  </Typography>
+                  {renderStatusSection(selectedIncident)}
+                </Box>
+
+                {/* Date and Time */}
+                <Typography variant="body2" color="textSecondary" sx={{ marginBottom: 2 }}>
+                  Reported on: {new Date(selectedIncident.startDate).toLocaleString()}
+                </Typography>
+              </Box>
+
+              {/* Media Section */}
+              {(selectedIncident.files?.image || selectedIncident.files?.audio) && (
+                <Box sx={{ marginBottom: 3 }}>
+                  <Typography variant="h6" sx={{ marginBottom: 1 }}>
+                    Evidence
+                  </Typography>
+                  
+                  {/* Image Section */}
+                  {selectedIncident.files?.image && (
+                    <Box sx={{ marginBottom: 2 }}>
+                      <CardMedia
+                        component="img"
+                        alt={selectedIncident.imageDescription || 'Incident Image'}
+                        height="200"
+                        image={selectedIncident.files.image}
+                        sx={{ 
+                          objectFit: 'contain', 
+                          borderRadius: 1,
+                          backgroundColor: 'background.default'
+                        }}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = '/placeholder.jpg';
+                        }}
+                      />
+                      <Typography variant="body2" color="textSecondary" sx={{ marginTop: 1 }}>
+                        {selectedIncident.imageDescription || 'No description provided for the image.'}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* Audio Section */}
+                  {selectedIncident.files?.audio && (
+                    <Box sx={{ marginBottom: 2 }}>
+                      <Typography variant="subtitle1" gutterBottom>
+                        Audio Recording
+                      </Typography>
+                      <Box sx={{ 
+                        backgroundColor: 'background.default', 
+                        padding: 2, 
+                        borderRadius: 1 
+                      }}>
+                        <audio controls style={{ width: '100%' }}>
+                          <source src={selectedIncident.files.audio} type="audio/mpeg" />
+                          Your browser does not support the audio element.
+                        </audio>
+                      </Box>
+                    </Box>
+                  )}
+                </Box>
+              )}
+
+              {/* Location Section */}
+              <Box sx={{ marginBottom: 2 }}>
+                <Typography variant="h6" sx={{ marginBottom: 1 }}>
+                  Alloted Police Station Details
+                </Typography>
+                <Card variant="outlined" sx={{ padding: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: 1 }}>
+                    <HomeIcon sx={{ marginRight: 1, color: 'primary.main' }} />
+                    <Typography variant="body1">
+                      {selectedIncident.policeStationName || 'Not assigned'}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: 1 }}>
+                    <CallIcon sx={{ marginRight: 1, color: 'primary.main' }} />
+                    <Typography variant="body1">
+                      {selectedIncident.policeMobileNumber || 'No contact provided'}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <ShareLocationIcon sx={{ marginRight: 1, color: 'primary.main' }} />
+                    <Typography variant="body1">
+                      {selectedIncident.policeStationLocation || 'Location not available'}
+                    </Typography>
+                  </Box>
+                </Card>
+              </Box>
+
+              {/* Additional Details Section if needed */}
+              {selectedIncident.additionalDetails && (
+                <Box sx={{ marginBottom: 2 }}>
+                  <Typography variant="h6" sx={{ marginBottom: 1 }}>
+                    Additional Details
+                  </Typography>
+                  <Typography variant="body1">
+                    {selectedIncident.additionalDetails}
+                  </Typography>
+                </Box>
+              )}
+            </>
+          ) : (
+            <Box sx={{ display: 'flex', justifyContent: 'center', padding: 3 }}>
+              <Typography>No incident details available.</Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar 
+        open={snackbar.open} 
+        autoHideDuration={6000} 
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Box>
+  );
 }

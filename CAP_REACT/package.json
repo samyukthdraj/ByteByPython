@@ -21,6 +21,9 @@
     "react-dom": "^19.0.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^6.28.0",
+    "react-slick": "^0.30.3",
+    "react-swipeable-views": "^0.14.0",
+    "slick-carousel": "^1.8.1",
     "styled-components": "^6.1.13",
     "vite-plugin-react": "^4.0.1"
   },
