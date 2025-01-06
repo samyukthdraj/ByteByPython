@@ -1,9 +1,9 @@
 from typing import List
 from fastapi import APIRouter, Request, UploadFile, File, Depends, Security
 from fastapi.exceptions import HTTPException #Corrected import
-from .model import Incident, DescriptionResponse, ImageRequest, GetIncident, AudioRequest, UpdateIncidentStatus
+from .model import Incident, DescriptionResponse,DescriptionRequest, GetIncident, UpdateIncidentStatus
 from pydantic import BaseModel 
-from .service import post_incident, get_allIncident, post_getImageDescription, post_getAudioDescription, get_incidentByUserId, put_updateIncidentStatus, uploadFileToDrive 
+from .service import post_incident, get_allIncident, post_getImageDescription, post_getAudioDescription, get_incidentByUserId, put_updateIncidentStatus, post_uploadFileToDrive, delete_removeFileFromDrive, get_downloadFileFromDrive
 from datetime import datetime
 from pathlib import Path
 import base64
@@ -14,29 +14,42 @@ from fastapi.security import OAuth2PasswordBearer
 
 incident_router = APIRouter()
 
-@incident_router.post("/uploadFileToDrive", summary="Upload a file to Google Drive", tags=["File Upload"])
+@incident_router.post("/uploadFileToDrive", tags=["Incident"])
 async def post_uploadFileToDrive_route(file: UploadFile = File(...)):
-    """
-    Endpoint for uploading a file to Google Drive.
-    """
     try:
-        response = await uploadFileToDrive(file)
+        response = await post_uploadFileToDrive(file)
         return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error uploading files: {str(e)}")
 
-@incident_router.post("/post/getAudioDescription", response_model=dict) # simplified response model
-async def post_getAudioDescription_route():
+@incident_router.delete("/removeFileFromDrive/{id}", tags=["Incident"])
+async def delete_removeFileFromDrive_route(id: str):
     try:
-        description = await post_getAudioDescription()
+        response = await delete_removeFileFromDrive(id)
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error uploading files: {str(e)}")
+
+@incident_router.get("/downloadFileFromDrive/{id}", tags=["Incident"])
+async def get_downloadFileFromDrive_route(id: str):
+    try:
+        response = await get_downloadFileFromDrive(id)
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error uploading files: {str(e)}")
+
+@incident_router.post("/post/getAudioDescription", response_model=dict)
+async def post_getAudioDescription_route(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+    try:
+        description = await post_getAudioDescription(file)
         return {"description": description}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing audio: {str(e)}")
  
 @incident_router.post("/post/getImageDescription", response_model=DescriptionResponse)
-async def post_getImageDescription_route(request:ImageRequest, current_user: dict = Depends(get_current_user)):  # Changed to accept base64 directly
+async def post_getImageDescription_route(file: UploadFile = File(...)):  # Changed to accept base64 directly
     try:
-        description = await post_getImageDescription(request.image)
+        description = await post_getImageDescription(file)
         return {"description": description}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")

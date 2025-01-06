@@ -4,10 +4,10 @@ import Container from '@mui/material/Container';
 import TextField from '@mui/material/TextField';
 import InputLabel from '@mui/material/InputLabel';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Button, FormControl, FormGroup, FormHelperText, Input, Snackbar, Alert, Select, MenuItem } from '@mui/material';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { Button, FormControl, FormGroup, FormHelperText, Input, Snackbar, Alert, Select, MenuItem, CircularProgress } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import API_URLS from '../../services/apiUrlService';
-import { getData, postData } from '../../services/apiService';
+import { getData, postData, deleteData } from '../../services/apiService';
 import { AuthContext } from '../../context/authContext';
 import crimeTypesData from '../../utils/crimeTypes.json';
 import { ThemeProvider, createTheme } from '@mui/material';
@@ -34,39 +34,51 @@ const theme = createTheme({
 });
 
 export default function NewIncident() {
-  const { user, isLoading } = useContext(AuthContext);
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
   const { showSnackbar } = useSnackbar();
+  const { user, isLoading } = useContext(AuthContext);
+  const imageInputRef = useRef();
+  const [crimeTypes, setCrimeTypes] = useState([]);
+  const [localImageId, setLocalImageId] = useState(null);
+  const [localAudioId, setLocalAudioId] = useState(null);
+  const [imageDescriptionResponse, setImageDescriptionResponse] = useState(null);
+  const [audioDescriptionResponse, setAudioDescriptionResponse] = useState(null);
+  const [policeStationDetial, setPoliceStationDetail] = useState([]);
+  const [filteredStations, setFilteredStations] = useState([]);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingAudio, setUploadingAudio] = useState(false);
+  const [removingFile, setRemovingFile] = useState(null); 
   const [formData, setFormData] = useState({
     _id: '',
-    image: null,
-    audio: null,
+    image: '',
+    audio: '',
     pincode: '',
     crimeType: '',
     imageDescription: '',
     audioDescription: '',
     userDescription: '',
     policeStationId: '',
-    userId: user ? user._id : '',
+    userId: '',
     startDate: '',
     status: '1',
   });
-
-  const [response, setResponse] = useState(null);
-  const [crimeTypes, setCrimeTypes] = useState([]);
-  const imageInputRef = useRef();
-  const [policeStationDetial, setPoliceStationDetail] = useState([]);
-  const [filteredStations, setFilteredStations] = useState([]);
 
   useEffect(() => {
     const SystemDate = new Date().toISOString();
     setFormData((prevData) => ({ ...prevData, startDate: SystemDate }));
   }, []);
 
-  useEffect(()=>{
+  useEffect(() => {
     setCrimeTypes(crimeTypesData);
-    getPoliceStationDetail();
-  },[user])
+    if (user && user.access_token) {  //Add a check for user and token before calling
+      getPoliceStationDetail();
+      setFormData((prevData) => ({
+        ...prevData,
+        userId: user._id,
+      }));
+    }
+
+  }, [user, user?.access_token]);
 
   const getPoliceStationDetail = async () => {
     try {
@@ -84,95 +96,245 @@ export default function NewIncident() {
     }
   };
 
-  const handleFileChange = (event) => {
-    const { name, files } = event.target;
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
 
-    if (files && files[0]) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setFormData((prevData) => {
-          const updatedData = { ...prevData, [name]: reader.result };
-          if (name === 'image') {
-            getImageDescription(updatedData.image);
+    const { name } = event.target;
+    const isImage = name === 'image';
+    const setUploading = isImage ? setUploadingImage : setUploadingAudio;
+    setUploading(true);
+
+    try {
+      const uploadResponse = await uploadFileToDrive(file);
+      if (uploadResponse) {
+        const { webViewLink, file_id } = uploadResponse;
+        const setLocalId = isImage ? setLocalImageId : setLocalAudioId;
+        const setImageDescResp = isImage ? setImageDescriptionResponse : setAudioDescriptionResponse;
+        const getDescFunc = isImage ? getImageDescription : getAudioDescription;
+
+        setLocalId(file_id);
+        setFormData((prevData) => ({ ...prevData, [name]: webViewLink }));
+        await getDescFunc(file);
+      } else {
+        showSnackbar('File upload failed.', 'error');
+      }
+    } catch (error) {
+      showSnackbar(`File upload failed: ${error.message}`, 'error');
+    } finally {
+      setUploading(false);
+      event.target.value = '';
+    }
+  };
+  
+  const handleRemoveFile = async (fileType) => {
+    setRemovingFile(fileType);
+    try {
+      let success = false;
+      if (fileType === 'image') {
+        success = await removeFileFromDrive(localImageId);
+        if (success) {
+          setLocalImageId(null);
+          setImageDescriptionResponse(null);
+          if (imageInputRef.current) {
+            imageInputRef.current.value = '';
           }
-          return updatedData;
-        });
-      };
-      reader.readAsDataURL(files[0]);
+        }
+      } else if (fileType === 'audio') {
+        success = await removeFileFromDrive(localAudioId);
+        if (success) {
+          setLocalAudioId(null);
+          setAudioDescriptionResponse(null);
+          const audioInput = document.getElementById('audio');
+          if (audioInput) {
+            audioInput.value = '';
+          }
+        }
+      }
+      
+      if (success) {
+        setFormData((prevData) => ({
+          ...prevData,
+          [fileType]: '',
+          [`${fileType}Description`]: '',
+        }));
+        showSnackbar(`Successfully removed ${fileType}.`, 'success');
+      } else {
+        showSnackbar(`Error removing ${fileType}. Please try again.`, 'error');
+      }
+    } catch (error) {
+      showSnackbar(`Error removing ${fileType}: ${error.message}`, 'error');
+    } finally {
+      setRemovingFile(null);
     }
   };
 
-  const getImageDescription = async (image_base64) => {
-    const image = image_base64.split(',')[1]; // Remove the prefix
+  const uploadFileToDrive = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+  
+    try {
+      const response = await fetch(API_URLS.INCIDENTS.uploadFileToDrive, {
+        method: 'POST',
+        headers: {
+          ...(user?.access_token ? { Authorization: `Bearer ${user.access_token}` } : {}),
+        },
+        body: formData,
+      });
+  
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (jsonError) {
+          errorData = { detail: `HTTP error! Status: ${response.status}, Message: ${response.statusText}` };
+        }
+        throw new Error(errorData.detail || `HTTP error! Status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      console.log("Upload successful:", data);
+      return {
+        webViewLink: data.webViewLink,
+        file_id: data.file_id,
+      };
+    } catch (error) {
+      console.error("Error during file upload:", error.message || error);
+      return null
+    }
+  };
+  
+  const removeFileFromDrive = async (id) => {
+    try{
+      const response = await fetch(API_URLS.INCIDENTS.removeFileFromDrive(id),{
+        method: 'DELETE',
+        headers: {
+          ...(user?.access_token ? { Authorization: `Bearer ${user.access_token}` } : {}),
+        },
+      });
+      const data = await response.json();
+      if(data.message === "File deleted successfully")
+        return true;
+      else 
+        return false;
+    }catch(error){
+      console.log(error);
+    }
+  };
 
-    const payload = { image: image };
+  const getImageDescription = async (imageFile) => {
+    if (!imageFile) return;
+
+    const formData = new FormData();
+    formData.append("file", imageFile);
 
     try {
-      const response = await postData(payload, API_URLS.INCIDENTS.getImageDescription, user.access_token);
-      const responseData = response.description.split('\n');
-      let parsedData = {
-        crime: '',
-        typeOfCrime: '',
-        imageDescription: 'Can\'t find any crime in the image.', // Default message
-      };
-
-      responseData.forEach((line) => {
-        const [key, value] = line.split(':');
-        if (key === 'crime') {
-          parsedData.crime = value.trim();
-        } else if (key === 'typeOfCrime') {
-          parsedData.typeOfCrime = value.trim();
-        } else if (key === 'description') {
-          parsedData.imageDescription = value.trim();
-        }
+      const response = await fetch(API_URLS.INCIDENTS.getImageDescription, {
+        method: 'POST',
+        headers: {
+          ...(user.access_token ? { Authorization: `Bearer ${user.access_token}` } : {}),
+        },
+        body: formData,
       });
 
-      // If a crime is detected, update the description
-      if (parsedData.crime && parsedData.crime !== 'false') {
-        setResponse(parsedData);
-      } else {
-        setResponse({
-          ...parsedData,
+      if (response.ok) {
+        const responseData = await response.json();
+        const description = responseData.description || '';
+        const lines = description.split(',');
+        let parsedData = {
+          crime: '',
+          typeOfCrime: 'No Crime',
           imageDescription: 'Can\'t find any crime in the image.',
+        };
+        lines.forEach((line) => {
+          const [key, value] = line.split(':');
+          if (key && value) {
+            if (key.trim() === 'crime') {
+              parsedData.crime = value.trim();
+            } else if (key.trim() === 'typeOfCrime') {
+              parsedData.typeOfCrime = value.trim();
+            } else if (key.trim() === 'description') {
+              parsedData.imageDescription = value.trim();
+            }
+          }
         });
+        setImageDescriptionResponse(parsedData);
+      } else {
+        console.error('Failed to fetch image description');
       }
     } catch (error) {
       console.error('Error:', error);
     }
   };
 
-  useEffect(() => {
-    if (response) {
+  const getAudioDescription = async (audioFile) => {
+    if (!audioFile) return;
+
+    const formData = new FormData();
+    formData.append("file", audioFile);
+
+    try {
+      const response = await fetch(API_URLS.INCIDENTS.getAudioDescripion, {
+        method: 'POST',
+        headers: {
+          // No need to add "Content-Type: multipart/form-data" as FormData handles that automatically
+          ...(user.access_token ? { Authorization: `Bearer ${user.access_token}` } : {}),
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+          console.log(errorData);
+        } catch (jsonError) {
+          // Handle cases where response isn't valid JSON (e.g., 500 error)
+          errorData = { detail: `HTTP error! status: ${response.status}, message: ${response.statusText}` };
+        }
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.detail || response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Audio Description Response:', data); // Log the response for debugging
+      setAudioDescriptionResponse(data.description?.transcription_text)
       setFormData((prevData) => ({
         ...prevData,
-        crimeType: response.typeOfCrime || '',
-        imageDescription: response.imageDescription || '',
+        audioDescription: data.description?.transcription_text || '', //Handle potential missing keys gracefully
+      }));
+    } catch (error) {
+      console.error('Error posting data:', error);
+      showSnackbar('Error processing audio.', 'error');
+      throw error;
+    }
+  };
+
+
+  useEffect(() => {
+    if (imageDescriptionResponse) {
+      setFormData((prevData) => ({
+        ...prevData,
+        crimeType: imageDescriptionResponse.typeOfCrime || '',
+        imageDescription: imageDescriptionResponse.imageDescription || '',
       }));
 
-      if (response.typeOfCrime && !crimeTypes.includes(response.typeOfCrime)) {
-        setCrimeTypes((prevTypes) => [...prevTypes, response.typeOfCrime]);
+      if (imageDescriptionResponse.typeOfCrime && !crimeTypes.includes(imageDescriptionResponse.typeOfCrime)) {
+        setCrimeTypes((prevTypes) => [...prevTypes, imageDescriptionResponse.typeOfCrime]);
       }
     }
-  }, [response, crimeTypes]);
+  }, [imageDescriptionResponse, crimeTypes]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  // Handle pincode change and filter police station details
   const handlePincodeChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
-
-    if (value.length === 6) { // Assuming pincode is 6 digits
-      const filteredStations = policeStationDetial.filter(
-        (station) => station.pincode === value
-      );
-      setFilteredStations(filteredStations);
-    } else {
-      setFilteredStations([]); // Reset the list if pincode is invalid
-    }
+    const filtered = value.length === 6 ?
+      policeStationDetial.filter(station => station.pincode === value) : [];
+    setFilteredStations(filtered);
   };
 
   const handlePoliceStationChange = (e) => {
@@ -183,16 +345,23 @@ export default function NewIncident() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
+      if (!formData.image || !formData.audio || !formData.pincode || !formData.crimeType || !formData.policeStationId) {
+        showSnackbar('Please fill in all required fields.', 'error');
+        return;
+    }
+      let uploadPromises = [];
       const response = await postData(formData, API_URLS.INCIDENTS.postIncident, user.access_token);
       if (response.detail === '201: Incident created successfully.') {
         showSnackbar('Incident raised successfully.', 'info');
         setTimeout(() => {
-          navigate('/civilian/dashboard'); // Navigate after showing the message
-        }, 2000); // Wait for 2 seconds
+          navigate('/civilian/dashboard');
+        }, 2000);
+      } else {
+        showSnackbar('Error creating incident: ' + response.detail, 'error'); // Improved error message
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      showSnackbar('Error occured', 'warning');
+      showSnackbar('An error occurred while submitting the form.', 'error'); // More generic error message
     }
   };
 
@@ -228,15 +397,24 @@ export default function NewIncident() {
                 />
                 <label htmlFor="image">
                   <Button component="span" variant="outlined" fullWidth
-                    sx={{ textAlign: 'left', 
-                      justifyContent: 'flex-start', 
-                      color: 'primary.main', 
-                      borderColor: 'quaternary.main'  
+                    sx={{
+                      textAlign: 'left',
+                      justifyContent: 'flex-start',
+                      color: 'primary.main',
+                      borderColor: 'quaternary.main'
                     }}>
                     Upload Image
                   </Button>
                 </label>
-                {formData.image && <FormHelperText sx={{ color: 'black' }}>Image uploaded</FormHelperText>}
+                {uploadingImage ? <CircularProgress size={20} /> : null}  {/* Show loading indicator */}
+                {localImageId && (
+                  <>
+                    <FormHelperText sx={{ color: 'black' }}>Image selected</FormHelperText>
+                    <Button onClick={() => handleRemoveFile('image')} disabled={removingFile === 'image'}>
+                      {removingFile === 'image' ? 'Removing...' : 'Remove Image'}
+                    </Button>
+                  </>
+                )}
               </FormControl>
 
               <FormControl fullWidth sx={{ marginBottom: 2 }}>
@@ -250,20 +428,29 @@ export default function NewIncident() {
                   sx={{ display: 'none' }}
                 />
                 <label htmlFor="audio">
-                  <Button component="span" variant="outlined" fullWidth 
-                    sx={{ textAlign: 'left', 
-                          justifyContent: 'flex-start', 
-                          color: 'primary.main', 
-                          borderColor: 'quaternary.main'  
-                        }}>
+                  <Button component="span" variant="outlined" fullWidth
+                    sx={{
+                      textAlign: 'left',
+                      justifyContent: 'flex-start',
+                      color: 'primary.main',
+                      borderColor: 'quaternary.main'
+                    }}>
                     Upload Audio
                   </Button>
                 </label>
-                {formData.audio && <FormHelperText sx={{ color: 'black' }}>Audio uploaded</FormHelperText>}
+                {uploadingAudio ? <CircularProgress size={20} /> : null}  {/* Show loading indicator */}
+                {localAudioId && (
+                  <>
+                    <FormHelperText sx={{ color: 'black' }}>Audio selected</FormHelperText>
+                    <Button onClick={() => handleRemoveFile('audio')} disabled={removingFile === 'audio'}>
+                      {removingFile === 'audio' ? 'Removing...' : 'Remove Audio'}
+                    </Button>
+                  </>
+                )}
               </FormControl>
 
               {/* Conditionally Render Image Description Field */}
-              {response && (
+              {imageDescriptionResponse && (
                 <TextField
                   id="imageDescription"
                   name="imageDescription"
@@ -302,43 +489,46 @@ export default function NewIncident() {
                   }}
                 />
               )}
+              {
+                audioDescriptionResponse && (
 
-              <TextField
-                id="audioDescription"
-                name="audioDescription"
-                label="Audio Description"
-                multiline
-                variant="standard"
-                value={formData.audioDescription}
-                onChange={handleChange}
-                fullWidth
-                color="primary"
-                sx={{ 
-                  marginBottom: 2,
-                  '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'secondary.main',
-                      '& input': {
+                  <TextField
+                    id="audioDescription"
+                    name="audioDescription"
+                    label="Audio Description"
+                    multiline
+                    variant="standard"
+                    value={formData.audioDescription}
+                    onChange={handleChange}
+                    fullWidth
+                    color="primary"
+                    sx={{
+                      marginBottom: 2,
+                      '& .MuiOutlinedInput-root': {
+                        backgroundColor: 'secondary.main',
+                        '& input': {
+                          color: 'primary.main',
+                        },
+                        '& fieldset': {
+                          borderColor: 'quaternary.main',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: 'primary.main',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: 'primary.main',
+                        },
+                      },
+                      '& .MuiInputLabel-root': {
                         color: 'primary.main',
                       },
-                      '& fieldset': {
-                        borderColor: 'quaternary.main',
+                      '& .MuiInputLabel-root.Mui-focused': {
+                        color: 'primary.main',
                       },
-                      '&:hover fieldset': {
-                        borderColor: 'primary.main',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: 'primary.main',
-                      },
-                    },
-                    '& .MuiInputLabel-root': {
-                      color: 'primary.main',
-                    },
-                    '& .MuiInputLabel-root.Mui-focused': {
-                      color: 'primary.main',
-                    },
-                }}
-              />
-
+                    }}
+                  />
+                )
+              }
               <TextField
                 id="userDescription"
                 name="userDescription"
@@ -349,41 +539,41 @@ export default function NewIncident() {
                 onChange={handleChange}
                 fullWidth
                 color="primary"
-                sx={{ 
+                sx={{
                   marginBottom: 2,
                   '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'secondary.main',
-                      '& input': {
-                        color: 'primary.main',
-                      },
-                      '& fieldset': {
-                        borderColor: 'quaternary.main',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: 'primary.main',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: 'primary.main',
-                      },
-                    },
-                    '& .MuiInputLabel-root': {
+                    backgroundColor: 'secondary.main',
+                    '& input': {
                       color: 'primary.main',
                     },
-                    '& .MuiInputLabel-root.Mui-focused': {
-                      color: 'primary.main',
+                    '& fieldset': {
+                      borderColor: 'quaternary.main',
                     },
+                    '&:hover fieldset': {
+                      borderColor: 'primary.main',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: 'primary.main',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: 'primary.main',
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: 'primary.main',
+                  },
                 }}
               />
 
-              <FormControl variant="standard" fullWidth  sx={{ marginBottom: 2 }}>
-                <InputLabel id="crimeType-label" sx = {{color :"primary.main"}}>Type of Crime</InputLabel>
+              <FormControl variant="standard" fullWidth sx={{ marginBottom: 2 }}>
+                <InputLabel id="crimeType-label" sx={{ color: "primary.main" }}>Type of Crime</InputLabel>
                 <Select
                   labelId="crimeType-label"
                   id="crimeType"
                   name="crimeType"
                   value={formData.crimeType}
                   onChange={handleChange}
-                  fullWidth 
+                  fullWidth
                 >
                   {crimeTypes.map((crime, index) => (
                     <MenuItem key={index} value={crime} style={{ color: 'primary.main' }}>
@@ -402,35 +592,35 @@ export default function NewIncident() {
                 onChange={handlePincodeChange}
                 fullWidth
                 color="primary"
-                sx={{ 
+                sx={{
                   marginBottom: 2,
                   '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'secondary.main',
-                      '& input': {
-                        color: 'primary.main',
-                      },
-                      '& fieldset': {
-                        borderColor: 'quaternary.main',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: 'primary.main',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: 'primary.main',
-                      },
-                    },
-                    '& .MuiInputLabel-root': {
+                    backgroundColor: 'secondary.main',
+                    '& input': {
                       color: 'primary.main',
                     },
-                    '& .MuiInputLabel-root.Mui-focused': {
-                      color: 'primary.main',
+                    '& fieldset': {
+                      borderColor: 'quaternary.main',
                     },
+                    '&:hover fieldset': {
+                      borderColor: 'primary.main',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: 'primary.main',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: 'primary.main',
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: 'primary.main',
+                  },
                 }}
               />
 
               {/* Police Station Select */}
-              <FormControl variant="standard" fullWidth  sx={{ marginBottom: 2 }}>
-                <InputLabel id="policeStationId-label" sx = {{color :"primary.main"}}>Police Station</InputLabel>
+              <FormControl variant="standard" fullWidth sx={{ marginBottom: 2 }}>
+                <InputLabel id="policeStationId-label" sx={{ color: "primary.main" }}>Police Station</InputLabel>
                 <Select
                   labelId="policeStationId-label"
                   id="policeStationId"
@@ -445,7 +635,7 @@ export default function NewIncident() {
                       </MenuItem>
                     ))
                   ) : (
-                    <MenuItem value="" sx = {{ color: 'primary.main' }}>No stations found</MenuItem>
+                    <MenuItem value="" disabled sx={{ color: 'primary.main' }}>Select Pincode First</MenuItem>
                   )}
                 </Select>
               </FormControl>

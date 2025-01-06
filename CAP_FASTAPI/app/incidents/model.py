@@ -11,11 +11,8 @@ class StatusEnum(str, Enum):
 class DescriptionResponse(BaseModel):
     description: str
 
-class ImageRequest(BaseModel):
-    image: str
-
-class AudioRequest(BaseModel):
-    audio: str
+class DescriptionRequest(BaseModel):
+    fileId:str
 
 class UpdateIncidentStatus(BaseModel):
     id: str

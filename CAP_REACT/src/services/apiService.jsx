@@ -1,11 +1,6 @@
-// import { useSnackbar } from "../context/snackbarContext";
-// import { Navigate, useNavigate } from "react-router-dom";
-// import { AuthContext } from "../context/authContext";
+
 
 export async function getData(url, accessToken) {
-//   const { showSnackbar } = useSnackbar();
-//   const { logout } = useContext(AuthContext);
-
     try {
         const response = await fetch(url, {
             method: 'GET',
@@ -17,10 +12,6 @@ export async function getData(url, accessToken) {
 
         if (!response.ok) {
             if (response.status === 401) {
-                // showSnackbar('Session Expired','info');
-                // logout();
-                // Navigate('/login')
-                alert('Please login again')
                 throw new Error('Unauthorized: Please login.');
             }
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -68,6 +59,34 @@ export async function putData(updatedData, url, accessToken) {
         return data;
     } catch (error) {
         console.error('Error putting data:', error);
+        throw error;
+    }
+}
+
+export async function deleteData(url, accessToken) {
+    try {
+        const response = await fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+            },
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                throw new Error('Unauthorized: Please login.');
+            }
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        try {
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            return { message: 'Resource deleted successfully' };
+        }
+    } catch (error) {
+        console.error('Error deleting data:', error);
         throw error;
     }
 }

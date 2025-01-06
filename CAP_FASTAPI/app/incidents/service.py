@@ -2,14 +2,16 @@ import base64
 import os
 from typing import List, Optional
 from bson.objectid import ObjectId
-from .model import Incident, DescriptionResponse, GetIncident, UpdateIncidentStatus
+from .model import Incident, DescriptionResponse,DescriptionRequest, GetIncident, UpdateIncidentStatus
 from datetime import datetime
 from ..database import incident_collection, civilian_collection, police_collection
 import google.generativeai as genai
+from googleapiclient.errors import HttpError
 from fastapi import FastAPI, HTTPException, status, Depends, File, UploadFile
-from fastapi.responses import JSONResponse 
+from fastapi.responses import JSONResponse, StreamingResponse
 from pymongo.errors import DuplicateKeyError, PyMongoError
 from PIL import Image
+import io
 from io import BytesIO
 import traceback
 import uuid
@@ -18,12 +20,64 @@ import os
 from google.cloud import speech
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
+from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload, MediaIoBaseUpload, MediaIoBaseDownload
+from google.oauth2.service_account import Credentials
 import time
 import tempfile
 import shutil
+from google.cloud import speech
+import assemblyai as aai
 
-async def uploadFileToDrive(file: UploadFile = File(...)):
+async def post_getAudioDescription(file: UploadFile):
+    try:
+        # Save the uploaded file to a temporary directory
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_audio:
+            temp_audio.write(await file.read())
+            temp_audio_path = temp_audio.name
+
+        # Initialize AssemblyAI transcriber
+        transcriber = aai.Transcriber()
+
+        # Create transcription configuration
+        config = aai.TranscriptionConfig(speaker_labels=True)
+
+        # Transcribe the audio file
+        transcript = transcriber.transcribe(temp_audio_path, config)
+
+        # Check for transcription errors
+        if transcript.status == aai.TranscriptStatus.error:
+            raise Exception(f"Transcription failed: {transcript.error}")
+
+        # Prepare the response with speaker-labeled transcription
+        transcription_text = transcript.text
+        speaker_utterances = [
+            {"speaker": utterance.speaker, "text": utterance.text}
+            for utterance in transcript.utterances
+        ]
+
+        # Combine results into a structured response
+        result = {
+            "transcription_text": transcription_text,
+            "speaker_utterances": speaker_utterances,
+        }
+
+        return result
+
+    except Exception as e:
+        # Handle specific error and return a clear response
+        if 'NoneType' in str(e):
+            return {    
+                "transcription_text":"Couldn't transcribe text from audio."
+            }
+        else:
+            return {"error": f"Error during transcription: {str(e)}"}
+
+    finally:
+        # Clean up the temporary file
+        if os.path.exists(temp_audio_path):
+            os.remove(temp_audio_path)
+
+async def post_uploadFileToDrive(file: UploadFile = File(...)):
     try:
         # Load credentials from environment variables
         credentials_info = {
@@ -46,21 +100,24 @@ async def uploadFileToDrive(file: UploadFile = File(...)):
         credentials = Credentials.from_service_account_info(credentials_info, scopes=SCOPES)
         drive_service = build("drive", "v3", credentials=credentials)
 
+        # Create a temporary file to save the uploaded content
         temp_file_path = tempfile.mkdtemp()
         temp_file_name = os.path.join(temp_file_path, file.filename)
 
-        with open(temp_file_name, "wb") as buffer_file: #Use a buffer file
+        # Save the uploaded file to the temporary file
+        with open(temp_file_name, "wb") as buffer_file:
             shutil.copyfileobj(file.file, buffer_file)
 
+        # Set file metadata
         file_metadata = {"name": file.filename, "parents": [DRIVE_FOLDER_ID]}
 
-        #Crucial Change: Open file for reading *after* writing it.
+        # Upload the file to Google Drive
         with open(temp_file_name, "rb") as f:
             media = MediaIoBaseUpload(f, mimetype=file.content_type, resumable=True)
             request = drive_service.files().create(body=file_metadata, media_body=media, fields="id, webViewLink")
 
             response = None
-            while response is None:  
+            while response is None:
                 try:
                     status, response = request.next_chunk()
                     if status:
@@ -73,14 +130,17 @@ async def uploadFileToDrive(file: UploadFile = File(...)):
                     else:
                         raise
 
+        # Retrieve file ID and web view link
         file_id = response.get("id")
         web_view_link = response.get("webViewLink")
 
-        if file_id is None or web_view_link is None:
-            raise Exception("Upload successful, but file ID or webview link not found.")
+        if not file_id or not web_view_link:
+            raise Exception("Upload successful, but file ID or webViewLink not found in the response.")
 
+        # Clean up temporary files
         shutil.rmtree(temp_file_path)
 
+        # Return a success response with file details
         return JSONResponse(
             content={
                 "message": "File uploaded successfully",
@@ -93,77 +153,141 @@ async def uploadFileToDrive(file: UploadFile = File(...)):
     except Exception as e:
         error_message = f"An error occurred: {str(e)}"
         print(error_message)
-        traceback.print_exc()  # Add this line to print the full traceback
+        traceback.print_exc()  # Print the full traceback for debugging
 
+        # Handle specific error types
         if "Permission denied" in str(e):
             raise HTTPException(status_code=403, detail="Insufficient permissions.")
         else:
             raise HTTPException(status_code=500, detail=error_message)
 
-async def post_getAudioDescription() -> str:
+async def get_downloadFileFromDrive(file_id: str):
     try:
-        # Set API key directly
-        os.environ["GOOGLE_API_KEY"] = os.getenv("API_KEY")
+        # Load credentials from environment variables
+        credentials_info = {
+            "type": os.getenv("TYPE"),
+            "project_id": os.getenv("GOOGLE_PROJECT_ID"),
+            "private_key_id": os.getenv("GOOGLE_PRIVATE_KEY_ID"),
+            "private_key": os.getenv("GOOGLE_PRIVATE_KEY").replace("\\n", "\n"),
+            "client_email": os.getenv("GOOGLE_CLIENT_EMAIL"),
+            "client_id": os.getenv("GOOGLE_CLIENT_ID"),
+            "auth_uri": os.getenv("GOOGLE_AUTH_URI"),
+            "token_uri": os.getenv("GOOGLE_TOKEN_URI"),
+            "auth_provider_x509_cert_url": os.getenv("GOOGLE_AUTH_PROVIDER_CERT_URL"),
+            "client_x509_cert_url": os.getenv("GOOGLE_CLIENT_CERT_URL"),
+        }
 
-        # Configure API with the key
-        genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+        DRIVE_FOLDER_ID = os.getenv("DRIVE_FOLDER_ID")
+        SCOPES = ["https://www.googleapis.com/auth/drive"]
 
-        # Debug: Verify API key is set
-        api_key = os.environ.get("GOOGLE_API_KEY")
+        credentials = Credentials.from_service_account_info(credentials_info, scopes=SCOPES)
+        drive_service = build("drive", "v3", credentials=credentials)
+
+        file_metadata = drive_service.files().get(fileId=file_id, fields='name,mimeType,webViewLink').execute()
+        file_name = file_metadata['name']
+        mime_type = file_metadata['mimeType']
+
+        request = drive_service.files().get_media(fileId=file_id)
+        fh = BytesIO()
+        downloader = MediaIoBaseDownload(fh, request)
+        done = False
+        while done is False:
+            status, done = downloader.next_chunk()
+
+        fh.seek(0)
+
+        def iterfile():
+            chunk_size = 4096  # Adjust chunk size as needed
+            while True:
+                chunk = fh.read(chunk_size)
+                if not chunk:
+                    break
+                yield chunk
+
+        return StreamingResponse(iterfile(), media_type=mime_type, headers={"Content-Disposition": f"attachment; filename={file_name}"})
+
+    except Exception as e:
+        print(f"Download Error: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error downloading file: {e}")
+        
+async def delete_removeFileFromDrive(fileId:str):
+    try:
+        # Load credentials from environment variables
+        credentials_info = {
+            "type": os.getenv("TYPE"),
+            "project_id": os.getenv("GOOGLE_PROJECT_ID"),
+            "private_key_id": os.getenv("GOOGLE_PRIVATE_KEY_ID"),
+            "private_key": os.getenv("GOOGLE_PRIVATE_KEY").replace("\\n", "\n"),
+            "client_email": os.getenv("GOOGLE_CLIENT_EMAIL"),
+            "client_id": os.getenv("GOOGLE_CLIENT_ID"),
+            "auth_uri": os.getenv("GOOGLE_AUTH_URI"),
+            "token_uri": os.getenv("GOOGLE_TOKEN_URI"),
+            "auth_provider_x509_cert_url": os.getenv("GOOGLE_AUTH_PROVIDER_CERT_URL"),
+            "client_x509_cert_url": os.getenv("GOOGLE_CLIENT_CERT_URL"),
+        }
+
+        DRIVE_FOLDER_ID = os.getenv("DRIVE_FOLDER_ID")
+        SCOPES = ["https://www.googleapis.com/auth/drive"]
+
+        # Authenticate with Google Drive API
+        credentials = Credentials.from_service_account_info(credentials_info, scopes=SCOPES)
+        drive_service = build("drive", "v3", credentials=credentials)
+
+        drive_service.files().delete(fileId=fileId).execute()
+
+        return JSONResponse(
+            content={"message": "File deleted successfully"}, status_code=200
+        )
+
+    except HttpError as e:
+        error_message = f"An error occurred: {str(e)}"
+        print(error_message)
+        traceback.print_exc()
+
+        # Handle specific error types (more specific error handling could be added here)
+        if e.resp.status == 404:
+            raise HTTPException(status_code=404, detail="File not found.")
+        elif e.resp.status == 403:
+            raise HTTPException(status_code=403, detail="Insufficient permissions.")
+        else:
+            raise HTTPException(status_code=500, detail=error_message)
+    except Exception as e:
+        error_message = f"An error occurred: {str(e)}"
+        print(error_message)
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=error_message)
+
+async def post_getImageDescription(file: UploadFile):
+    try:
+        # Ensure the API key is set
+        api_key = os.getenv("API_KEY")
         if not api_key:
             print("Error: API key not set. Please set the GOOGLE_API_KEY environment variable.")
-            exit(1)
-        else:
-            print("API key set successfully.")
+            return "Error: API key not set."
 
-        # Example placeholder method for Generative AI (update based on the actual API docs)
+        # Initialize the genai configuration
+        genai.configure(api_key=api_key)
+
+        # Read the uploaded file (ensure the file is an image)
+        file_content = await file.read()
+        image = Image.open(io.BytesIO(file_content))
+        # Assuming 'file_content' is the image to be analyzed
+        prompt = f"""Identify if there is any crime depicted in the following image. 
+        If a crime is present, respond with 'crime:True, typeOfCrime:<type>, description:<description>'. 
+        Otherwise, respond with 'crime:False'."""
+        
         model = genai.GenerativeModel("gemini-1.5-flash")
-        prompt = f"""Transcribe the audio file located at: {https://drive.google.com/file/d/1am9nFnjojwCbJq3tUwGWlHkWRXAi653I/view?usp=drive_link}"""
-        response = model.generate_content([prompt])
+        response = model.generate_content([prompt,image])
+
+        # Log the response from the AI model
         print(response.text)
-        # Return the response text
+
         return response.text
 
     except Exception as e:
-        print(f"An error occurred: {e}")
-        return f"An error occurred: {e}"
-
-
-async def post_getImageDescription(base64_image: str) -> str:
-    try:
-        # Set API key directly
-        os.environ["GOOGLE_API_KEY"] = os.getenv("API_KEY")
-
-        # Configure API with the key
-        genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
-
-        # Debug: Verify API key is set
-        api_key = os.environ.get("GOOGLE_API_KEY")
-        if not api_key:
-            print("Error: API key not set. Please set the GOOGLE_API_KEY environment variable.")
-            exit(1)
-        else:
-            print("API key set successfully.")
-
-        # Convert base64 string to image
-        image_data = base64.b64decode(base64_image)
-        image = Image.open(BytesIO(image_data))
-
-        # Ensure the image was opened correctly
-        if image is None:
-            print("Error: Unable to open image.")
-            return "Error: Unable to open image."
-
-        # Example placeholder method for Generative AI (update based on the actual API docs)
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        response = model.generate_content(["Identify if there is any crime depicted in this image. If a crime is present, then create a response like crime:True or False, typeOfCrime: Type of crime, description: Brief description of the crime",image])
-        print(response.text)
-        # Return the response text
-        return response.text
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return f"An error occurred: {e}"
+        print(f"An error occurred in image analysis: {e}")
+        return f"An error occurred in image analysis: {e}"
         
 def put_updateIncidentStatus(updateIncidentStatus: UpdateIncidentStatus) -> dict:
     try:

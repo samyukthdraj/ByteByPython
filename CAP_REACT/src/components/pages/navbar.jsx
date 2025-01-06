@@ -15,12 +15,13 @@ import { useMediaQuery } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
+import LogoutSharpIcon from '@mui/icons-material/LogoutSharp';
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
-  backgroundColor: '#272343', // Modern blue
-  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)', // Subtle shadow for depth
+  backgroundColor: '#272343',
+  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
   padding: theme.spacing(1),
-  transition: 'background-color 0.3s ease', // Smooth background transition
+  transition: 'background-color 0.3s ease',
 }));
 
 const Navbar = () => {
@@ -31,17 +32,16 @@ const Navbar = () => {
   const location = useLocation();
   const isMobile = useMediaQuery('(max-width:600px)');
 
-  // Ensure the drawer state is reset when screen size changes
   useEffect(() => {
     if (!isMobile) {
-      setDrawerOpen(false); // Close the drawer when transitioning to a desktop screen
+      setDrawerOpen(false);
     }
   }, [isMobile]);
 
   const handleLogout = () => {
     setOpen(false);
     logout();
-    navigate('/'); // Redirect to login after logout
+    navigate('/');
   };
 
   const handleClickOpen = () => {
@@ -71,11 +71,11 @@ const Navbar = () => {
             marginBottom: drawerOpen || isMobile ? 2 : 0,
             marginRight: drawerOpen || isMobile ? 0 : 2,
             '&:hover': {
-              color: '#BAE8E8', // Hover color
+              color: '#BAE8E8',
               backgroundColor: 'transparent',
             },
             '&.active': {
-              color: '#EFE3C2', // Active nav item color
+              color: '#EFE3C2',
             },
           }}
           className={location.pathname === '/civilian/newIncident' ? 'active' : ''}
@@ -92,11 +92,11 @@ const Navbar = () => {
           marginBottom: drawerOpen || isMobile ? 2 : 0,
           marginRight: drawerOpen || isMobile ? 0 : 2,
           '&:hover': {
-            color: '#BAE8E8', // Hover color
+            color: '#BAE8E8',
             backgroundColor: 'transparent',
           },
           '&.active': {
-            color: '#EFE3C2', // Active nav item color
+            color: '#EFE3C2',
           },
         }}
         className={
@@ -117,11 +117,14 @@ const Navbar = () => {
         sx={{
           color: '#FFFFFF',
           '&:hover': {
-            color: '#BAE8E8', // Hover color
+            color: '#BAE8E8',
             backgroundColor: 'transparent',
           },
+          display: 'flex',
+          alignItems: 'center',
         }}
         onClick={handleClickOpen}
+        startIcon={<LogoutSharpIcon />}
       >
         Logout
       </Button>
@@ -147,8 +150,8 @@ const Navbar = () => {
                 onClose={toggleDrawer}
                 sx={{
                   '& .MuiDrawer-paper': {
-                    backgroundColor: '#272343', // Match the app bar background
-                    color: '#FFFFFF', // Ensure the text is white on the dark background
+                    backgroundColor: '#272343',
+                    color: '#FFFFFF',
                     width: 250,
                   },
                 }}
@@ -157,7 +160,7 @@ const Navbar = () => {
               </Drawer>
             </>
           ) : (
-            renderNavLinks() // Display in row on desktop view
+            renderNavLinks()
           )}
         </Toolbar>
       </StyledAppBar>
