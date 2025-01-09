@@ -109,18 +109,26 @@ Civilians As Police (CAP) is a comprehensive web application designed to simplif
 Create a `.env` file with the following variables:
 
 ```env
-SECRET_KEY=your_secret_key
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-MONGODB_URL=your_mongodb_url
-ASSEMBLY_API_KEY=your_assemblyai_api_key
-FOLDER_ID=your_google_drive_folder_id
+MONGO_URI=mongodb+srv://samyukthterawe:g4sno72xdTi4NDpa@cap-cluster.ky2cl.mongodb.net/?retryWrites=true&w=majority&appName=cap-cluster
+MONGO_DB_NAME=cap_database
+ASSEMBLY_API_KEY=9e493625da8c4a9aa8ea4125507e4d4a
+GEMINI_API_KEY = AIzaSyBXr_EYbwC-JA4tJ_F37fctbzgKDcxTzZo
+SECRET_KEY=922f4a5a50d8055a318c3e49313f6ec47733043ccc1cadef03b1a2000c0c1029
+SENDER_EMAIL=edusmart500@gmail.com
+SENDER_PASSWORD=eegcqypkszxcqelz
+SMTP_EMAIL=edusmart500@gmail.com
+SMTP_PASSWORD=eegcqypkszxcqelz
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+ 
+DEV_MODE=False
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
-EMAIL_USERNAME=your_email
-EMAIL_PASSWORD=your_app_password
-EMAIL_FROM=your_sender_email
-GEMINI_API_KEY=your_gemini_api_key
+EMAIL_USERNAME=edusmart500@gmail.com
+EMAIL_PASSWORD=eegcqypkszxcqelz
+EMAIL_FROM=edusmart500@gmail.com
+ 
+FOLDER_ID = "1dxymA4Lejnbuv2_y3dXjgBUNRh9ZtO3x"
 ```
 
 ## 🗂️ Project Structure
