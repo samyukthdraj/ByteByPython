@@ -14,7 +14,6 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { postData } from '../../services/apiService';
 import { AuthContext } from '../../context/authContext';
 import API_URLS from '../../services/apiUrlService';
-import './signIn.css';
 import { useSnackbar } from '../../context/snackbarContext';
 
 const theme = createTheme({
