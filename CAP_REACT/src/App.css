@@ -1,0 +1,4 @@
+/* If you need any global styles that are NOT handled by the theme*/
+body {
+    margin: 0; /* This is often a good default */
+  }

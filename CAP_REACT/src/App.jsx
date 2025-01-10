@@ -1,37 +1,26 @@
 import { AuthProvider } from './context/authContext';
 import { RouterProvider } from 'react-router-dom';
-import { createTheme, ThemeProvider } from '@mui/material/styles'; // For MUI theme
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import routes from './routes';
-import './App.css'
+import './App.css';
 import { SnackbarProvider } from './context/snackbarContext';
 
+// Choose ONE main font family.  I'm using Open Sans here.
 const theme = createTheme({
   typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif', // Apply Roboto font
+    fontFamily: '"Open Sans", sans-serif',
   },
 });
 
 function App() {
   return (
-    <div>
+    <ThemeProvider theme={theme}> {/* ThemeProvider should wrap everything */}
       <AuthProvider>
-        <ThemeProvider theme={theme}>
-          <SnackbarProvider>
-            <RouterProvider
-              future={{
-                v7_startTransition: true,
-                v7_relativeSplatPath: true,
-                v7_fetcherPersist: true,
-                v7_normalizeFormMethod: true,
-                v7_partialHydration: true,
-                v7_skipActionErrorRevalidation: true
-              }}
-              router={routes}
-            />
-          </SnackbarProvider>
-        </ThemeProvider>
+        <SnackbarProvider>
+          <RouterProvider router={routes} />
+        </SnackbarProvider>
       </AuthProvider>
-    </div>
+    </ThemeProvider>
   );
 }
 

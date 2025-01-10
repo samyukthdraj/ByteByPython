@@ -183,22 +183,33 @@ async def post_uploadFileToDrive(file: UploadFile = File(...)):
                     else:
                         raise
 
-        # Retrieve file ID and web view link
+        # Retrieve file ID
         file_id = response.get("id")
-        web_view_link = response.get("webViewLink")
+        if not file_id:
+            raise Exception("Upload successful, but file ID not found in the response.")
 
-        if not file_id or not web_view_link:
-            raise Exception("Upload successful, but file ID or webViewLink not found in the response.")
+        # Make the file public
+        permission = {"type": "anyone", "role": "reader"}
+        drive_service.permissions().create(fileId=file_id, body=permission).execute()
+
+        # Get the direct file link
+        file_details = drive_service.files().get(fileId=file_id, fields="id, webViewLink, webContentLink").execute()
+        web_content_link = file_details.get("webContentLink")
+        web_view_link = file_details.get("webViewLink")
+
+        if not web_content_link:
+            raise Exception("Failed to get the web content link for the file.")
 
         # Clean up temporary files
         shutil.rmtree(temp_file_path)
 
-        # Return a success response with file details
+        # Return a success response with the direct link
         return JSONResponse(
             content={
                 "message": "File uploaded successfully",
                 "file_id": file_id,
                 "webViewLink": web_view_link,
+                "webContentLink": web_content_link,
             },
             status_code=200,
         )

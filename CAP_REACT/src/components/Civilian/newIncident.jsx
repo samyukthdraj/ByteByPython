@@ -108,13 +108,13 @@ export default function NewIncident() {
     try {
       const uploadResponse = await uploadFileToDrive(file);
       if (uploadResponse) {
-        const { webViewLink, file_id } = uploadResponse;
+        const { webContentLink, file_id } = uploadResponse;
         const setLocalId = isImage ? setLocalImageId : setLocalAudioId;
         const setImageDescResp = isImage ? setImageDescriptionResponse : setAudioDescriptionResponse;
         const getDescFunc = isImage ? getImageDescription : getAudioDescription;
 
         setLocalId(file_id);
-        setFormData((prevData) => ({ ...prevData, [name]: webViewLink }));
+        setFormData((prevData) => ({ ...prevData, [name]: webContentLink }));
         await getDescFunc(file);
       } else {
         showSnackbar('File upload failed.', 'error');
@@ -195,7 +195,7 @@ export default function NewIncident() {
       const data = await response.json();
       console.log("Upload successful:", data);
       return {
-        webViewLink: data.webViewLink,
+        webContentLink: data.webContentLink,
         file_id: data.file_id,
       };
     } catch (error) {

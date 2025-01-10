@@ -16,18 +16,22 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import LogoutSharpIcon from '@mui/icons-material/LogoutSharp';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle'; // Import User Icon
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
-  backgroundColor: '#272343',
-  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+  backgroundColor: 'white',
+  boxShadow: 'none',
   padding: theme.spacing(1),
-  transition: 'background-color 0.3s ease',
 }));
 
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
   const [open, setOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null); // For user menu
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useMediaQuery('(max-width:600px)');
@@ -56,47 +60,63 @@ const Navbar = () => {
     setDrawerOpen(!drawerOpen);
   };
 
+  const handleUserMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setAnchorEl(null);
+  };
+
   const renderNavLinks = () => (
     <Box
       display="flex"
       flexDirection={drawerOpen || isMobile ? 'column' : 'row'}
-      justifyContent="flex-start"
+      justifyContent="flex-end" // Align to the right
       alignItems="center"
     >
       {user?.userType === 'civilian' && (
         <Button
+          component={Link}
+          to="/civilian/newIncident"
           variant="text"
           sx={{
-            color: '#FFFFFF',
-            marginBottom: drawerOpen || isMobile ? 2 : 0,
-            marginRight: drawerOpen || isMobile ? 0 : 2,
+            color: 'black',
+            marginRight: 2,
+            textDecoration: 'none',
+            textTransform: 'capitalize',
+            fontSize:'1.125rem',
             '&:hover': {
-              color: '#BAE8E8',
-              backgroundColor: 'transparent',
+              color: '#000000', // Maintain black on hover for better contrast.
+              textDecoration: 'underline',
             },
             '&.active': {
-              color: '#EFE3C2',
+              fontWeight: 600,
+              color: '#000000',
             },
           }}
           className={location.pathname === '/civilian/newIncident' ? 'active' : ''}
         >
-          <Link to="/civilian/newIncident" style={{ textDecoration: 'none', color: 'inherit' }}>
-            New Incident
-          </Link>
+          New Incident
         </Button>
       )}
       <Button
+        component={Link}
+        to={user?.userType === 'civilian' ? '/civilian/dashboard' : '/police/dashboard'}
         variant="text"
         sx={{
-          color: '#FFFFFF',
-          marginBottom: drawerOpen || isMobile ? 2 : 0,
-          marginRight: drawerOpen || isMobile ? 0 : 2,
+          color: 'black',
+          marginRight: 2,
+          textDecoration: 'none',
+          textTransform: 'capitalize',
+          fontSize:'1.125rem',
           '&:hover': {
-            color: '#BAE8E8',
-            backgroundColor: 'transparent',
+            color: '#000000',
+            textDecoration: 'underline',
           },
           '&.active': {
-            color: '#EFE3C2',
+            fontWeight: 600,
+            color: '#000000',
           },
         }}
         className={
@@ -105,29 +125,28 @@ const Navbar = () => {
             : ''
         }
       >
-        <Link
-          to={user?.userType === 'civilian' ? '/civilian/dashboard' : '/police/dashboard'}
-          style={{ textDecoration: 'none', color: 'inherit' }}
-        >
-          Dashboard
-        </Link>
+        Dashboard
       </Button>
-      <Button
-        variant="text"
-        sx={{
-          color: '#FFFFFF',
-          '&:hover': {
-            color: '#BAE8E8',
-            backgroundColor: 'transparent',
-          },
-          display: 'flex',
-          alignItems: 'center',
-        }}
-        onClick={handleClickOpen}
-        startIcon={<LogoutSharpIcon />}
+      <IconButton
+        aria-controls="user-menu"
+        aria-haspopup="true"
+        onClick={handleUserMenuOpen}
+        sx={{ 
+          color: 'black',
+         }}
       >
-        Logout
-      </Button>
+        <AccountCircleIcon />
+      </IconButton>
+      <Menu
+        id="user-menu"
+        anchorEl={anchorEl}
+        keepMounted
+        open={Boolean(anchorEl)}
+        onClose={handleUserMenuClose}
+      >
+        <MenuItem onClick={handleUserMenuClose}>{user ? `Welcome, ${user.name}!` : 'Please log in.'}</MenuItem>
+        <MenuItem onClick={handleClickOpen}>Logout</MenuItem>
+      </Menu>
     </Box>
   );
 
@@ -135,10 +154,13 @@ const Navbar = () => {
     <>
       <StyledAppBar position="fixed">
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold', color: 'white' }}>
-            {user ? `Welcome, ${user.name}!` : 'Please log in.'}
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{ flexGrow: 1, color: 'black', fontSize: '40px', fontWeight: '700'}}
+          >
+            C A P
           </Typography>
-
           {isMobile ? (
             <>
               <IconButton edge="end" color="inherit" onClick={toggleDrawer} sx={{ display: { sm: 'none' } }}>
@@ -150,8 +172,8 @@ const Navbar = () => {
                 onClose={toggleDrawer}
                 sx={{
                   '& .MuiDrawer-paper': {
-                    backgroundColor: '#272343',
-                    color: '#FFFFFF',
+                    backgroundColor: 'white',
+                    color: 'black',
                     width: 250,
                   },
                 }}
