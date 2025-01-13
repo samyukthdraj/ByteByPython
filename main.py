@@ -42,26 +42,17 @@ import pytz
 app = FastAPI()
 db = Database()
 
-# Serve the frontend directory
-frontend_path = "frontend"
-if not os.path.exists(frontend_path):
-    os.makedirs(frontend_path, exist_ok=True)  # Ensure the directory exists
-app.mount("/frontend", StaticFiles(directory=frontend_path), name="frontend")
+# Mount app to directories
+static_dirs = {
+    "frontend": "frontend",
+    "backend": "backend",
+    "police_stations": "police_stations",
+    "uploads": "uploads"
+}
 
-# Mount backend directory
-backend_path = "backend"
-os.makedirs(backend_path, exist_ok=True)
-app.mount("/backend", StaticFiles(directory=backend_path), name="backend")
-
-# Mount the police_stations directory
-police_stations_path = "police_stations"
-os.makedirs(police_stations_path, exist_ok=True)  # Ensure the directory exists
-app.mount("/police_stations", StaticFiles(directory=police_stations_path), name="police_stations")
-
-#putting into uploads.
-uploads_path = "uploads"
-os.makedirs(uploads_path, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
+for path, dir_name in static_dirs.items():
+    os.makedirs(dir_name, exist_ok=True)
+    app.mount(f"/{path}", StaticFiles(directory=dir_name), name=path)
 
 @app.on_event("startup")
 async def startup_event():
