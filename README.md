@@ -202,6 +202,9 @@ pip install -r requirements.txt
 ```bash
 uvicorn main:app --reload
 ```
+7. Also accessible to use at:
+- FE: https://samyukthdraj.github.io/ByteByPython/frontend/hero.html
+- BE: https://bytebypython.onrender.com
 
 ## 🌟 Key Features Implementation
 
