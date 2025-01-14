@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const password = document.getElementById('user-password').value;
     
             try {
-                const response = await fetch('http://localhost:8000/login', {
+                const response = await fetch('https://bytebypython.onrender.com/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const stationPassword = document.getElementById('police-station-password').value;
 
             try {
-                const response = await fetch('http://localhost:8000/police-login', {
+                const response = await fetch('https://bytebypython.onrender.com/police-login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

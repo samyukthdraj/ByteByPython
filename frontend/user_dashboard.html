@@ -42,7 +42,7 @@
       try {
         if (!checkAuthentication()) return;
 
-        const response = await fetch('http://localhost:8000/user-tickets', {
+        const response = await fetch('https://bytebypython.onrender.com/user-tickets', {
           method: 'GET',
           // credentials: 'include',
           headers: {

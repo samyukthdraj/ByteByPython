@@ -89,6 +89,9 @@ def convert_objectid_to_str(data):
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "https://samyukthdraj.github.io/ByteByPython/frontend/hero.html"
+        "https://samyukthdraj.github.io/ByteByPython/"
+        "https://bytebypython.onrender.com"
         "http://localhost:8000",  # FastAPI server
         "http://127.0.0.1:8000",  # Alternative localhost
         "http://localhost:5500",   # Your frontend origin (NEW)
@@ -655,9 +658,9 @@ async def get_ticket_details(
         
         # If there are file URLs, construct full URLs
         if ticket.get('image_url'):
-            ticket['image_url'] = f"http://localhost:8000/uploads/{ticket['image_url']}"
+            ticket['image_url'] = f"https://bytebypython.onrender.com/uploads/{ticket['image_url']}"
         if ticket.get('audio_url'):
-            ticket['audio_url'] = f"http://localhost:8000/uploads/{ticket['audio_url']}"
+            ticket['audio_url'] = f"https://bytebypython.onrender.com/uploads/{ticket['audio_url']}"
             
         return ticket
     except Exception as e:
