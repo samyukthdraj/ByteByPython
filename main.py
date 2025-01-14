@@ -96,14 +96,17 @@ app.add_middleware(
         "http://localhost:8000",  # FastAPI server
         "http://127.0.0.1:8000",  # Alternative localhost
         "http://localhost:5500",   # Your frontend origin (NEW)
-        "http://127.0.0.1:5500", #live server origin
-        "null",  # For local file access
-        "*"  # Be cautious with this in production
+        "http://127.0.0.1:5500" #live server origin
+        # "null",  # For local file access
+        # "*"  # Be cautious with this in production
     ],
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # Explicitly specify methods
+    allow_headers=["Content-Type", "Authorization", "Accept"],  # Specify needed headers
+    expose_headers=["Content-Type"],  # Expose necessary headers to the frontend
+    max_age=3600,  # Cache preflight requests for 1 hour
 )
+
 
 load_dotenv()
 
