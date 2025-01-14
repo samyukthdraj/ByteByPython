@@ -91,7 +91,7 @@ app.add_middleware(
     allow_origins=[
         # "https://samyukthdraj.github.io/ByteByPython/frontend/hero.html",
         # "https://samyukthdraj.github.io/ByteByPython/",
-        "https://samyukthdraj.github.io"
+        "https://samyukthdraj.github.io",
         "https://bytebypython.onrender.com",
         "http://localhost:8000",  # FastAPI server
         "http://127.0.0.1:8000",  # Alternative localhost
