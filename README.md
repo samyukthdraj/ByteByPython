@@ -201,6 +201,9 @@ pip install -r requirements.txt
 6. Run the application:
 ```bash
 uvicorn main:app --reload
+OR
+- FE:"https://samyukthdraj.github.io/ByteByPython/frontend/hero.html",
+- BE:"https://bytebypython.onrender.com"
 ```
 
 ## 🌟 Key Features Implementation

@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const BACKEND_URL = 'http://127.0.0.1:8000';
+    const BACKEND_URL = 'https://bytebypython.onrender.com';
     
     const forgotPasswordForm = document.getElementById('forgot-password-form');
     const emailSection = document.getElementById('email-section');

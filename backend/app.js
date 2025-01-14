@@ -88,7 +88,7 @@ async function startRecording() {
                 const formData = new FormData();
                 formData.append("file", file);
 
-                const response = await fetch("http://127.0.0.1:8000/process-speech", {
+                const response = await fetch("https://bytebypython.onrender.com/process-speech", {
                     method: "POST",
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('access_token')}`
@@ -449,7 +449,7 @@ async function analyzeImage(file) {
                     body: JSON.stringify({
                         contents: [{
                             parts: [
-                                { text: 'Analyze this image and provide the following in a structured JSON format: {"keywords": [], "crime_type": "", "description": ""}. If no specific crime is evident, set crime_type to null. Make crime_type match existing dropdown options (theft, vandalism, assault, fraud, or others). If not in the list then the real type should be appended in the dropdown and selected automatically. If not a crime then give in the description not a crime and update the type of crime as No Criminal Activity.' },
+                                { text: 'Analyze this image and provide the following in a structured JSON format: {"keywords": [], "crime_type": "", "description": ""}. If no specific crime is evident, set crime_type to null. Make crime_type match existing dropdown options (theft, vandalism, assault, fraud, or others). If not in the list then the real type should be appended in the dropdown and selected automatically. If not a crime then give in the description not a crime and update the type of crime as No Criminal Activity. Overspeeding, helmetless driving, driving using phone should be others and under the others put "traffic".' },
                                 { 
                                     inlineData: {
                                         mimeType: 'image/jpeg',
@@ -535,7 +535,7 @@ async function processVoice(file) {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch("http://127.0.0.1:8000/process-speech", {
+        const response = await fetch("https://bytebypython.onrender.com/process-speech", {
             method: "POST",
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('access_token')}`
