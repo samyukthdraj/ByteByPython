@@ -100,7 +100,7 @@ app.add_middleware(
         "null",  # For local file access
         "*"  # Be cautious with this in production
     ],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
