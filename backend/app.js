@@ -617,7 +617,7 @@ async function submitReport() {
             throw new Error('No access token found. Please log in.');
         }
 
-        const response = await fetch("http://localhost:8000/upload-crime-report", {
+        const response = await fetch("https://bytebypython.onrender.com/upload-crime-report", {
             method: "POST",
             headers: {
                 'Authorization': `Bearer ${accessToken}`,

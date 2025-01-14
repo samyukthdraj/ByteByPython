@@ -63,10 +63,10 @@ uploads_path = "uploads"
 os.makedirs(uploads_path, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
 
-@app.on_event("startup")
-async def startup_event():
-    # Open the login page when the server starts
-    webbrowser.open_new_tab("http://127.0.0.1:8000/frontend/hero.html")
+# @app.on_event("startup")
+# async def startup_event():
+#     # Open the login page when the server starts
+#     webbrowser.open_new_tab("http://127.0.0.1:8000/frontend/hero.html")
 
 @app.get("/")
 def read_root():
@@ -131,8 +131,6 @@ class OTPVerification(BaseModel):
 class PasswordReset(BaseModel):
     email: EmailStr
     new_password: str
-
-
 
 # Authentication Utility Functions
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -366,9 +364,9 @@ async def reset_password(reset_request: PasswordReset):
             detail=f"An error occurred: {str(e)}"
         )
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+# if __name__ == "__main__":
+#     import uvicorn
+#     uvicorn.run(app, host="127.0.0.1", port=8000)
 
 
 @app.post("/token")
