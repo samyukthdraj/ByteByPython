@@ -431,7 +431,7 @@ function updateDropdownWithStations(dropdown, stations) {
 
 
 async function analyzeImage(file) {
-    const GEMINI_API_KEY = 'AIzaSyBXr_EYbwC-JA4tJ_F37fctbzgKDcxTzZo';
+    const GEMINI_API_KEY = 'AIzaSyC6E4DiBp0grX944z2wQg-B2uTNk3B28dk';
 
     const reader = new FileReader();
     reader.readAsDataURL(file);
