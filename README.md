@@ -181,21 +181,21 @@ project/
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/samyukthdraj/ByteByPython.git
 ```
 
-2. Install dependencies:
+2. Create and activate virtual environment:
+```bash
+python -m venv venv_name
+.\venv_name\Scripts\activate
+```
+
+3. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Install additional dependencies for AI and API functionality:
-```bash
-pip install google-api-core google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib
-pip install fastapi[all] pytz aiohttp
-```
-
-4. Set up environment variables as mentioned above
+4. Set up environment variables in a .env file as mentioned above 
 
 5. Prepare the police stations CSV file with the following columns:
    - slNo
@@ -209,6 +209,9 @@ pip install fastapi[all] pytz aiohttp
 6. Run the application:
 ```bash
 uvicorn main:app --reload
+OR
+- FE:"https://samyukthdraj.github.io/ByteByPython/frontend/hero.html",
+- BE:"https://bytebypython.onrender.com"
 ```
 
 ## 🌟 Key Features Implementation
@@ -240,11 +243,9 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 ## 👥 Contributors
 
-[Your Name] - Initial work
-
-## 🔖 License
-
-This project is licensed under the [License Name] - see the LICENSE.md file for details
+- Samyukth Dharmarajan
+- Ashwin Linu
+- Surya D
 
 ## 🙏 Acknowledgments
 
@@ -253,4 +254,9 @@ This project is licensed under the [License Name] - see the LICENSE.md file for 
 - MongoDB for database services
 - Google Gemini for image analysis
 - Contributors to the MediaRecorder API
+
+## 📸 Screenshots
+![image](https://github.com/user-attachments/assets/93242d4d-64bf-4863-91ab-92622b2edadb)
+
+
 
