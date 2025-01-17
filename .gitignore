@@ -30,7 +30,7 @@ build/
 .idea/
 
 # Environment variables
-.env
+# .env
 
 uploads/
 
