@@ -431,7 +431,7 @@ function updateDropdownWithStations(dropdown, stations) {
 
 
 async function analyzeImage(file) {
-    const GEMINI_API_KEY = 'AIzaSyBXr_EYbwC-JA4tJ_F37fctbzgKDcxTzZo';
+    const GEMINI_API_KEY = 'AIzaSyAfd0qt66GzWWxEAh150F5YuY1BDomkZiw';
 
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -461,20 +461,34 @@ async function analyzeImage(file) {
                     })
                 });
 
+                // Check if the response is ok (status 200-299)
+                if (!response.ok) {
+                    throw new Error(`API request failed with status ${response.status}`);
+                }
+
                 const data = await response.json();
+                console.log("API Response:", data); // Log response for debugging
+
                 let analysisResult;
                 try {
-                    const responseText = data.candidates[0].content.parts[0].text
-                        .replace(/```json/g, '')
-                        .replace(/```/g, '')
-                        .trim();
-                    
-                    analysisResult = JSON.parse(responseText);
+                    // Safely access response data
+                    const responseText = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]
+                        ? data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim()
+                        : '';
+
+                    if (responseText) {
+                        analysisResult = JSON.parse(responseText);
+                    } else {
+                        throw new Error('Invalid response format or missing content');
+                    }
                 } catch (parseError) {
                     console.error('Failed to parse JSON:', parseError);
                     throw new Error('Unable to parse Gemini response');
                 }
 
+                console.log("Analysis Result:", analysisResult); // Log the analysis result
+
+                // Handle the description and crime type
                 const descriptionBox = document.getElementById("description");
                 const crimeTypeDropdown = document.getElementById("crimeType");
                 const customCrimeTypeInput = document.getElementById("customCrimeTypeInput");
